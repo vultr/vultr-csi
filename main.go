@@ -14,11 +14,15 @@ limitations under the License.
 package main
 
 import (
+	"flag"
 	"fmt"
+	"log"
 	"math/rand"
 	"os"
 	"time"
-	// "github.com/container-storage-interface/spec/lib/go/csi"
+
+	"github.com/vultr/govultr"
+	"github.com/vultr/vultr-csi/vultr"
 )
 
 const (
@@ -27,15 +31,41 @@ const (
 
 var (
 	vendorVersion string
+
+	bsPrefix = flag.String("bs-prefix", "", "Vultr BlockStorage Volume label prefix")
+	endpoint = flag.String("endpoint", "unix:/tmp/csi.sock", "Vultr CSI endpoint")
+	node     = flag.String("node", "", "Vultr Hostname")
+	token    = flag.String("token", "", "Vultr API Token")
+	url      = flag.String("url", "https://vultr.com/api", "Vultr API URL")
 )
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
+	flag.Parse()
 	handle()
 	os.Exit(0)
 }
 
 func handle() {
+	// Check API token
+	apiToken := os.Getenv("VULTR_API_KEY")
+	if apiToken == "" {
+		apiToken := *token
+		if apiToken == "" {
+			log.Fatalln("You must provide your Vultr API token")
+		}
+	}
 
-	fmt.Print(vendorVersion)
+	// Get Vultr client
+	vultrClient := govultr.NewClient(nil, apiToken)
+
+	// Initialize driver
+	drv, err := driver.NewDriver(vultrClient, driverName, vendorVersion, *bsPrefix, *url, *endpoint)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Run the service
+
+	fmt.Print(drv) // test
 }

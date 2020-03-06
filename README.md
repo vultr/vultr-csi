@@ -1,12 +1,12 @@
 # Kubernetes Cloud Storage Interface for Vultr
 
-The Vultr Cloud Storage Interface (csi) provides a fully supported experience of Vultr features in your Kubernetes cluster.
+The Vultr Cloud Storage Interface (CSI) provides a fully supported experience of Vultr features in your Kubernetes cluster.
 
 This project is currently in active development and is not feature complete.
 
 ## Development 
 
-Go minimum version `1.12.0`
+Go minimum version `1.13.0`
 
 The `vultr-csi` uses go modules for its dependencies.
 
@@ -35,5 +35,3 @@ Running the image
 ### Deploying to a kubernetes cluster
 
 You will need to make sure that your kubernetes cluster is configured to interact with a `external cloud provider`
-
-More can be read about this in the [Running Cloud Controller](https://kubernetes.io/docs/tasks/administer-cluster/running-cloud-controller/)

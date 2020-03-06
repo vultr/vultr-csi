@@ -14,26 +14,79 @@ limitations under the License.
 package driver
 
 import (
-// "github.com/container-storage-interface/spec/lib/go/csi"
-// "github.com/vultr/govultr"
+	"time"
+
+	"github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/sirupsen/logrus"
+	"github.com/vultr/govultr"
 )
 
-// Driver implements the following CSI interfaces:
-//
-//   csi.IdentityServer
-//   csi.ControllerServer
-//   csi.NodeServer
-//
+const (
+	defaultTimeout = 1 * time.Minute
+)
+
 type VultrDriver struct {
 	name          string
 	vendorVersion string
 	bsPrefix      string
+	endpoint      string
+	waitTimeout   time.Duration
+	log           *logrus.Entry
 
-	identity   string // *VultrIdentityServer
-	node       string // *VultrNodeServer
-	controller string // *VultrControllerServer
+	identity   csi.IdentityServer
+	node       csi.ControllerServer
+	controller csi.NodeServer
+
+	account   govultr.AccountService
+	snapshot  govultr.SnapshotService
+	bsStorage govultr.BlockStorageService
+	server    govultr.ServerService
 }
 
-func getDriver() *VultrDriver {
+func GetDriver() *VultrDriver {
 	return &VultrDriver{}
+}
+
+// NewDriver returns a CSI plugin that contains gRPC interfaces
+// which interact with Kubernetes over unix domain sockets for managing Block Storage
+func NewDriver(vultrClient *govultr.Client, driverName, version, prefix, url, ep string) (*VultrDriver, error) {
+	driver := GetDriver()
+
+	if driverName == "" {
+		driverName = driver.name
+	}
+
+	if version == "" {
+		version = "dev" // TODO add default version
+	}
+
+	// Authenticate client
+
+	// Initialize metadata
+
+	// TODO fix: Set up logging
+	log := logrus.New().WithFields(logrus.Fields{
+		"region":  "region",
+		"host_id": "hostID",
+	})
+
+	return &VultrDriver{
+		name:          driverName,
+		vendorVersion: version,
+		endpoint:      ep,
+		log:           log,
+
+		// TODO Differentiate driver's purpose: Node or Controller
+		// isController:      "",
+		waitTimeout: defaultTimeout,
+
+		bsStorage: vultrClient.BlockStorage,
+		server:    vultrClient.Server,
+		snapshot:  vultrClient.Snapshot,
+		account:   vultrClient.Account,
+	}, nil
+}
+
+func Run() {
+	// TODO
 }
