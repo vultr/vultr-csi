@@ -14,8 +14,8 @@ limitations under the License.
 package main
 
 import (
+	_ "context"
 	"flag"
-	"fmt"
 	"log"
 	"math/rand"
 	"os"
@@ -33,7 +33,7 @@ var (
 	vendorVersion string
 
 	bsPrefix = flag.String("bs-prefix", "", "Vultr BlockStorage Volume label prefix")
-	endpoint = flag.String("endpoint", "unix:/tmp/csi.sock", "Vultr CSI endpoint")
+	endpoint = flag.String("endpoint", "unix:///var/lib/kubelet/plugins/"+driverName+"/csi.sock", "Vultr CSI endpoint")
 	node     = flag.String("node", "", "Vultr Hostname")
 	token    = flag.String("token", "", "Vultr API Token")
 	url      = flag.String("url", "https://vultr.com/api", "Vultr API URL")
@@ -66,6 +66,5 @@ func handle() {
 	}
 
 	// Run the service
-
-	fmt.Print(drv) // test
+	drv.Run(*endpoint)
 }

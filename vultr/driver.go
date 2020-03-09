@@ -14,11 +14,19 @@ limitations under the License.
 package driver
 
 import (
+	_ "context"
+	"fmt"
+	"log"
+	"net"
+	_ "net/http"
+	"net/url"
+	"path"
+	"path/filepath"
 	"time"
 
-	"github.com/container-storage-interface/spec/lib/go/csi"
-	"github.com/sirupsen/logrus"
+	_ "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/vultr/govultr"
+	"google.golang.org/grpc"
 )
 
 const (
@@ -31,11 +39,9 @@ type VultrDriver struct {
 	bsPrefix      string
 	endpoint      string
 	waitTimeout   time.Duration
-	log           *logrus.Entry
+	isController  bool
 
-	identity   csi.IdentityServer
-	node       csi.ControllerServer
-	controller csi.NodeServer
+	grpc *grpc.Server
 
 	account   govultr.AccountService
 	snapshot  govultr.SnapshotService
@@ -51,34 +57,25 @@ func GetDriver() *VultrDriver {
 // which interact with Kubernetes over unix domain sockets for managing Block Storage
 func NewDriver(vultrClient *govultr.Client, driverName, version, prefix, url, ep string) (*VultrDriver, error) {
 	driver := GetDriver()
+	driver.name = driverName
+	driver.vendorVersion = version
 
 	if driverName == "" {
-		driverName = driver.name
+		log.Fatalln("Vultr Driver name is missing")
 	}
 
 	if version == "" {
-		version = "dev" // TODO add default version
+		driver.vendorVersion = "dev"
 	}
 
-	// Authenticate client
-
-	// Initialize metadata
-
-	// TODO fix: Set up logging
-	log := logrus.New().WithFields(logrus.Fields{
-		"region":  "region",
-		"host_id": "hostID",
-	})
+	// TODO metadata
 
 	return &VultrDriver{
 		name:          driverName,
 		vendorVersion: version,
 		endpoint:      ep,
-		log:           log,
-
-		// TODO Differentiate driver's purpose: Node or Controller
-		// isController:      "",
-		waitTimeout: defaultTimeout,
+		isController:  false, // TODO Differentiate driver's purpose: Node or Controller
+		waitTimeout:   defaultTimeout,
 
 		bsStorage: vultrClient.BlockStorage,
 		server:    vultrClient.Server,
@@ -87,6 +84,32 @@ func NewDriver(vultrClient *govultr.Client, driverName, version, prefix, url, ep
 	}, nil
 }
 
-func Run() {
-	// TODO
+// Run starts the pluginwhich will run on the given port
+func (driver *VultrDriver) Run(endpoint string) error {
+	// test
+	fmt.Printf("Running on this endpoint: %s", endpoint)
+
+	// Parse endpoint
+	u, err := url.Parse(endpoint)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	grpcAddr := path.Join(u.Host, filepath.FromSlash(u.Path))
+	if u.Host == "" {
+		grpcAddr = filepath.FromSlash(u.Path)
+	}
+
+	// Set up gRCP listener
+	grpcListener, err := net.Listen(u.Scheme, grpcAddr)
+	if err != nil {
+		return fmt.Errorf("failed to listen: %v", err)
+	}
+
+	// Register identity server
+	// driver.grpc = grpc.NewServer(grpc.UnaryInterceptor(errHandler))
+	// csi.RegisterIdentityServer(driver.grpc, driver)
+
+	return nil
 }

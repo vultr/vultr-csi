@@ -14,10 +14,6 @@ github.com/hashicorp/go-cleanhttp
 github.com/hashicorp/go-hclog
 # github.com/hashicorp/go-retryablehttp v0.6.3
 github.com/hashicorp/go-retryablehttp
-# github.com/konsorten/go-windows-terminal-sequences v1.0.1
-github.com/konsorten/go-windows-terminal-sequences
-# github.com/sirupsen/logrus v1.4.2
-github.com/sirupsen/logrus
 # github.com/vultr/govultr v0.3.0
 github.com/vultr/govultr
 # golang.org/x/net v0.0.0-20190311183353-d8887717615a
