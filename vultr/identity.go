@@ -15,9 +15,15 @@ package driver
 
 import (
 	"context"
+
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/golang/protobuf/ptypes/wrappers"
 )
+
+// VultrIdentityServer ...
+type VultrIdentityServer struct {
+	Driver *VultrDriver
+}
 
 // GetPluginInfo returns basic plugin data
 func (d *VultrDriver) GetPluginInfo(ctx context.Context, req *csi.GetPluginInfoRequest) (*csi.GetPluginInfoResponse, error) {
@@ -29,7 +35,7 @@ func (d *VultrDriver) GetPluginInfo(ctx context.Context, req *csi.GetPluginInfoR
 }
 
 // GetPluginCapabilities returns plugins available capabilities
-func (d *VultrDriver) GetPluginCapabilities(ctx context.Context) (*csi.GetPluginCapabilitiesResponse, error) { // This can change depending on what we will offer right away
+func (d *VultrDriver) GetPluginCapabilities(ctx context.Context, req *csi.GetPluginCapabilitiesRequest) (*csi.GetPluginCapabilitiesResponse, error) { // This can change depending on what we will offer right away
 	volExpType := csi.PluginCapability_VolumeExpansion_ONLINE
 
 	return &csi.GetPluginCapabilitiesResponse{
@@ -53,7 +59,7 @@ func (d *VultrDriver) GetPluginCapabilities(ctx context.Context) (*csi.GetPlugin
 }
 
 // Probe returns plugin health and readiness
-func (d *VultrDriver) Probe(ctx context.Context) (*csi.ProbeResponse, error) {
+func (d *VultrDriver) Probe(ctx context.Context, req *csi.ProbeRequest) (*csi.ProbeResponse, error) {
 	return &csi.ProbeResponse{
 		Ready: &wrappers.BoolValue{Value: true},
 	}, nil

@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/vultr/govultr"
-	"github.com/vultr/vultr-csi/vultr"
+	driver "github.com/vultr/vultr-csi/vultr"
 )
 
 const (
@@ -66,5 +66,6 @@ func handle() {
 	}
 
 	// Run the service
-	drv.Run(*endpoint)
+	endpoint := "unix:///tmp/echo.sock" // to test locally
+	drv.Run(endpoint)
 }

@@ -15,55 +15,64 @@ package driver
 
 import (
 	"fmt"
-	// "github.com/container-storage-interface/spec/lib/go/csi"
-	// "google.golang.org/grpc/codes"
-	// "google.golang.org/grpc/status"
 )
 
+// CreateVolume provisions a new volume on behalf of the user
 func CreateVolume() {
 	fmt.Print("IMPLEMENT ME")
 }
 
+// DeleteVolume deletes a volume created by CreateVolume
 func DeleteVolume() {
 	fmt.Print("IMPLEMENT ME")
 }
 
+// ControllerPublishVolume makes a volume available on a specified node. This will attach a volume to the node
 func ControllerPublishVolume() {
 	fmt.Print("IMPLEMENT ME")
 }
 
+// ControllerUnpublishVolume makes the volume unavailable on a given node. Makes a call to detach a volume from a node
 func ControllerUnpublishVolume() {
 	fmt.Print("IMPLEMENT ME")
 }
 
+// ValidateVolumeCapabilities returns capabilities of a volume
 func ValidateVolumeCapabilities() {
 	fmt.Print("IMPLEMENT ME")
 }
 
+// ListVolumes returns all available volumes
 func ListVolumes() {
 	fmt.Print("IMPLEMENT ME")
 }
 
+// GetCapacity returns capacity of total storage pool available
 func GetCapacity() {
 	fmt.Print("IMPLEMENT ME")
 }
 
+// ControllerGetCapabilities returns the capabilities of the Controller plugin
 func ControllerGetCapabilities() {
 	fmt.Print("IMPLEMENT ME")
 }
 
+// CreateSnapshot creates a snapshot
 func CreateSnapshot() {
 	fmt.Print("IMPLEMENT ME")
 }
 
+// DeleteSnapshot deletes a snapshot
 func DeleteSnapshot() {
 	fmt.Print("IMPLEMENT ME")
 }
 
+// ListSnapshots lists snapshots
 func ListSnapshots() {
 	fmt.Print("IMPLEMENT ME")
 }
 
+// ControllerExpandVolume ...
 func ControllerExpandVolume() {
 	fmt.Print("IMPLEMENT ME")
 }

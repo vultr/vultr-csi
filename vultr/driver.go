@@ -14,17 +14,20 @@ limitations under the License.
 package driver
 
 import (
-	_ "context"
+	// _ "context"
 	"fmt"
 	"log"
 	"net"
-	_ "net/http"
+
+	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"path/filepath"
 	"time"
 
-	_ "github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/sirupsen/logrus"
 	"github.com/vultr/govultr"
 	"google.golang.org/grpc"
 )
@@ -33,6 +36,7 @@ const (
 	defaultTimeout = 1 * time.Minute
 )
 
+// VultrDriver struct
 type VultrDriver struct {
 	name          string
 	vendorVersion string
@@ -41,7 +45,11 @@ type VultrDriver struct {
 	waitTimeout   time.Duration
 	isController  bool
 
-	grpc *grpc.Server
+	log     *logrus.Entry
+	grpc    *grpc.Server
+	httpSrv *http.Server
+
+	idServer *VultrIdentityServer
 
 	account   govultr.AccountService
 	snapshot  govultr.SnapshotService
@@ -49,6 +57,7 @@ type VultrDriver struct {
 	server    govultr.ServerService
 }
 
+// GetDriver returns VultrDriver
 func GetDriver() *VultrDriver {
 	return &VultrDriver{}
 }
@@ -68,7 +77,10 @@ func NewDriver(vultrClient *govultr.Client, driverName, version, prefix, url, ep
 		driver.vendorVersion = "dev"
 	}
 
-	// TODO metadata
+	// TODO change to whatever
+	log := logrus.New().WithFields(logrus.Fields{
+		"version": version,
+	})
 
 	return &VultrDriver{
 		name:          driverName,
@@ -77,6 +89,8 @@ func NewDriver(vultrClient *govultr.Client, driverName, version, prefix, url, ep
 		isController:  false, // TODO Differentiate driver's purpose: Node or Controller
 		waitTimeout:   defaultTimeout,
 
+		log: log,
+
 		bsStorage: vultrClient.BlockStorage,
 		server:    vultrClient.Server,
 		snapshot:  vultrClient.Snapshot,
@@ -84,14 +98,10 @@ func NewDriver(vultrClient *govultr.Client, driverName, version, prefix, url, ep
 	}, nil
 }
 
-// Run starts the pluginwhich will run on the given port
+// Run starts the plugin which will run on the given port
 func (driver *VultrDriver) Run(endpoint string) error {
-	// test
-	fmt.Printf("Running on this endpoint: %s", endpoint)
-
-	// Parse endpoint
+	// Parse endpoint and get address
 	u, err := url.Parse(endpoint)
-
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -101,15 +111,37 @@ func (driver *VultrDriver) Run(endpoint string) error {
 		grpcAddr = filepath.FromSlash(u.Path)
 	}
 
+	// Remove socket if already exists
+	if err := os.RemoveAll(grpcAddr); err != nil {
+		return fmt.Errorf("could not remove unix domain socket %s, error: %s", grpcAddr, err)
+	}
+
+	if u.Scheme != "unix" {
+		return fmt.Errorf("only unix domain sockets are supported, have: %s", u.Scheme)
+	}
+
 	// Set up gRCP listener
 	grpcListener, err := net.Listen(u.Scheme, grpcAddr)
 	if err != nil {
-		return fmt.Errorf("failed to listen: %v", err)
+		return fmt.Errorf("cannot listen on socket: %v", err)
 	}
 
 	// Register identity server
-	// driver.grpc = grpc.NewServer(grpc.UnaryInterceptor(errHandler))
-	// csi.RegisterIdentityServer(driver.grpc, driver)
+	driver.grpc = grpc.NewServer(grpc.UnaryInterceptor(driver.GRPCLogger))
+	// TODO: register other servers here
+	csi.RegisterIdentityServer(driver.grpc, driver)
 
-	return nil
+	// test start
+	driver.log.WithField("grpc_addr", grpcAddr).Info("server starting...")
+
+	if driver.httpSrv == nil {
+		driver.log.WithField("grpc_addr", grpcAddr).Info("server running...")
+		return driver.grpc.Serve(grpcListener)
+	}
+
+	err = driver.httpSrv.ListenAndServe()
+	if err == http.ErrServerClosed {
+		return nil
+	}
+	return err
 }
