@@ -14,12 +14,98 @@ limitations under the License.
 package driver
 
 import (
+	"context"
 	"fmt"
+	"strconv"
+
+	"github.com/container-storage-interface/spec/lib/go/csi"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+)
+
+const (
+	_   = iota
+	kiB = 1 << (10 * iota)
+	miB
+	giB
+	tiB
+)
+
+const (
+	minVolumeSizeInBytes     int64 = 1 * giB
+	maxVolumeSizeInBytes     int64 = 10 * tiB
+	defaultVolumeSizeInBytes int64 = 10 * giB
+)
+
+var (
+	supportedVolCapabilities = &csi.VolumeCapability_AccessMode{
+		Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+	}
 )
 
 // CreateVolume provisions a new volume on behalf of the user
-func CreateVolume() {
-	fmt.Print("IMPLEMENT ME")
+func (d *VultrDriver) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
+	volName := req.Name
+
+	if volName == "" {
+		return nil, status.Error(codes.InvalidArgument, "CreateVolume Name is missing")
+	}
+
+	if req.VolumeCapabilities == nil || len(req.VolumeCapabilities) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "CreateVolume Volume Capabilities is missing")
+	}
+
+	// Validate
+	if !isValidCapability(req.VolumeCapabilities) {
+		return nil, status.Errorf(codes.InvalidArgument, "CreateVolume Volume capability is not compatible: %v", req)
+	}
+
+	// check that the volume doesnt already exist
+	curVolume, err := d.client.BlockStorage.Get(context.TODO(), volName)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// if volume exists, do nothing - idempotency
+	blockID, _ := strconv.Atoi(curVolume.BlockStorageID)
+	if blockID != 0 {
+
+		return &csi.CreateVolumeResponse{
+			Volume: &csi.Volume{
+				VolumeId:      curVolume.BlockStorageID,
+				CapacityBytes: int64(curVolume.SizeGB) * giB,
+			},
+		}, nil
+	}
+
+	// if applicable, create volume
+	label := "CSI Volume"
+	region, _ := strconv.Atoi(d.region)
+	size, err := getStorageBytes(req.CapacityRange)
+	if err != nil {
+		return nil, status.Errorf(codes.OutOfRange, "invalid volume capacity range: %v", err)
+	}
+
+	volume, err := d.client.BlockStorage.Create(ctx, region, int(size), label)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	res := &csi.CreateVolumeResponse{
+		Volume: &csi.Volume{
+			VolumeId:      volume.BlockStorageID,
+			CapacityBytes: size,
+			AccessibleTopology: []*csi.Topology{
+				{
+					Segments: map[string]string{
+						"region": d.region,
+					},
+				},
+			},
+		},
+	}
+
+	return res, nil
 }
 
 // DeleteVolume deletes a volume created by CreateVolume
@@ -75,4 +161,40 @@ func ListSnapshots() {
 // ControllerExpandVolume ...
 func ControllerExpandVolume() {
 	fmt.Print("IMPLEMENT ME")
+}
+
+func isValidCapability(caps []*csi.VolumeCapability) bool {
+	for _, cap := range caps {
+		if cap == nil {
+			return false
+		}
+
+		accessMode := cap.GetAccessMode()
+		if accessMode == nil {
+			return false
+		}
+
+		if accessMode.GetMode() != supportedVolCapabilities.GetMode() {
+			return false
+		}
+
+		accessType := cap.GetAccessType()
+		switch accessType.(type) {
+		case *csi.VolumeCapability_Block:
+		case *csi.VolumeCapability_Mount:
+		default:
+			return false
+		}
+	}
+	return true
+}
+
+// getStorageBytes returns storage size in bytes
+func getStorageBytes(capRange *csi.CapacityRange) (int64, error) {
+	if capRange == nil {
+		return defaultVolumeSizeInBytes, nil
+	}
+
+	cap := capRange.GetRequiredBytes()
+	return cap, nil
 }
