@@ -15,6 +15,6 @@ limitations under the License.
 package driver
 
 import (
-// "google.golang.org/grpc"
-// "net"
+	_ "google.golang.org/grpc"
+	_ "net"
 )

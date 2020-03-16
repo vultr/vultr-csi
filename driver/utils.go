@@ -15,10 +15,26 @@ package driver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/sirupsen/logrus"
+	"github.com/vultr/govultr"
 	"google.golang.org/grpc"
 )
+
+func GetVultrByName(client *govultr.Client, name string) (*govultr.Server, error) {
+	instances, err := client.Server.List(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("error while getting instance list: %s", err)
+	}
+
+	for _, v := range instances {
+		if v.Label == name {
+			return &v, nil
+		}
+	}
+	return nil, fmt.Errorf("could not retrieve instance: %s", name)
+}
 
 // GRPCLogger provides better error handling for gRPC calls
 func (driver *VultrDriver) GRPCLogger(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
