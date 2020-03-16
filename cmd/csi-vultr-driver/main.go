@@ -19,13 +19,10 @@ import (
 	"log"
 )
 
-
-
 func main() {
 
 	var (
 		endpoint   = flag.String("endpoint", "unix:///var/lib/kubelet/plugins"+driver.DriverName+"/csi.sock", "CSI endpoint")
-		url        = flag.String("url", "https://api.vultr.com", "Vultr API URL")
 		token      = flag.String("token", "", "Vultr API Token")
 		driverName = flag.String("driver-name", driver.DriverName, "Name of driver")
 		node       = flag.String("node", "", "Vultr Hostname")
@@ -37,13 +34,10 @@ func main() {
 		log.Fatal("vendor must be defined at compilation")
 	}
 
-	driver, err := driver.NewDriver(*endpoint, *token, *url, *driverName, *version, *node)
+	d, err := driver.NewDriver(*endpoint, *token, *driverName, *version, *node)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	if err := driver.Run(); err != nil {
-		log.Fatalln(err)
-	}
-
+	d.Run()
 }

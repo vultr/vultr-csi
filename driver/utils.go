@@ -17,9 +17,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sirupsen/logrus"
 	"github.com/vultr/govultr"
-	"google.golang.org/grpc"
 )
 
 func GetVultrByName(client *govultr.Client, name string) (*govultr.Server, error) {
@@ -34,17 +32,4 @@ func GetVultrByName(client *govultr.Client, name string) (*govultr.Server, error
 		}
 	}
 	return nil, fmt.Errorf("could not retrieve instance: %s", name)
-}
-
-// GRPCLogger provides better error handling for gRPC calls
-func (driver *VultrDriver) GRPCLogger(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	res, err := handler(ctx, req)
-	if err != nil {
-		driver.log.WithError(err).WithFields(
-			logrus.Fields{
-				"method":  info.FullMethod,
-				"request": req,
-			}).Error("method failed")
-	}
-	return res, err
 }

@@ -14,12 +14,10 @@ limitations under the License.
 package driver
 
 import (
-	"net/http"
 	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/vultr/govultr"
-	"google.golang.org/grpc"
 )
 
 const (
@@ -33,24 +31,18 @@ type VultrDriver struct {
 	endpoint string
 	host     string
 	region   string
+	client   *govultr.Client
 
 	isController bool
 	waitTimeout  time.Duration
 
-	log     *logrus.Entry
-	grpc    *grpc.Server
-	httpSrv *http.Server
+	log *logrus.Entry
 	//mounter Mounter
 
-	account  govultr.AccountService
-	storage  govultr.BlockStorageService
-	server   govultr.ServerService
-	snapshot govultr.SnapshotService
-
-	version
+	version string
 }
 
-func NewDriver(endpoint, token, url, driverName, version, node string) (*VultrDriver, error) {
+func NewDriver(endpoint, token, driverName, version, node string) (*VultrDriver, error) {
 	if driverName == "" {
 		driverName = DriverName
 	}
@@ -64,10 +56,11 @@ func NewDriver(endpoint, token, url, driverName, version, node string) (*VultrDr
 	}
 
 	return &VultrDriver{
-		name:     driverName,
-		endpoint: endpoint,
-		host:     instance.InstanceID,
-		region:   instance.RegionID,
+		name:         driverName,
+		endpoint:     endpoint,
+		host:         instance.InstanceID,
+		region:       instance.RegionID,
+		client:       client,
 
 		isController: token != "",
 		waitTimeout:  defaultTimeout,
@@ -78,16 +71,15 @@ func NewDriver(endpoint, token, url, driverName, version, node string) (*VultrDr
 			"version": version,
 		}),
 
-		account:  client.Account,
-		storage:  client.BlockStorage,
-		server:   client.Server,
-		snapshot: client.Snapshot,
 
 		version: version,
 	}, nil
 }
 
-func (d *VultrDriver) Run() error {
-
-	return nil
+func (d *VultrDriver) Run() {
+	server := NewNonBlockingGRPCServer()
+	identity := NewVultrIdentityServer(d)
+	// add in controller + node when they are done
+	server.Start(d.endpoint, identity, nil, nil)
+	server.Wait()
 }
