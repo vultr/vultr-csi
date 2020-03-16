@@ -31,7 +31,7 @@ func main() {
 	flag.Parse()
 
 	if *version == "" {
-		log.Fatal("vendor must be defined at compilation")
+		log.Fatal("version must be defined at compilation")
 	}
 
 	d, err := driver.NewDriver(*endpoint, *token, *driverName, *version, *node)
