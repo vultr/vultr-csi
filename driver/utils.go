@@ -1,6 +1,5 @@
 /*
-Copyright 2018 Vultr Authors.
-
+Copyright 2020 Vultr Authors.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -15,6 +14,22 @@ limitations under the License.
 package driver
 
 import (
-// "google.golang.org/grpc"
-// "net"
+	"context"
+	"fmt"
+
+	"github.com/vultr/govultr"
 )
+
+func GetVultrByName(client *govultr.Client, name string) (*govultr.Server, error) {
+	instances, err := client.Server.List(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("error while getting instance list: %s", err)
+	}
+
+	for _, v := range instances {
+		if v.Label == name {
+			return &v, nil
+		}
+	}
+	return nil, fmt.Errorf("could not retrieve instance: %s", name)
+}

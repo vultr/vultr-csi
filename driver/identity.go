@@ -20,23 +20,29 @@ import (
 	"github.com/golang/protobuf/ptypes/wrappers"
 )
 
-// VultrIdentityServer ...
+// VultrIdentityServer
 type VultrIdentityServer struct {
 	Driver *VultrDriver
 }
 
+func NewVultrIdentityServer(driver *VultrDriver) *VultrIdentityServer {
+	return &VultrIdentityServer{driver}
+}
+
 // GetPluginInfo returns basic plugin data
-func (d *VultrDriver) GetPluginInfo(ctx context.Context, req *csi.GetPluginInfoRequest) (*csi.GetPluginInfoResponse, error) {
+func (vultrIdentity *VultrIdentityServer) GetPluginInfo(ctx context.Context, req *csi.GetPluginInfoRequest) (*csi.GetPluginInfoResponse, error) {
+	vultrIdentity.Driver.log.Info("VultrIdentityServer.GetPluginInfo called")
+
 	res := &csi.GetPluginInfoResponse{
-		Name:          d.name,
-		VendorVersion: d.vendorVersion,
+		Name:          vultrIdentity.Driver.name,
+		VendorVersion: vultrIdentity.Driver.version,
 	}
 	return res, nil
 }
 
 // GetPluginCapabilities returns plugins available capabilities
-func (d *VultrDriver) GetPluginCapabilities(ctx context.Context, req *csi.GetPluginCapabilitiesRequest) (*csi.GetPluginCapabilitiesResponse, error) { // This can change depending on what we will offer right away
-	volExpType := csi.PluginCapability_VolumeExpansion_ONLINE
+func (vultrIdentity *VultrIdentityServer) GetPluginCapabilities(ctx context.Context, req *csi.GetPluginCapabilitiesRequest) (*csi.GetPluginCapabilitiesResponse, error) { // This can change depending on what we will offer right away
+	vultrIdentity.Driver.log.Infof("VultrIdentityServer.GetPluginCapabilities called with request : %v", req)
 
 	return &csi.GetPluginCapabilitiesResponse{
 		Capabilities: []*csi.PluginCapability{
@@ -50,7 +56,7 @@ func (d *VultrDriver) GetPluginCapabilities(ctx context.Context, req *csi.GetPlu
 			{
 				Type: &csi.PluginCapability_VolumeExpansion_{
 					VolumeExpansion: &csi.PluginCapability_VolumeExpansion{
-						Type: volExpType,
+						Type: csi.PluginCapability_VolumeExpansion_ONLINE,
 					},
 				},
 			},
@@ -59,7 +65,9 @@ func (d *VultrDriver) GetPluginCapabilities(ctx context.Context, req *csi.GetPlu
 }
 
 // Probe returns plugin health and readiness
-func (d *VultrDriver) Probe(ctx context.Context, req *csi.ProbeRequest) (*csi.ProbeResponse, error) {
+func (vultrIdentity *VultrIdentityServer) Probe(ctx context.Context, req *csi.ProbeRequest) (*csi.ProbeResponse, error) {
+	vultrIdentity.Driver.log.Infof("VultrIdentityServer.Probe called with request : %v", req)
+
 	return &csi.ProbeResponse{
 		Ready: &wrappers.BoolValue{Value: true},
 	}, nil
