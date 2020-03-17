@@ -72,7 +72,7 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 	}
 
 	// check that the volume doesnt already exist
-	volumes, err := c.Driver.client.BlockStorage.List(context.Background())
+	volumes, err := c.Driver.client.BlockStorage.List(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
