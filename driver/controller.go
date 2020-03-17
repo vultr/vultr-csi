@@ -16,6 +16,7 @@ package driver
 import (
 	"context"
 	"strconv"
+	"time"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/sirupsen/logrus"
@@ -33,9 +34,11 @@ const (
 )
 
 const (
-	minVolumeSizeInBytes     int64 = 1 * giB
-	maxVolumeSizeInBytes     int64 = 10 * tiB
-	defaultVolumeSizeInBytes int64 = 10 * giB
+	minVolumeSizeInBytes      int64 = 1 * giB
+	maxVolumeSizeInBytes      int64 = 10 * tiB
+	defaultVolumeSizeInBytes  int64 = 10 * giB
+	volumeStatusCheckRetries        = 10
+	volumeStatusCheckInterval       = 1
 )
 
 var (
@@ -96,7 +99,7 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 	// if applicable, create volume
 	region, err := strconv.Atoi(c.Driver.region)
 	if err != nil {
-		return nil, status.Error(codes.Aborted, "region code must be an int in ")
+		return nil, status.Error(codes.Aborted, "region code must be an int")
 	}
 	size, err := getStorageBytes(req.CapacityRange)
 	if err != nil {
@@ -108,6 +111,27 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 	volume, err := c.Driver.client.BlockStorage.Create(ctx, region, int(size/giB), volName)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// Check to see if volume is in active state
+	volReady := false
+
+	for i := 0; i < volumeStatusCheckRetries; i++ {
+		time.Sleep(volumeStatusCheckInterval * time.Second)
+		bs, err := c.Driver.client.BlockStorage.Get(ctx, volume.BlockStorageID)
+
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		if bs.Status == "active" {
+			volReady = true
+			break
+		}
+	}
+
+	if !volReady {
+		return nil, status.Errorf(codes.Internal, "volume is not active after %v seconds", volumeStatusCheckRetries)
 	}
 
 	res := &csi.CreateVolumeResponse{
