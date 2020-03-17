@@ -1,8 +1,14 @@
 .PHONY: build-linux
 build-linux:
-	echo "building vultr csi for linux"
-	GOOS=linux GOARCH=amd64 GCO_ENABLED=0 go build -o dist/vultr-csi .
+	@echo "building vultr csi for linux"
+	CGO_ENABLED=0 go build -ldflags '-X main.version=$(VERSION)' -o csi-vultr-plugin ./cmd/csi-vultr-driver
 
+
+.PHONY: docker-build
 docker-build:
-	echo "building docker image"
-	docker build . -t vultr/vultr-csi
+	@echo "building docker image to dockerhub $(REGISTRY) with version $(VERSION)"
+	docker build . -t $(REGISTRY)/vultr-csi:$(VERSION)
+
+.PHONY: docker-push
+docker-push:
+	docker push $(REGISTRY)/vultr-csi:$(VERSION)
