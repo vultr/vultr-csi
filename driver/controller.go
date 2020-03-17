@@ -15,7 +15,6 @@ package driver
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
@@ -43,8 +42,18 @@ var (
 	}
 )
 
+var _ csi.ControllerServer = &VultrControllerServer{}
+
+type VultrControllerServer struct {
+	Driver *VultrDriver
+}
+
+func NewVultrControllerServer(driver *VultrDriver) *VultrControllerServer {
+	return &VultrControllerServer{Driver: driver}
+}
+
 // CreateVolume provisions a new volume on behalf of the user
-func (d *VultrDriver) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
+func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
 	volName := req.Name
 
 	if volName == "" {
@@ -61,15 +70,12 @@ func (d *VultrDriver) CreateVolume(ctx context.Context, req *csi.CreateVolumeReq
 	}
 
 	// check that the volume doesnt already exist
-	curVolume, err := d.client.BlockStorage.Get(context.TODO(), volName)
+	curVolume, err := c.Driver.client.BlockStorage.Get(context.TODO(), volName)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	// if volume exists, do nothing - idempotency
-	blockID, _ := strconv.Atoi(curVolume.BlockStorageID)
-	if blockID != 0 {
-
+	if curVolume != nil {
 		return &csi.CreateVolumeResponse{
 			Volume: &csi.Volume{
 				VolumeId:      curVolume.BlockStorageID,
@@ -79,14 +85,16 @@ func (d *VultrDriver) CreateVolume(ctx context.Context, req *csi.CreateVolumeReq
 	}
 
 	// if applicable, create volume
-	label := "CSI Volume"
-	region, _ := strconv.Atoi(d.region)
+	region, err := strconv.Atoi(c.Driver.region)
+	if err != nil {
+		return nil, status.Error(codes.Aborted, "region code must be an int in ")
+	}
 	size, err := getStorageBytes(req.CapacityRange)
 	if err != nil {
 		return nil, status.Errorf(codes.OutOfRange, "invalid volume capacity range: %v", err)
 	}
 
-	volume, err := d.client.BlockStorage.Create(ctx, region, int(size), label)
+	volume, err := c.Driver.client.BlockStorage.Create(ctx, region, int(size), volName)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -98,7 +106,7 @@ func (d *VultrDriver) CreateVolume(ctx context.Context, req *csi.CreateVolumeReq
 			AccessibleTopology: []*csi.Topology{
 				{
 					Segments: map[string]string{
-						"region": d.region,
+						"region": c.Driver.region,
 					},
 				},
 			},
@@ -108,68 +116,57 @@ func (d *VultrDriver) CreateVolume(ctx context.Context, req *csi.CreateVolumeReq
 	return res, nil
 }
 
-// DeleteVolume deletes a volume created by CreateVolume
-func DeleteVolume() {
-	fmt.Print("IMPLEMENT ME")
+func (c *VultrControllerServer) DeleteVolume(context.Context, *csi.DeleteVolumeRequest) (*csi.DeleteVolumeResponse, error) {
+	panic("implement me")
 }
 
-// ControllerPublishVolume makes a volume available on a specified node. This will attach a volume to the node
-func ControllerPublishVolume() {
-	fmt.Print("IMPLEMENT ME")
+func (c *VultrControllerServer) ControllerPublishVolume(context.Context, *csi.ControllerPublishVolumeRequest) (*csi.ControllerPublishVolumeResponse, error) {
+	panic("implement me")
 }
 
-// ControllerUnpublishVolume makes the volume unavailable on a given node. Makes a call to detach a volume from a node
-func ControllerUnpublishVolume() {
-	fmt.Print("IMPLEMENT ME")
+func (c *VultrControllerServer) ControllerUnpublishVolume(context.Context, *csi.ControllerUnpublishVolumeRequest) (*csi.ControllerUnpublishVolumeResponse, error) {
+	panic("implement me")
 }
 
-// ValidateVolumeCapabilities returns capabilities of a volume
-func ValidateVolumeCapabilities() {
-	fmt.Print("IMPLEMENT ME")
+func (c *VultrControllerServer) ValidateVolumeCapabilities(context.Context, *csi.ValidateVolumeCapabilitiesRequest) (*csi.ValidateVolumeCapabilitiesResponse, error) {
+	panic("implement me")
 }
 
-// ListVolumes returns all available volumes
-func ListVolumes() {
-	fmt.Print("IMPLEMENT ME")
+func (c *VultrControllerServer) ListVolumes(context.Context, *csi.ListVolumesRequest) (*csi.ListVolumesResponse, error) {
+	panic("implement me")
 }
 
-// GetCapacity returns capacity of total storage pool available
-func GetCapacity() {
-	fmt.Print("IMPLEMENT ME")
+func (c *VultrControllerServer) GetCapacity(context.Context, *csi.GetCapacityRequest) (*csi.GetCapacityResponse, error) {
+	panic("implement me")
 }
 
-// ControllerGetCapabilities returns the capabilities of the Controller plugin
-func ControllerGetCapabilities() {
-	fmt.Print("IMPLEMENT ME")
+func (c *VultrControllerServer) ControllerGetCapabilities(context.Context, *csi.ControllerGetCapabilitiesRequest) (*csi.ControllerGetCapabilitiesResponse, error) {
+	panic("implement me")
 }
 
-// CreateSnapshot creates a snapshot
-func CreateSnapshot() {
-	fmt.Print("IMPLEMENT ME")
+func (c *VultrControllerServer) CreateSnapshot(context.Context, *csi.CreateSnapshotRequest) (*csi.CreateSnapshotResponse, error) {
+	panic("implement me")
 }
 
-// DeleteSnapshot deletes a snapshot
-func DeleteSnapshot() {
-	fmt.Print("IMPLEMENT ME")
+func (c *VultrControllerServer) DeleteSnapshot(context.Context, *csi.DeleteSnapshotRequest) (*csi.DeleteSnapshotResponse, error) {
+	panic("implement me")
 }
 
-// ListSnapshots lists snapshots
-func ListSnapshots() {
-	fmt.Print("IMPLEMENT ME")
+func (c *VultrControllerServer) ListSnapshots(context.Context, *csi.ListSnapshotsRequest) (*csi.ListSnapshotsResponse, error) {
+	panic("implement me")
 }
 
-// ControllerExpandVolume ...
-func ControllerExpandVolume() {
-	fmt.Print("IMPLEMENT ME")
+func (c *VultrControllerServer) ControllerExpandVolume(context.Context, *csi.ControllerExpandVolumeRequest) (*csi.ControllerExpandVolumeResponse, error) {
+	panic("implement me")
 }
 
 func isValidCapability(caps []*csi.VolumeCapability) bool {
-	for _, cap := range caps {
-		if cap == nil {
+	for _, capacity := range caps {
+		if capacity == nil {
 			return false
 		}
 
-		accessMode := cap.GetAccessMode()
+		accessMode := capacity.GetAccessMode()
 		if accessMode == nil {
 			return false
 		}
@@ -178,7 +175,7 @@ func isValidCapability(caps []*csi.VolumeCapability) bool {
 			return false
 		}
 
-		accessType := cap.GetAccessType()
+		accessType := capacity.GetAccessType()
 		switch accessType.(type) {
 		case *csi.VolumeCapability_Block:
 		case *csi.VolumeCapability_Mount:
@@ -195,6 +192,6 @@ func getStorageBytes(capRange *csi.CapacityRange) (int64, error) {
 		return defaultVolumeSizeInBytes, nil
 	}
 
-	cap := capRange.GetRequiredBytes()
-	return cap, nil
+	capacity := capRange.GetRequiredBytes()
+	return capacity, nil
 }
