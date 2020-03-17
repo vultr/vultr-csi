@@ -18,6 +18,8 @@ import (
 	"strconv"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/sirupsen/logrus"
+	"github.com/vultr/govultr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -70,9 +72,16 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 	}
 
 	// check that the volume doesnt already exist
-	curVolume, err := c.Driver.client.BlockStorage.Get(context.TODO(), volName)
+	volumes, err := c.Driver.client.BlockStorage.List(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	var curVolume *govultr.BlockStorage
+	for _, volume := range volumes {
+		if volume.Label == volName {
+			curVolume = &volume
+		}
 	}
 
 	if curVolume != nil {
@@ -94,7 +103,9 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 		return nil, status.Errorf(codes.OutOfRange, "invalid volume capacity range: %v", err)
 	}
 
-	volume, err := c.Driver.client.BlockStorage.Create(ctx, region, int(size), volName)
+	c.Driver.log.WithFields(logrus.Fields{"size": size})
+
+	volume, err := c.Driver.client.BlockStorage.Create(ctx, region, int(size/giB), volName)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -140,8 +151,37 @@ func (c *VultrControllerServer) GetCapacity(context.Context, *csi.GetCapacityReq
 	panic("implement me")
 }
 
+// ControllerGetCapabilities get capabilities of the controller
 func (c *VultrControllerServer) ControllerGetCapabilities(context.Context, *csi.ControllerGetCapabilitiesRequest) (*csi.ControllerGetCapabilitiesResponse, error) {
-	panic("implement me")
+	capability := func(capability csi.ControllerServiceCapability_RPC_Type) *csi.ControllerServiceCapability {
+		return &csi.ControllerServiceCapability{
+			Type: &csi.ControllerServiceCapability_Rpc{
+				Rpc: &csi.ControllerServiceCapability_RPC{
+					Type: capability,
+				},
+			},
+		}
+	}
+
+	var capabilities []*csi.ControllerServiceCapability
+	for _, caps := range []csi.ControllerServiceCapability_RPC_Type{
+		csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME,
+		csi.ControllerServiceCapability_RPC_PUBLISH_UNPUBLISH_VOLUME,
+		csi.ControllerServiceCapability_RPC_LIST_VOLUMES,
+	} {
+		capabilities = append(capabilities, capability(caps))
+	}
+
+	resp := &csi.ControllerGetCapabilitiesResponse{
+		Capabilities: capabilities,
+	}
+
+	c.Driver.log.WithFields(logrus.Fields{
+		"response": resp,
+		"method":   "controller-get-capabilities",
+	})
+
+	return resp, nil
 }
 
 func (c *VultrControllerServer) CreateSnapshot(context.Context, *csi.CreateSnapshotRequest) (*csi.CreateSnapshotResponse, error) {

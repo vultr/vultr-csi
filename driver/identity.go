@@ -20,6 +20,8 @@ import (
 	"github.com/golang/protobuf/ptypes/wrappers"
 )
 
+var _ csi.IdentityServer = &VultrIdentityServer{}
+
 // VultrIdentityServer
 type VultrIdentityServer struct {
 	Driver *VultrDriver
@@ -30,7 +32,7 @@ func NewVultrIdentityServer(driver *VultrDriver) *VultrIdentityServer {
 }
 
 // GetPluginInfo returns basic plugin data
-func (vultrIdentity *VultrIdentityServer) GetPluginInfo(ctx context.Context, req *csi.GetPluginInfoRequest) (*csi.GetPluginInfoResponse, error) {
+func (vultrIdentity *VultrIdentityServer) GetPluginInfo(context.Context, *csi.GetPluginInfoRequest) (*csi.GetPluginInfoResponse, error) {
 	vultrIdentity.Driver.log.Info("VultrIdentityServer.GetPluginInfo called")
 
 	res := &csi.GetPluginInfoResponse{
@@ -41,7 +43,7 @@ func (vultrIdentity *VultrIdentityServer) GetPluginInfo(ctx context.Context, req
 }
 
 // GetPluginCapabilities returns plugins available capabilities
-func (vultrIdentity *VultrIdentityServer) GetPluginCapabilities(ctx context.Context, req *csi.GetPluginCapabilitiesRequest) (*csi.GetPluginCapabilitiesResponse, error) { // This can change depending on what we will offer right away
+func (vultrIdentity *VultrIdentityServer) GetPluginCapabilities(_ context.Context, req *csi.GetPluginCapabilitiesRequest) (*csi.GetPluginCapabilitiesResponse, error) {
 	vultrIdentity.Driver.log.Infof("VultrIdentityServer.GetPluginCapabilities called with request : %v", req)
 
 	return &csi.GetPluginCapabilitiesResponse{
@@ -64,8 +66,7 @@ func (vultrIdentity *VultrIdentityServer) GetPluginCapabilities(ctx context.Cont
 	}, nil
 }
 
-// Probe returns plugin health and readiness
-func (vultrIdentity *VultrIdentityServer) Probe(ctx context.Context, req *csi.ProbeRequest) (*csi.ProbeResponse, error) {
+func (vultrIdentity *VultrIdentityServer) Probe(_ context.Context, req *csi.ProbeRequest) (*csi.ProbeResponse, error) {
 	vultrIdentity.Driver.log.Infof("VultrIdentityServer.Probe called with request : %v", req)
 
 	return &csi.ProbeResponse{
