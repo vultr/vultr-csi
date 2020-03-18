@@ -151,8 +151,34 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 	return res, nil
 }
 
-func (c *VultrControllerServer) DeleteVolume(context.Context, *csi.DeleteVolumeRequest) (*csi.DeleteVolumeResponse, error) {
-	panic("implement me")
+func (c *VultrControllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVolumeRequest) (*csi.DeleteVolumeResponse, error) {
+	if req.VolumeId == "" {
+		return nil, status.Error(codes.InvalidArgument, "DeleteVolume VolumeID is missing")
+	}
+
+	list, err := c.Driver.client.BlockStorage.List(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	exists := false
+	for _, v := range list {
+		if v.BlockStorageID == req.VolumeId {
+			exists = true
+			break
+		}
+	}
+
+	if !exists {
+		return &csi.DeleteVolumeResponse{}, nil
+	}
+
+	err = c.Driver.client.BlockStorage.Delete(ctx, req.VolumeId)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "cannot delete volume, %v", err.Error())
+	}
+
+	return &csi.DeleteVolumeResponse{}, nil
 }
 
 func (c *VultrControllerServer) ControllerPublishVolume(context.Context, *csi.ControllerPublishVolumeRequest) (*csi.ControllerPublishVolumeResponse, error) {
