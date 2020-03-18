@@ -158,6 +158,23 @@ func (c *VultrControllerServer) DeleteVolume(ctx context.Context, req *csi.Delet
 
 	err := c.Driver.client.BlockStorage.Delete(ctx, req.VolumeId)
 	if err != nil {
+		// check that the volume doesnt still exist
+		volumes, err2 := c.Driver.client.BlockStorage.List(ctx)
+		if err2 != nil {
+			return nil, status.Error(codes.Internal, err2.Error())
+		}
+
+		exists := false
+		for _, volume := range volumes {
+			if volume.BlockStorageID == req.VolumeId {
+				exists = true
+			}
+		}
+
+		if !exists {
+			return nil, status.Errorf(codes.OK, "volume does not exist")
+		}
+
 		return nil, status.Errorf(codes.InvalidArgument, "cannot delete volume, %v", err.Error())
 	}
 
