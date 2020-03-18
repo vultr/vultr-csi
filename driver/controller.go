@@ -254,19 +254,19 @@ func (c *VultrControllerServer) ControllerGetCapabilities(context.Context, *csi.
 }
 
 func (c *VultrControllerServer) CreateSnapshot(context.Context, *csi.CreateSnapshotRequest) (*csi.CreateSnapshotResponse, error) {
-	panic("implement me")
+	return nil, status.Error(codes.Unimplemented, "")
 }
 
 func (c *VultrControllerServer) DeleteSnapshot(context.Context, *csi.DeleteSnapshotRequest) (*csi.DeleteSnapshotResponse, error) {
-	panic("implement me")
+	return nil, status.Error(codes.Unimplemented, "")
 }
 
 func (c *VultrControllerServer) ListSnapshots(context.Context, *csi.ListSnapshotsRequest) (*csi.ListSnapshotsResponse, error) {
-	panic("implement me")
+	return nil, status.Error(codes.Unimplemented, "")
 }
 
 func (c *VultrControllerServer) ControllerExpandVolume(context.Context, *csi.ControllerExpandVolumeRequest) (*csi.ControllerExpandVolumeResponse, error) {
-	panic("implement me")
+	return nil, status.Error(codes.Unimplemented, "")
 }
 
 func isValidCapability(caps []*csi.VolumeCapability) bool {
