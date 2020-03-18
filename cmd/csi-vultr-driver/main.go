@@ -19,6 +19,8 @@ import (
 	"log"
 )
 
+var version string
+
 func main() {
 
 	var (
@@ -26,15 +28,14 @@ func main() {
 		token      = flag.String("token", "", "Vultr API Token")
 		driverName = flag.String("driver-name", driver.DriverName, "Name of driver")
 		node       = flag.String("node", "", "Vultr Hostname")
-		version    = flag.String("version", "", "version of driver")
 	)
 	flag.Parse()
 
-	if *version == "" {
+	if version == "" {
 		log.Fatal("version must be defined at compilation")
 	}
 
-	d, err := driver.NewDriver(*endpoint, *token, *driverName, *version, *node)
+	d, err := driver.NewDriver(*endpoint, *token, *driverName, version, *node)
 	if err != nil {
 		log.Fatalln(err)
 	}
