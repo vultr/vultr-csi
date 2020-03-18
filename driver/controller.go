@@ -217,7 +217,7 @@ func (c *VultrControllerServer) ListVolumes(ctx context.Context, req *csi.ListVo
 }
 
 func (c *VultrControllerServer) GetCapacity(context.Context, *csi.GetCapacityRequest) (*csi.GetCapacityResponse, error) {
-	panic("implement me")
+	return nil, status.Error(codes.Unimplemented, "")
 }
 
 // ControllerGetCapabilities get capabilities of the controller
