@@ -193,8 +193,27 @@ func (c *VultrControllerServer) ValidateVolumeCapabilities(context.Context, *csi
 	panic("implement me")
 }
 
-func (c *VultrControllerServer) ListVolumes(context.Context, *csi.ListVolumesRequest) (*csi.ListVolumesResponse, error) {
-	panic("implement me")
+func (c *VultrControllerServer) ListVolumes(ctx context.Context, req *csi.ListVolumesRequest) (*csi.ListVolumesResponse, error) {
+	list, err := c.Driver.client.BlockStorage.List(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "ListVolumes cannot retrieve subscriptions. %v", err.Error())
+	}
+
+	var entries []*csi.ListVolumesResponse_Entry
+	for _, v := range list {
+		entries = append(entries, &csi.ListVolumesResponse_Entry{
+			Volume: &csi.Volume{
+				VolumeId:      v.BlockStorageID,
+				CapacityBytes: int64(v.SizeGB) * giB,
+			},
+		})
+	}
+
+	res := &csi.ListVolumesResponse{
+		Entries: entries,
+	}
+
+	return res, nil
 }
 
 func (c *VultrControllerServer) GetCapacity(context.Context, *csi.GetCapacityRequest) (*csi.GetCapacityResponse, error) {
