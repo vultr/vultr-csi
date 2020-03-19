@@ -16,6 +16,7 @@ package driver
 import (
 	"context"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
@@ -181,8 +182,75 @@ func (c *VultrControllerServer) DeleteVolume(ctx context.Context, req *csi.Delet
 	return &csi.DeleteVolumeResponse{}, nil
 }
 
-func (c *VultrControllerServer) ControllerPublishVolume(context.Context, *csi.ControllerPublishVolumeRequest) (*csi.ControllerPublishVolumeResponse, error) {
-	panic("implement me")
+func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req *csi.ControllerPublishVolumeRequest) (*csi.ControllerPublishVolumeResponse, error) {
+	if req.VolumeId == "" {
+		return nil, status.Error(codes.InvalidArgument, "ControllerPublishVolume Volume ID is missing")
+	}
+
+	if req.NodeId == "" {
+		return nil, status.Error(codes.InvalidArgument, "ControllerPublishVolume Node ID is missing")
+	}
+
+	if req.VolumeCapability == nil {
+		return nil, status.Error(codes.InvalidArgument, "ControllerPublishVolume Volume ID is missing")
+	}
+
+	if req.Readonly {
+		return nil, status.Error(codes.InvalidArgument, "ControllerPublishVolume read only is not currently supported")
+	}
+
+	volume, err := c.Driver.client.BlockStorage.Get(ctx, req.VolumeId)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "cannot get volume: %v", err.Error())
+	}
+
+	_, err = c.Driver.client.Server.GetServer(ctx, req.NodeId)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "cannot get node: %v", err.Error())
+	}
+
+	// node is already attached, do nothing
+	if volume.InstanceID == req.NodeId {
+		return &csi.ControllerPublishVolumeResponse{}, nil
+	}
+
+	// assuming its attached & to the wrong node
+	if volume.InstanceID != "" {
+		return nil, status.Errorf(codes.FailedPrecondition, "cannot attach volume to node because it is already attached to a different node ID: %v", volume.InstanceID)
+	}
+
+	err = c.Driver.client.BlockStorage.Attach(ctx, req.VolumeId, req.NodeId)
+	if err != nil {
+		// Desired node could still be spinning up
+		if strings.Contains(err.Error(), "Server is currently locked") {
+			return nil, status.Errorf(codes.Aborted, "cannot attach volume to node: %v", err.Error())
+		}
+
+		if strings.Contains(err.Error(), "Block storage volume is already attached to a node") {
+			return &csi.ControllerPublishVolumeResponse{}, nil
+		}
+	}
+
+	attachReady := false
+	for i := 0; i < volumeStatusCheckRetries; i++ {
+		time.Sleep(volumeStatusCheckInterval * time.Second)
+		bs, err := c.Driver.client.BlockStorage.Get(ctx, volume.BlockStorageID)
+
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		if bs.InstanceID == req.NodeId {
+			attachReady = true
+			break
+		}
+	}
+
+	if !attachReady {
+		return nil, status.Errorf(codes.Internal, "volume is not attached to node after %v seconds", volumeStatusCheckRetries)
+	}
+
+	return &csi.ControllerPublishVolumeResponse{}, nil
 }
 
 func (c *VultrControllerServer) ControllerUnpublishVolume(context.Context, *csi.ControllerUnpublishVolumeRequest) (*csi.ControllerUnpublishVolumeResponse, error) {
