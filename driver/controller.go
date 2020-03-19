@@ -274,7 +274,7 @@ func (c *VultrControllerServer) ControllerUnpublishVolume(ctx context.Context, r
 
 	_, err = c.Driver.client.Server.GetServer(ctx, req.NodeId)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "cannot get node: %v", err.Error())
+		return nil, status.Errorf(codes.Internal, "cannot get node: %v", err.Error())
 	}
 
 	err = c.Driver.client.BlockStorage.Detach(ctx, req.VolumeId)
@@ -282,7 +282,7 @@ func (c *VultrControllerServer) ControllerUnpublishVolume(ctx context.Context, r
 		if strings.Contains(err.Error(), "Block storage volume is not currently attached to a server") {
 			return &csi.ControllerUnpublishVolumeResponse{}, nil
 		}
-		return nil, status.Errorf(codes.NotFound, "cannot detach volume: %v", err.Error())
+		return nil, status.Errorf(codes.Internal, "cannot detach volume: %v", err.Error())
 	}
 
 	return &csi.ControllerUnpublishVolumeResponse{}, nil
