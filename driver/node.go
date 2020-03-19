@@ -1,45 +1,79 @@
 package driver
 
 import (
-	"fmt"
+	"context"
+	csi "github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-// NodeStageVolume temporarily mounts the volume to a staging path
-func NodeStageVolume() {
-	fmt.Print("IMPLEMENT ME")
+var _ csi.NodeServer = &VultrNodeServer{}
+
+type VultrNodeServer struct {
+	Driver *VultrDriver
 }
 
-// NodeUnstageVolume unmounts volume from staging path
-func NodeUnstageVolume() {
-	fmt.Print("IMPLEMENT ME")
+func NewVultrNodeDriver(driver *VultrDriver) *VultrNodeServer {
+	return &VultrNodeServer{Driver: driver}
 }
 
-// NodePublishVolume mounts volume to specified path
-func NodePublishVolume() {
-	fmt.Print("IMPLEMENT ME")
+func (n *VultrNodeServer) NodeStageVolume(context.Context, *csi.NodeStageVolumeRequest) (*csi.NodeStageVolumeResponse, error) {
+	panic("implement me")
 }
 
-// NodeUnpublishVolume unmounts volume from specified path
-func NodeUnpublishVolume() {
-	fmt.Print("IMPLEMENT ME")
+func (n *VultrNodeServer) NodeUnstageVolume(context.Context, *csi.NodeUnstageVolumeRequest) (*csi.NodeUnstageVolumeResponse, error) {
+	panic("implement me")
 }
 
-// NodeGetVolumeStats ...
-func NodeGetVolumeStats() {
-	fmt.Print("IMPLEMENT ME")
+func (n *VultrNodeServer) NodePublishVolume(context.Context, *csi.NodePublishVolumeRequest) (*csi.NodePublishVolumeResponse, error) {
+	panic("implement me")
 }
 
-// NodeExpandVolume ...
-func NodeExpandVolume() {
-	fmt.Print("IMPLEMENT ME")
+func (n *VultrNodeServer) NodeUnpublishVolume(context.Context, *csi.NodeUnpublishVolumeRequest) (*csi.NodeUnpublishVolumeResponse, error) {
+	panic("implement me")
 }
 
-// NodeGetCapabilities returns capabiliites of the node plugin
-func NodeGetCapabilities() {
-	fmt.Print("IMPLEMENT ME")
+func (n *VultrNodeServer) NodeGetVolumeStats(context.Context, *csi.NodeGetVolumeStatsRequest) (*csi.NodeGetVolumeStatsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "")
 }
 
-// NodeGetInfo gets node info
-func NodeGetInfo() {
-	fmt.Print("IMPLEMENT ME")
+func (n *VultrNodeServer) NodeExpandVolume(context.Context, *csi.NodeExpandVolumeRequest) (*csi.NodeExpandVolumeResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "")
+}
+
+func (n *VultrNodeServer) NodeGetCapabilities(context.Context, *csi.NodeGetCapabilitiesRequest) (*csi.NodeGetCapabilitiesResponse, error) {
+	nodeCapabilities := []*csi.NodeServiceCapability{
+		&csi.NodeServiceCapability{
+			Type: &csi.NodeServiceCapability_Rpc{
+				Rpc: &csi.NodeServiceCapability_RPC{
+					Type: csi.NodeServiceCapability_RPC_STAGE_UNSTAGE_VOLUME,
+				},
+			},
+		},
+	}
+
+	n.Driver.log.WithFields(logrus.Fields{
+		"method":       "node-get-capabilities",
+		"capabilities": nodeCapabilities,
+	})
+
+	return &csi.NodeGetCapabilitiesResponse{
+		Capabilities: nodeCapabilities,
+	}, nil
+}
+
+func (n *VultrNodeServer) NodeGetInfo(ctx context.Context, req *csi.NodeGetInfoRequest) (*csi.NodeGetInfoResponse, error) {
+	n.Driver.log.WithFields(logrus.Fields{
+		"method": "node-get-info",
+	})
+
+	return &csi.NodeGetInfoResponse{
+		NodeId: n.Driver.host,
+		AccessibleTopology: &csi.Topology{
+			Segments: map[string]string{
+				"region": n.Driver.region,
+			},
+		},
+	}, nil
 }

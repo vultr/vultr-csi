@@ -56,11 +56,11 @@ func NewDriver(endpoint, token, driverName, version, node string) (*VultrDriver,
 	}
 
 	return &VultrDriver{
-		name:         driverName,
-		endpoint:     endpoint,
-		host:         instance.InstanceID,
-		region:       instance.RegionID,
-		client:       client,
+		name:     driverName,
+		endpoint: endpoint,
+		host:     instance.InstanceID,
+		region:   instance.RegionID,
+		client:   client,
 
 		isController: token != "",
 		waitTimeout:  defaultTimeout,
@@ -80,7 +80,8 @@ func (d *VultrDriver) Run() {
 	server := NewNonBlockingGRPCServer()
 	identity := NewVultrIdentityServer(d)
 	controller := NewVultrControllerServer(d)
-	// add in node once it has a new func
-	server.Start(d.endpoint, identity, controller, nil)
+	node := NewVultrNodeDriver(d)
+
+	server.Start(d.endpoint, identity, controller, node)
 	server.Wait()
 }
