@@ -226,7 +226,7 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 			return nil, status.Errorf(codes.Aborted, "cannot attach volume to node: %v", err.Error())
 		}
 
-		if strings.Contains(err.Error(), "Block storage volume is already attached to a node") {
+		if strings.Contains(err.Error(), "Block storage volume is already attached to a server") {
 			return &csi.ControllerPublishVolumeResponse{}, nil
 		}
 	}
