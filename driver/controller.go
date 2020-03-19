@@ -274,7 +274,7 @@ func (c *VultrControllerServer) ControllerUnpublishVolume(ctx context.Context, r
 
 	_, err = c.Driver.client.Server.GetServer(ctx, req.NodeId)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "cannot get node: %v", err.Error())
+		return nil, status.Errorf(codes.NotFound, "cannot get node: %v", err.Error())
 	}
 
 	err = c.Driver.client.BlockStorage.Detach(ctx, req.VolumeId)
