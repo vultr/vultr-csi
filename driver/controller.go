@@ -201,12 +201,12 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 
 	volume, err := c.Driver.client.BlockStorage.Get(ctx, req.VolumeId)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "cannot get volume: %v", err.Error())
+		return nil, status.Errorf(codes.NotFound, "cannot get volume: %v", err.Error())
 	}
 
 	_, err = c.Driver.client.Server.GetServer(ctx, req.NodeId)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "cannot get node: %v", err.Error())
+		return nil, status.Errorf(codes.NotFound, "cannot get node: %v", err.Error())
 	}
 
 	// node is already attached, do nothing
