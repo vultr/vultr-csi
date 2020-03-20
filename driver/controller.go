@@ -226,7 +226,7 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 			return nil, status.Errorf(codes.Aborted, "cannot attach volume to node: %v", err.Error())
 		}
 
-		if strings.Contains(err.Error(), "Block storage volume is already attached to a node") {
+		if strings.Contains(err.Error(), "Block storage volume is already attached to a server") {
 			return &csi.ControllerPublishVolumeResponse{}, nil
 		}
 	}
@@ -253,8 +253,39 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 	return &csi.ControllerPublishVolumeResponse{}, nil
 }
 
-func (c *VultrControllerServer) ControllerUnpublishVolume(context.Context, *csi.ControllerUnpublishVolumeRequest) (*csi.ControllerUnpublishVolumeResponse, error) {
-	panic("implement me")
+func (c *VultrControllerServer) ControllerUnpublishVolume(ctx context.Context, req *csi.ControllerUnpublishVolumeRequest) (*csi.ControllerUnpublishVolumeResponse, error) {
+	if req.VolumeId == "" {
+		return nil, status.Error(codes.InvalidArgument, "ControllerUnpublishVolume Volume ID is missing")
+	}
+
+	if req.NodeId != "" {
+		return nil, status.Error(codes.InvalidArgument, "ControllerUnpublishVolume Node ID is missing")
+	}
+
+	volume, err := c.Driver.client.BlockStorage.Get(ctx, req.VolumeId)
+	if err != nil {
+		return &csi.ControllerUnpublishVolumeResponse{}, nil
+	}
+
+	// node is already unattached, do nothing
+	if volume.InstanceID == "" {
+		return &csi.ControllerUnpublishVolumeResponse{}, nil
+	}
+
+	_, err = c.Driver.client.Server.GetServer(ctx, req.NodeId)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "cannot get node: %v", err.Error())
+	}
+
+	err = c.Driver.client.BlockStorage.Detach(ctx, req.VolumeId)
+	if err != nil {
+		if strings.Contains(err.Error(), "Block storage volume is not currently attached to a server") {
+			return &csi.ControllerUnpublishVolumeResponse{}, nil
+		}
+		return nil, status.Errorf(codes.Internal, "cannot detach volume: %v", err.Error())
+	}
+
+	return &csi.ControllerUnpublishVolumeResponse{}, nil
 }
 
 func (c *VultrControllerServer) ValidateVolumeCapabilities(context.Context, *csi.ValidateVolumeCapabilitiesRequest) (*csi.ValidateVolumeCapabilitiesResponse, error) {
