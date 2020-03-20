@@ -267,7 +267,6 @@ func (c *VultrControllerServer) ValidateVolumeCapabilities(ctx context.Context, 
 		return nil, status.Error(codes.InvalidArgument, "ValidateVolumeCapabilities Volume Capabilities is missing")
 	}
 
-	// Get Volume
 	_, err := c.Driver.client.BlockStorage.Get(ctx, req.VolumeId)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "cannot get volume: %v", err.Error())
