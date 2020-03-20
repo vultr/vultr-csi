@@ -288,8 +288,32 @@ func (c *VultrControllerServer) ControllerUnpublishVolume(ctx context.Context, r
 	return &csi.ControllerUnpublishVolumeResponse{}, nil
 }
 
-func (c *VultrControllerServer) ValidateVolumeCapabilities(context.Context, *csi.ValidateVolumeCapabilitiesRequest) (*csi.ValidateVolumeCapabilitiesResponse, error) {
-	panic("implement me")
+// ValidateVolumeCapabilities checks if requested capabilities are supported
+func (c *VultrControllerServer) ValidateVolumeCapabilities(ctx context.Context, req *csi.ValidateVolumeCapabilitiesRequest) (*csi.ValidateVolumeCapabilitiesResponse, error) {
+	if req.VolumeId == "" {
+		return nil, status.Error(codes.InvalidArgument, "ValidateVolumeCapabilities Volume ID is missing")
+	}
+
+	if req.VolumeCapabilities == nil {
+		return nil, status.Error(codes.InvalidArgument, "ValidateVolumeCapabilities Volume Capabilities is missing")
+	}
+
+	_, err := c.Driver.client.BlockStorage.Get(ctx, req.VolumeId)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "cannot get volume: %v", err.Error())
+	}
+
+	res := &csi.ValidateVolumeCapabilitiesResponse{
+		Confirmed: &csi.ValidateVolumeCapabilitiesResponse_Confirmed{
+			VolumeCapabilities: []*csi.VolumeCapability{
+				{
+					AccessMode: supportedVolCapabilities,
+				},
+			},
+		},
+	}
+
+	return res, nil
 }
 
 func (c *VultrControllerServer) ListVolumes(ctx context.Context, req *csi.ListVolumesRequest) (*csi.ListVolumesResponse, error) {
