@@ -76,7 +76,6 @@ func NewDriver(endpoint, token, driverName, version, nodeID string) (*VultrDrive
 		log:     log,
 		mounter: NewMounter(log),
 
-
 		version: version,
 	}, nil
 }

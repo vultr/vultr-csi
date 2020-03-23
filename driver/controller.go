@@ -174,6 +174,14 @@ func (c *VultrControllerServer) DeleteVolume(ctx context.Context, req *csi.Delet
 		return &csi.DeleteVolumeResponse{}, nil
 	}
 
+	// detach just to be safe
+	err = c.Driver.client.BlockStorage.Detach(ctx, req.VolumeId, "yes")
+	if err != nil {
+		if !strings.Contains(err.Error(), "Block storage volume is not currently attached to a server") {
+			return nil, status.Errorf(codes.Internal, "cannot detach volume in delete, %v", err.Error())
+		}
+	}
+
 	err = c.Driver.client.BlockStorage.Delete(ctx, req.VolumeId)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "cannot delete volume, %v", err.Error())
@@ -229,7 +237,7 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 		"method":    "controller-publish-volume",
 	}).Info("controller publish volume")
 
-	err = c.Driver.client.BlockStorage.Attach(ctx, req.VolumeId, req.NodeId)
+	err = c.Driver.client.BlockStorage.Attach(ctx, req.VolumeId, req.NodeId, "yes")
 	if err != nil {
 		// Desired node could still be spinning up
 		if strings.Contains(err.Error(), "Server is currently locked") {
@@ -276,7 +284,7 @@ func (c *VultrControllerServer) ControllerUnpublishVolume(ctx context.Context, r
 		return nil, status.Error(codes.InvalidArgument, "ControllerUnpublishVolume Volume ID is missing")
 	}
 
-	if req.NodeId != "" {
+	if req.NodeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "ControllerUnpublishVolume Node ID is missing")
 	}
 
@@ -295,7 +303,7 @@ func (c *VultrControllerServer) ControllerUnpublishVolume(ctx context.Context, r
 		return nil, status.Errorf(codes.NotFound, "cannot get node: %v", err.Error())
 	}
 
-	err = c.Driver.client.BlockStorage.Detach(ctx, req.VolumeId)
+	err = c.Driver.client.BlockStorage.Detach(ctx, req.VolumeId, "yes")
 	if err != nil {
 		if strings.Contains(err.Error(), "Block storage volume is not currently attached to a server") {
 			return &csi.ControllerUnpublishVolumeResponse{}, nil

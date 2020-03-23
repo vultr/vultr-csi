@@ -12,7 +12,7 @@ import (
 
 const (
 	diskPath   = "/dev/disk/by-id"
-	diskPrefix = "virtio-"
+	diskPrefix = "virtio-SUBID"
 )
 
 var _ csi.NodeServer = &VultrNodeServer{}
@@ -90,16 +90,95 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 	return &csi.NodeStageVolumeResponse{}, nil
 }
 
-func (n *VultrNodeServer) NodeUnstageVolume(context.Context, *csi.NodeUnstageVolumeRequest) (*csi.NodeUnstageVolumeResponse, error) {
-	panic("implement me")
+func (n *VultrNodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstageVolumeRequest) (*csi.NodeUnstageVolumeResponse, error) {
+	if req.VolumeId == "" {
+		return nil, status.Error(codes.InvalidArgument, "VolumeID must be provided")
+	}
+
+	if req.StagingTargetPath == "" {
+		return nil, status.Error(codes.InvalidArgument, "Staging Target Path must be provided")
+	}
+
+	n.Driver.log.WithFields(logrus.Fields{
+		"volume-id":           req.VolumeId,
+		"staging-target-path": req.StagingTargetPath,
+	}).Info("node unstage volume")
+
+	// todo check if it is mounted
+	err := n.Driver.mounter.UnMount(req.StagingTargetPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return &csi.NodeUnstageVolumeResponse{}, nil
 }
 
-func (n *VultrNodeServer) NodePublishVolume(context.Context, *csi.NodePublishVolumeRequest) (*csi.NodePublishVolumeResponse, error) {
-	panic("implement me")
+func (n *VultrNodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublishVolumeRequest) (*csi.NodePublishVolumeResponse, error) {
+	if req.VolumeId == "" {
+		return nil, status.Error(codes.InvalidArgument, "VolumeID must be provided")
+	}
+
+	if req.StagingTargetPath == "" {
+		return nil, status.Error(codes.InvalidArgument, "Staging Target Path must be provided")
+	}
+
+	if req.TargetPath == "" {
+		return nil, status.Error(codes.InvalidArgument, "Target Path must be provided")
+	}
+
+	log := n.Driver.log.WithFields(logrus.Fields{
+		"volume_id":           req.VolumeId,
+		"staging_target_path": req.StagingTargetPath,
+		"target_path":         req.TargetPath,
+		"method":              "node_publish_volume",
+	})
+	log.Info("node publish volume called")
+
+	options := []string{"bind"}
+	if req.Readonly {
+		options = append(options, "ro")
+	}
+
+	mnt := req.VolumeCapability.GetMount()
+	for _, flag := range mnt.MountFlags {
+		options = append(options, flag)
+	}
+
+	fsType := "ext4"
+	if mnt.FsType != "" {
+		fsType = mnt.FsType
+	}
+
+	//todo check if mounted
+	err := n.Driver.mounter.Mount(req.StagingTargetPath, req.TargetPath, fsType, options...)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &csi.NodePublishVolumeResponse{}, nil
 }
 
-func (n *VultrNodeServer) NodeUnpublishVolume(context.Context, *csi.NodeUnpublishVolumeRequest) (*csi.NodeUnpublishVolumeResponse, error) {
-	panic("implement me")
+func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpublishVolumeRequest) (*csi.NodeUnpublishVolumeResponse, error) {
+	if req.VolumeId == "" {
+		return nil, status.Error(codes.InvalidArgument, "VolumeID must be provided")
+	}
+
+	if req.TargetPath == "" {
+		return nil, status.Error(codes.InvalidArgument, "Target Path must be provided")
+	}
+
+	n.Driver.log.WithFields(logrus.Fields{
+		"volume-id":   req.VolumeId,
+		"target-path": req.TargetPath,
+	}).Info("node unpublish volume")
+
+	//todo check if mounted
+	err := n.Driver.mounter.UnMount(req.TargetPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
 
 func (n *VultrNodeServer) NodeGetVolumeStats(context.Context, *csi.NodeGetVolumeStatsRequest) (*csi.NodeGetVolumeStatsResponse, error) {

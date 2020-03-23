@@ -11,13 +11,9 @@ import (
 
 type Mounter interface {
 	Format(source, fs string) error
-
 	IsFormatted() (bool, error)
-
 	Mount(source, target, fs string, opts ...string) error
-
 	IsMounted() (bool, error)
-
 	UnMount(target string) error
 }
 
@@ -48,7 +44,6 @@ func (m *mounter) Format(source, fs string) error {
 	}
 
 	argument := []string{}
-
 	argument = append(argument, source)
 	if fs == "ext4" || fs == "ext3" {
 		argument = []string{"-F", source}
@@ -80,6 +75,14 @@ func (m *mounter) Mount(source, target, fs string, opts ...string) error {
 	if fs == "" {
 		return errors.New("fs type was not provided - required for mounting")
 	}
+
+	m.log.WithFields(logrus.Fields{
+		"source":     source,
+		"target":     target,
+		"filesystem": fs,
+		"options":    opts,
+		"methods":    "mount",
+	}).Info("Mount Called")
 
 	mountCommand := "mount"
 	mountArguments := []string{}
