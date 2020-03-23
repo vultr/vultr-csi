@@ -1,3 +1,6 @@
+.PHONY: deploy
+deploy: build-linux docker-build docker-push
+
 .PHONY: build-linux
 build-linux:
 	@echo "building vultr csi for linux"

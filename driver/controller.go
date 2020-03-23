@@ -211,13 +211,23 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 
 	// node is already attached, do nothing
 	if volume.InstanceID == req.NodeId {
-		return &csi.ControllerPublishVolumeResponse{}, nil
+		return &csi.ControllerPublishVolumeResponse{
+			PublishContext: map[string]string{
+				c.Driver.publishVolumeID: volume.BlockStorageID,
+			},
+		}, nil
 	}
 
 	// assuming its attached & to the wrong node
 	if volume.InstanceID != "" {
 		return nil, status.Errorf(codes.FailedPrecondition, "cannot attach volume to node because it is already attached to a different node ID: %v", volume.InstanceID)
 	}
+
+	c.Driver.log.WithFields(logrus.Fields{
+		"volume-id": req.VolumeId,
+		"node-id":   req.NodeId,
+		"method":    "controller-publish-volume",
+	}).Info("controller publish volume")
 
 	err = c.Driver.client.BlockStorage.Attach(ctx, req.VolumeId, req.NodeId)
 	if err != nil {
@@ -227,7 +237,11 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 		}
 
 		if strings.Contains(err.Error(), "Block storage volume is already attached to a server") {
-			return &csi.ControllerPublishVolumeResponse{}, nil
+			return &csi.ControllerPublishVolumeResponse{
+				PublishContext: map[string]string{
+					c.Driver.publishVolumeID: volume.BlockStorageID,
+				},
+			}, nil
 		}
 	}
 
@@ -250,7 +264,11 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 		return nil, status.Errorf(codes.Internal, "volume is not attached to node after %v seconds", volumeStatusCheckRetries)
 	}
 
-	return &csi.ControllerPublishVolumeResponse{}, nil
+	return &csi.ControllerPublishVolumeResponse{
+		PublishContext: map[string]string{
+			c.Driver.publishVolumeID: volume.BlockStorageID,
+		},
+	}, nil
 }
 
 func (c *VultrControllerServer) ControllerUnpublishVolume(ctx context.Context, req *csi.ControllerUnpublishVolumeRequest) (*csi.ControllerUnpublishVolumeResponse, error) {
