@@ -3,11 +3,12 @@ package driver
 import (
 	"context"
 	"fmt"
+	"path/filepath"
+
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"path/filepath"
 )
 
 const (
@@ -60,31 +61,38 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 		fsTpe = mount.FsType
 	}
 
-	//todo format
-	// add ability to not reformat disks
-	// check if formatted
-	// n.Driver.mounter.IsFormatted()
-	if err := n.Driver.mounter.Format(source, fsTpe); err != nil {
-		n.Driver.log.WithFields(logrus.Fields{
-			"source": source,
-			"fs":     fsTpe,
-			"method": "node-stage-method",
-		}).Warn("node stage volume format")
+	formatted, err := n.Driver.mounter.IsFormatted(source, fsTpe)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "cannot verify if formatted: %v", err.Error())
+	}
+
+	if !formatted {
+		if err = n.Driver.mounter.Format(source, fsTpe); err != nil {
+			n.Driver.log.WithFields(logrus.Fields{
+				"source": source,
+				"fs":     fsTpe,
+				"method": "node-stage-method",
+			}).Warn("node stage volume format")
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+	}
+
+	mounted, err := n.Driver.mounter.IsMounted(target, fsTpe)
+	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	//todo then mount
-	// check if mounted
-	// n.Driver.mounter.IsMounted()
-	if err := n.Driver.mounter.Mount(source, target, fsTpe, options...); err != nil {
-		n.Driver.log.WithFields(logrus.Fields{
-			"source":  source,
-			"target":  target,
-			"fs":      fsTpe,
-			"options": options,
-			"method":  "node-stage-method",
-		}).Warn("node stage volume mount")
-		return nil, status.Error(codes.Internal, err.Error())
+	if !mounted {
+		if err := n.Driver.mounter.Mount(source, target, fsTpe, options...); err != nil {
+			n.Driver.log.WithFields(logrus.Fields{
+				"source":  source,
+				"target":  target,
+				"fs":      fsTpe,
+				"options": options,
+				"method":  "node-stage-method",
+			}).Warn("node stage volume mount")
+			return nil, status.Error(codes.Internal, err.Error())
+		}
 	}
 
 	return &csi.NodeStageVolumeResponse{}, nil

@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -12,9 +13,9 @@ import (
 
 type Mounter interface {
 	Format(source, fs string) error
-	IsFormatted(source string) (bool, error)
+	IsFormatted(source, fs string) (bool, error)
 	Mount(source, target, fs string, opts ...string) error
-	IsMounted(source string) (bool, error)
+	IsMounted(target, fs string) (bool, error)
 	UnMount(target string) error
 }
 
@@ -24,6 +25,14 @@ type mounter struct {
 
 func NewMounter(log *logrus.Entry) *mounter {
 	return &mounter{log: log}
+}
+
+type findmntRes struct {
+	FileSystems []fileSystemTarget `json:"filesystems"`
+}
+
+type fileSystemTarget struct {
+	Target string `json:"target"`
 }
 
 func (m *mounter) Format(source, fs string) error {
@@ -60,7 +69,7 @@ func (m *mounter) Format(source, fs string) error {
 	return nil
 }
 
-func (m *mounter) IsFormatted(source string) (bool, error) {
+func (m *mounter) IsFormatted(source, fs string) (bool, error) {
 	if source == "" {
 		return false, errors.New("source name was not provided")
 	}
@@ -72,10 +81,14 @@ func (m *mounter) IsFormatted(source string) (bool, error) {
 	}
 
 	blkidArgs := []string{source}
-
-	_, err = exec.Command(blkidCmd, blkidArgs...).Output()
+	out, err := exec.Command(blkidCmd, blkidArgs...).CombinedOutput()
 	if err != nil {
 		return false, fmt.Errorf("checking formatting failed for %v: %v", blkidArgs, err)
+	}
+
+	// assume not formatted
+	if string(out) == "" {
+		return false, nil
 	}
 
 	return true, nil
@@ -127,9 +140,13 @@ func (m *mounter) Mount(source, target, fs string, opts ...string) error {
 	return nil
 }
 
-func (m *mounter) IsMounted(path string) (bool, error) {
-	if path == "" {
-		return false, fmt.Errorf("No executable found in $PATH %v", path)
+func (m *mounter) IsMounted(target, fstype string) (bool, error) {
+	if target == "" {
+		return false, errors.New("target path was not provided")
+	}
+
+	if fstype == "" {
+		return false, errors.New("fstype was not provided")
 	}
 
 	findmntCmd := "findmnt"
@@ -141,16 +158,32 @@ func (m *mounter) IsMounted(path string) (bool, error) {
 		return false, err
 	}
 
-	cmdArgs := []string{"-o", "TARGET,PROPAGATION,FSTYPE,OPTIONS", "-M", path}
-	out, err := exec.Command(path, cmdArgs...).CombinedOutput()
+	// filter by its supposed fstype
+	cmdArgs := []string{"-o", "TARGET", "-t", fstype, "-J", target}
+	out, err := exec.Command(findmntCmd, cmdArgs...).CombinedOutput()
 	if err != nil {
-		return false, fmt.Errorf("checking mount failed: ", err)
-	}
-	strOut := strings.Split(string(out), " ")[0]
-	strOut = strings.TrimSuffix(string(out), "\n")
+		// not an error, just nothing found.
+		if strings.TrimSpace(string(out)) == "" {
+			return false, nil
+		}
 
-	if strOut == path {
-		return true, nil
+		return false, fmt.Errorf("checking mount failed with command %v: %v", findmntCmd, err)
+	}
+
+	if string(out) == "" {
+		return false, nil
+	}
+
+	var res *findmntRes
+	err = json.Unmarshal(out, &res)
+	if err != nil {
+		return false, fmt.Errorf("could not unmarshal data returned from cmd %v", findmntCmd)
+	}
+
+	for _, fs := range res.FileSystems {
+		if fs.Target == target {
+			return true, nil
+		}
 	}
 
 	return false, nil
