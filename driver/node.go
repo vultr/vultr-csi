@@ -42,8 +42,7 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 		"volume":   req.VolumeId,
 		"target":   req.StagingTargetPath,
 		"capacity": req.VolumeCapability,
-		"method":   "node-stage-method",
-	}).Info("node stage volume")
+	}).Info("Node Stage Volume: called")
 
 	volumeID, ok := req.GetPublishContext()[n.Driver.publishVolumeID]
 	if !ok {
@@ -65,11 +64,6 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 	// check if formatted
 	// n.Driver.mounter.IsFormatted()
 	if err := n.Driver.mounter.Format(source, fsTpe); err != nil {
-		n.Driver.log.WithFields(logrus.Fields{
-			"source": source,
-			"fs":     fsTpe,
-			"method": "node-stage-method",
-		}).Warn("node stage volume format")
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -77,16 +71,10 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 	// check if mounted
 	// n.Driver.mounter.IsMounted()
 	if err := n.Driver.mounter.Mount(source, target, fsTpe, options...); err != nil {
-		n.Driver.log.WithFields(logrus.Fields{
-			"source":  source,
-			"target":  target,
-			"fs":      fsTpe,
-			"options": options,
-			"method":  "node-stage-method",
-		}).Warn("node stage volume mount")
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	n.Driver.log.Info("Node Stage Volume: volume staged")
 	return &csi.NodeStageVolumeResponse{}, nil
 }
 
@@ -102,7 +90,7 @@ func (n *VultrNodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUn
 	n.Driver.log.WithFields(logrus.Fields{
 		"volume-id":           req.VolumeId,
 		"staging-target-path": req.StagingTargetPath,
-	}).Info("node unstage volume")
+	}).Info("Node Unstage Volume: called")
 
 	// todo check if it is mounted
 	err := n.Driver.mounter.UnMount(req.StagingTargetPath)
@@ -110,6 +98,7 @@ func (n *VultrNodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUn
 		return nil, err
 	}
 
+	n.Driver.log.Info("Node Unstage Volume: volume unstaged")
 	return &csi.NodeUnstageVolumeResponse{}, nil
 }
 
@@ -130,9 +119,8 @@ func (n *VultrNodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePu
 		"volume_id":           req.VolumeId,
 		"staging_target_path": req.StagingTargetPath,
 		"target_path":         req.TargetPath,
-		"method":              "node_publish_volume",
 	})
-	log.Info("node publish volume called")
+	log.Info("Node Publish Volume: called")
 
 	options := []string{"bind"}
 	if req.Readonly {
@@ -155,6 +143,7 @@ func (n *VultrNodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePu
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	n.Driver.log.Info("Node Publish Volume: published")
 	return &csi.NodePublishVolumeResponse{}, nil
 }
 
@@ -170,7 +159,7 @@ func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.Node
 	n.Driver.log.WithFields(logrus.Fields{
 		"volume-id":   req.VolumeId,
 		"target-path": req.TargetPath,
-	}).Info("node unpublish volume")
+	}).Info("Node Unpublish Volume: called")
 
 	//todo check if mounted
 	err := n.Driver.mounter.UnMount(req.TargetPath)
@@ -178,6 +167,7 @@ func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.Node
 		return nil, err
 	}
 
+	n.Driver.log.Info("Node Publish Volume: unpublished")
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
 
@@ -201,9 +191,8 @@ func (n *VultrNodeServer) NodeGetCapabilities(context.Context, *csi.NodeGetCapab
 	}
 
 	n.Driver.log.WithFields(logrus.Fields{
-		"method":       "node-get-capabilities",
 		"capabilities": nodeCapabilities,
-	})
+	}).Info("Node Get Capabilities: called")
 
 	return &csi.NodeGetCapabilitiesResponse{
 		Capabilities: nodeCapabilities,
@@ -212,8 +201,7 @@ func (n *VultrNodeServer) NodeGetCapabilities(context.Context, *csi.NodeGetCapab
 
 func (n *VultrNodeServer) NodeGetInfo(ctx context.Context, req *csi.NodeGetInfoRequest) (*csi.NodeGetInfoResponse, error) {
 	n.Driver.log.WithFields(logrus.Fields{
-		"method": "node-get-info",
-	})
+	}).Info("Node Get Info: called")
 
 	return &csi.NodeGetInfoResponse{
 		NodeId: n.Driver.nodeID,
