@@ -43,8 +43,7 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 		"volume":   req.VolumeId,
 		"target":   req.StagingTargetPath,
 		"capacity": req.VolumeCapability,
-		"method":   "node-stage-method",
-	}).Info("node stage volume")
+	}).Info("Node Stage Volume: called")
 
 	volumeID, ok := req.GetPublishContext()[n.Driver.publishVolumeID]
 	if !ok {
@@ -94,7 +93,8 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 	}
-
+  
+	n.Driver.log.Info("Node Stage Volume: volume staged")
 	return &csi.NodeStageVolumeResponse{}, nil
 }
 
@@ -110,7 +110,7 @@ func (n *VultrNodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUn
 	n.Driver.log.WithFields(logrus.Fields{
 		"volume-id":           req.VolumeId,
 		"staging-target-path": req.StagingTargetPath,
-	}).Info("node unstage volume")
+	}).Info("Node Unstage Volume: called")
 
 	mounted, err := n.Driver.mounter.IsMounted(req.StagingTargetPath)
 	if err != nil {
@@ -124,6 +124,7 @@ func (n *VultrNodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUn
 		}
 	}
 
+	n.Driver.log.Info("Node Unstage Volume: volume unstaged")
 	return &csi.NodeUnstageVolumeResponse{}, nil
 }
 
@@ -144,9 +145,8 @@ func (n *VultrNodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePu
 		"volume_id":           req.VolumeId,
 		"staging_target_path": req.StagingTargetPath,
 		"target_path":         req.TargetPath,
-		"method":              "node_publish_volume",
 	})
-	log.Info("node publish volume called")
+	log.Info("Node Publish Volume: called")
 
 	options := []string{"bind"}
 	if req.Readonly {
@@ -175,6 +175,7 @@ func (n *VultrNodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePu
 		}
 	}
 
+	n.Driver.log.Info("Node Publish Volume: published")
 	return &csi.NodePublishVolumeResponse{}, nil
 }
 
@@ -190,7 +191,7 @@ func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.Node
 	n.Driver.log.WithFields(logrus.Fields{
 		"volume-id":   req.VolumeId,
 		"target-path": req.TargetPath,
-	}).Info("node unpublish volume")
+	}).Info("Node Unpublish Volume: called")
 
 	mounted, err := n.Driver.mounter.IsMounted(req.TargetPath)
 	if err != nil {
@@ -204,6 +205,7 @@ func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.Node
 		}
 	}
 
+	n.Driver.log.Info("Node Publish Volume: unpublished")
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
 
@@ -227,9 +229,8 @@ func (n *VultrNodeServer) NodeGetCapabilities(context.Context, *csi.NodeGetCapab
 	}
 
 	n.Driver.log.WithFields(logrus.Fields{
-		"method":       "node-get-capabilities",
 		"capabilities": nodeCapabilities,
-	})
+	}).Info("Node Get Capabilities: called")
 
 	return &csi.NodeGetCapabilitiesResponse{
 		Capabilities: nodeCapabilities,
@@ -238,8 +239,7 @@ func (n *VultrNodeServer) NodeGetCapabilities(context.Context, *csi.NodeGetCapab
 
 func (n *VultrNodeServer) NodeGetInfo(ctx context.Context, req *csi.NodeGetInfoRequest) (*csi.NodeGetInfoResponse, error) {
 	n.Driver.log.WithFields(logrus.Fields{
-		"method": "node-get-info",
-	})
+	}).Info("Node Get Info: called")
 
 	return &csi.NodeGetInfoResponse{
 		NodeId: n.Driver.nodeID,
