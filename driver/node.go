@@ -77,7 +77,7 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 		}
 	}
 
-	mounted, err := n.Driver.mounter.IsMounted(target, fsTpe)
+	mounted, err := n.Driver.mounter.IsMounted(target)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -112,10 +112,16 @@ func (n *VultrNodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUn
 		"staging-target-path": req.StagingTargetPath,
 	}).Info("node unstage volume")
 
-	// todo check if it is mounted
-	err := n.Driver.mounter.UnMount(req.StagingTargetPath)
+	mounted, err := n.Driver.mounter.IsMounted(req.StagingTargetPath)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "cannot verify mount status for %v, %v", req.StagingTargetPath, err.Error())
+	}
+
+	if mounted {
+		err := n.Driver.mounter.UnMount(req.StagingTargetPath)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &csi.NodeUnstageVolumeResponse{}, nil
@@ -157,10 +163,16 @@ func (n *VultrNodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePu
 		fsType = mnt.FsType
 	}
 
-	//todo check if mounted
-	err := n.Driver.mounter.Mount(req.StagingTargetPath, req.TargetPath, fsType, options...)
+	mounted, err := n.Driver.mounter.IsMounted(req.StagingTargetPath)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Errorf(codes.Internal, "cannot verify mount status for %v, %v", req.StagingTargetPath, err.Error())
+	}
+
+	if !mounted {
+		err := n.Driver.mounter.Mount(req.StagingTargetPath, req.TargetPath, fsType, options...)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
 	}
 
 	return &csi.NodePublishVolumeResponse{}, nil
@@ -180,10 +192,16 @@ func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.Node
 		"target-path": req.TargetPath,
 	}).Info("node unpublish volume")
 
-	//todo check if mounted
-	err := n.Driver.mounter.UnMount(req.TargetPath)
+	mounted, err := n.Driver.mounter.IsMounted(req.TargetPath)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "cannot verify mount status for %v, %v", req.TargetPath, err.Error())
+	}
+
+	if mounted {
+		err := n.Driver.mounter.UnMount(req.TargetPath)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &csi.NodeUnpublishVolumeResponse{}, nil

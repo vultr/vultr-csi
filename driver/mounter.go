@@ -15,7 +15,7 @@ type Mounter interface {
 	Format(source, fs string) error
 	IsFormatted(source string) (bool, error)
 	Mount(source, target, fs string, opts ...string) error
-	IsMounted(target, fs string) (bool, error)
+	IsMounted(target string) (bool, error)
 	UnMount(target string) error
 }
 
@@ -140,13 +140,9 @@ func (m *mounter) Mount(source, target, fs string, opts ...string) error {
 	return nil
 }
 
-func (m *mounter) IsMounted(target, fstype string) (bool, error) {
+func (m *mounter) IsMounted(target string) (bool, error) {
 	if target == "" {
 		return false, errors.New("target path was not provided")
-	}
-
-	if fstype == "" {
-		return false, errors.New("fstype was not provided")
 	}
 
 	findmntCmd := "findmnt"
@@ -158,8 +154,7 @@ func (m *mounter) IsMounted(target, fstype string) (bool, error) {
 		return false, err
 	}
 
-	// filter by its supposed fstype
-	cmdArgs := []string{"-o", "TARGET", "-t", fstype, "-J", target}
+	cmdArgs := []string{"-o", "TARGET", "-J", target}
 	out, err := exec.Command(findmntCmd, cmdArgs...).CombinedOutput()
 	if err != nil {
 		// not an error, just nothing found.
