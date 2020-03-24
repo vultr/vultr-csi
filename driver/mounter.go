@@ -12,9 +12,9 @@ import (
 
 type Mounter interface {
 	Format(source, fs string) error
-	IsFormatted() (bool, error)
+	IsFormatted(source string) (bool, error)
 	Mount(source, target, fs string, opts ...string) error
-	IsMounted() (bool, error)
+	IsMounted(source string) (bool, error)
 	UnMount(target string) error
 }
 
@@ -60,8 +60,8 @@ func (m *mounter) Format(source, fs string) error {
 	return nil
 }
 
-func (m *mounter) IsFormatted(target string) (bool, error) {
-	if target == "" {
+func (m *mounter) IsFormatted(source string) (bool, error) {
+	if source == "" {
 		return false, errors.New("source name was not provided")
 	}
 
@@ -71,7 +71,7 @@ func (m *mounter) IsFormatted(target string) (bool, error) {
 		return false, fmt.Errorf("%q not found in $PATH", blkidCmd)
 	}
 
-	blkidArgs := []string{target}
+	blkidArgs := []string{source}
 
 	_, err = exec.Command(blkidCmd, blkidArgs...).Output()
 	if err != nil {
