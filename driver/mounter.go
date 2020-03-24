@@ -3,10 +3,11 @@ package driver
 import (
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Mounter interface {
@@ -59,8 +60,25 @@ func (m *mounter) Format(source, fs string) error {
 	return nil
 }
 
-func (m *mounter) IsFormatted() (bool, error) {
-	panic("implement me")
+func (m *mounter) IsFormatted(target string) (bool, error) {
+	if target == "" {
+		return false, errors.New("source name was not provided")
+	}
+
+	blkidCmd := "blkid"
+	_, err := exec.LookPath(blkidCmd)
+	if err != nil {
+		return false, fmt.Errorf("%q not found in $PATH", blkidCmd)
+	}
+
+	blkidArgs := []string{target}
+
+	_, err = exec.Command(blkidCmd, blkidArgs...).Output()
+	if err != nil {
+		return false, fmt.Errorf("checking formatting failed for %v: %v", blkidArgs, err)
+	}
+
+	return true, nil
 }
 
 func (m *mounter) Mount(source, target, fs string, opts ...string) error {
@@ -109,8 +127,33 @@ func (m *mounter) Mount(source, target, fs string, opts ...string) error {
 	return nil
 }
 
-func (m *mounter) IsMounted() (bool, error) {
-	panic("implement me")
+func (m *mounter) IsMounted(path string) (bool, error) {
+	if path == "" {
+		return false, fmt.Errorf("No executable found in $PATH %v", path)
+	}
+
+	findmntCmd := "findmnt"
+	_, err := exec.LookPath(findmntCmd)
+	if err != nil {
+		if err == exec.ErrNotFound {
+			return false, fmt.Errorf("%q not found in $PATH", findmntCmd)
+		}
+		return false, err
+	}
+
+	cmdArgs := []string{"-o", "TARGET,PROPAGATION,FSTYPE,OPTIONS", "-M", path}
+	out, err := exec.Command(path, cmdArgs...).CombinedOutput()
+	if err != nil {
+		return false, fmt.Errorf("checking mount failed: ", err)
+	}
+	strOut := strings.Split(string(out), " ")[0]
+	strOut = strings.TrimSuffix(string(out), "\n")
+
+	if strOut == path {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func (m *mounter) UnMount(target string) error {
