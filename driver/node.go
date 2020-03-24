@@ -61,7 +61,7 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 		fsTpe = mount.FsType
 	}
 
-	formatted, err := n.Driver.mounter.IsFormatted(source, fsTpe)
+	formatted, err := n.Driver.mounter.IsFormatted(source)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "cannot verify if formatted: %v", err.Error())
 	}

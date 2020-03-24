@@ -13,7 +13,7 @@ import (
 
 type Mounter interface {
 	Format(source, fs string) error
-	IsFormatted(source, fs string) (bool, error)
+	IsFormatted(source string) (bool, error)
 	Mount(source, target, fs string, opts ...string) error
 	IsMounted(target, fs string) (bool, error)
 	UnMount(target string) error
@@ -69,7 +69,7 @@ func (m *mounter) Format(source, fs string) error {
 	return nil
 }
 
-func (m *mounter) IsFormatted(source, fs string) (bool, error) {
+func (m *mounter) IsFormatted(source string) (bool, error) {
 	if source == "" {
 		return false, errors.New("source name was not provided")
 	}
