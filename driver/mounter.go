@@ -154,7 +154,7 @@ func (m *mounter) IsMounted(target string) (bool, error) {
 		return false, err
 	}
 
-	cmdArgs := []string{"-o", "TARGET", "-J", target}
+	cmdArgs := []string{"-o", "TARGET", target, "-J"}
 	out, err := exec.Command(findmntCmd, cmdArgs...).CombinedOutput()
 	if err != nil {
 		// not an error, just nothing found.
