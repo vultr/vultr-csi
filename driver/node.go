@@ -163,7 +163,7 @@ func (n *VultrNodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePu
 		fsType = mnt.FsType
 	}
 
-	mounted, err := n.Driver.mounter.IsMounted(req.StagingTargetPath)
+	mounted, err := n.Driver.mounter.IsMounted(req.TargetPath)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "cannot verify mount status for %v, %v", req.StagingTargetPath, err.Error())
 	}

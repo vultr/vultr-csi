@@ -1,7 +1,6 @@
 package driver
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -154,7 +153,7 @@ func (m *mounter) IsMounted(target string) (bool, error) {
 		return false, err
 	}
 
-	cmdArgs := []string{"-o", "TARGET", "-J", target}
+	cmdArgs := []string{"-o", "TARGET", "-T", target}
 	out, err := exec.Command(findmntCmd, cmdArgs...).CombinedOutput()
 	if err != nil {
 		// not an error, just nothing found.
@@ -169,16 +168,8 @@ func (m *mounter) IsMounted(target string) (bool, error) {
 		return false, nil
 	}
 
-	var res *findmntRes
-	err = json.Unmarshal(out, &res)
-	if err != nil {
-		return false, fmt.Errorf("could not unmarshal data returned from cmd %v", findmntCmd)
-	}
-
-	for _, fs := range res.FileSystems {
-		if fs.Target == target {
-			return true, nil
-		}
+	if strings.Contains(string(out), target) {
+		return true, nil
 	}
 
 	return false, nil
