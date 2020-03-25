@@ -26,14 +26,6 @@ func NewMounter(log *logrus.Entry) *mounter {
 	return &mounter{log: log}
 }
 
-type findmntRes struct {
-	FileSystems []fileSystemTarget `json:"filesystems"`
-}
-
-type fileSystemTarget struct {
-	Target string `json:"target"`
-}
-
 func (m *mounter) Format(source, fs string) error {
 	if fs == "" {
 		return errors.New("fs type was not provided - required for formatting the volume")
