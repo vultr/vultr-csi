@@ -315,7 +315,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: vultr-csi-plugin
-          image: ddymko/vultr-csi:v0.1.6
+          image: vultr/vultr-csi:v0.0.1
           args :
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--token=$(VULTR_API_KEY)"
@@ -324,7 +324,10 @@ spec:
             - name: CSI_ENDPOINT
               value: unix:///var/lib/csi/sockets/pluginproxy/csi.sock
             - name: VULTR_API_KEY
-              value: "5L4GKRWV44TN7OSCUO5UJHRNCHVMALGKE6DA"
+              valueFrom:
+                secretKeyRef:
+                  name: vultr-csi
+                  key: api-key
             - name: NODE_NAME
               valueFrom:
                 fieldRef:
@@ -380,7 +383,7 @@ spec:
             - name: registration-dir
               mountPath: /registration/
         - name: csi-vultr-plugin
-          image: ddymko/vultr-csi:v0.1.6
+          image: vultr/vultr-csi:v0.0.1
           args :
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--token=$(VULTR_API_KEY)"
@@ -389,7 +392,10 @@ spec:
             - name: CSI_ENDPOINT
               value: unix:///csi/csi.sock
             - name: VULTR_API_KEY
-              value: "5L4GKRWV44TN7OSCUO5UJHRNCHVMALGKE6DA"
+              valueFrom:
+                secretKeyRef:
+                  name: vultr-csi
+                  key: api-key
             - name: NODE_NAME
               valueFrom:
                 fieldRef:
