@@ -3,17 +3,18 @@ package driver
 import (
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Mounter interface {
 	Format(source, fs string) error
-	IsFormatted() (bool, error)
+	IsFormatted(source string) (bool, error)
 	Mount(source, target, fs string, opts ...string) error
-	IsMounted() (bool, error)
+	IsMounted(target string) (bool, error)
 	UnMount(target string) error
 }
 
@@ -59,8 +60,29 @@ func (m *mounter) Format(source, fs string) error {
 	return nil
 }
 
-func (m *mounter) IsFormatted() (bool, error) {
-	panic("implement me")
+func (m *mounter) IsFormatted(source string) (bool, error) {
+	if source == "" {
+		return false, errors.New("source name was not provided")
+	}
+
+	blkidCmd := "blkid"
+	_, err := exec.LookPath(blkidCmd)
+	if err != nil {
+		return false, fmt.Errorf("%q not found in $PATH", blkidCmd)
+	}
+
+	blkidArgs := []string{source}
+	out, err := exec.Command(blkidCmd, blkidArgs...).CombinedOutput()
+	if err != nil {
+		return false, fmt.Errorf("checking formatting failed for %v: %v", blkidArgs, err)
+	}
+
+	// assume not formatted
+	if string(out) == "" {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func (m *mounter) Mount(source, target, fs string, opts ...string) error {
@@ -109,8 +131,40 @@ func (m *mounter) Mount(source, target, fs string, opts ...string) error {
 	return nil
 }
 
-func (m *mounter) IsMounted() (bool, error) {
-	panic("implement me")
+func (m *mounter) IsMounted(target string) (bool, error) {
+	if target == "" {
+		return false, errors.New("target path was not provided")
+	}
+
+	findmntCmd := "findmnt"
+	_, err := exec.LookPath(findmntCmd)
+	if err != nil {
+		if err == exec.ErrNotFound {
+			return false, fmt.Errorf("%q not found in $PATH", findmntCmd)
+		}
+		return false, err
+	}
+
+	cmdArgs := []string{"-o", "TARGET", "-T", target}
+	out, err := exec.Command(findmntCmd, cmdArgs...).CombinedOutput()
+	if err != nil {
+		// not an error, just nothing found.
+		if strings.TrimSpace(string(out)) == "" {
+			return false, nil
+		}
+
+		return false, fmt.Errorf("checking mount failed with command %v: %v", findmntCmd, err)
+	}
+
+	if string(out) == "" {
+		return false, nil
+	}
+
+	if strings.Contains(string(out), target) {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func (m *mounter) UnMount(target string) error {

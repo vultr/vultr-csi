@@ -3,11 +3,12 @@ package driver
 import (
 	"context"
 	"fmt"
+	"path/filepath"
+
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"path/filepath"
 )
 
 const (
@@ -59,21 +60,33 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 		fsTpe = mount.FsType
 	}
 
-	//todo format
-	// add ability to not reformat disks
-	// check if formatted
-	// n.Driver.mounter.IsFormatted()
-	if err := n.Driver.mounter.Format(source, fsTpe); err != nil {
+	formatted, err := n.Driver.mounter.IsFormatted(source)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "cannot verify if formatted: %v", err.Error())
+	}
+
+	if !formatted {
+		if err = n.Driver.mounter.Format(source, fsTpe); err != nil {
+			n.Driver.log.WithFields(logrus.Fields{
+				"source": source,
+				"fs":     fsTpe,
+				"method": "node-stage-method",
+			}).Warn("node stage volume format")
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+	}
+
+	mounted, err := n.Driver.mounter.IsMounted(target)
+	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	//todo then mount
-	// check if mounted
-	// n.Driver.mounter.IsMounted()
-	if err := n.Driver.mounter.Mount(source, target, fsTpe, options...); err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+	if !mounted {
+		if err := n.Driver.mounter.Mount(source, target, fsTpe, options...); err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
 	}
-
+  
 	n.Driver.log.Info("Node Stage Volume: volume staged")
 	return &csi.NodeStageVolumeResponse{}, nil
 }
@@ -92,10 +105,16 @@ func (n *VultrNodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUn
 		"staging-target-path": req.StagingTargetPath,
 	}).Info("Node Unstage Volume: called")
 
-	// todo check if it is mounted
-	err := n.Driver.mounter.UnMount(req.StagingTargetPath)
+	mounted, err := n.Driver.mounter.IsMounted(req.StagingTargetPath)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "cannot verify mount status for %v, %v", req.StagingTargetPath, err.Error())
+	}
+
+	if mounted {
+		err := n.Driver.mounter.UnMount(req.StagingTargetPath)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	n.Driver.log.Info("Node Unstage Volume: volume unstaged")
@@ -137,10 +156,16 @@ func (n *VultrNodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePu
 		fsType = mnt.FsType
 	}
 
-	//todo check if mounted
-	err := n.Driver.mounter.Mount(req.StagingTargetPath, req.TargetPath, fsType, options...)
+	mounted, err := n.Driver.mounter.IsMounted(req.TargetPath)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Errorf(codes.Internal, "cannot verify mount status for %v, %v", req.StagingTargetPath, err.Error())
+	}
+
+	if !mounted {
+		err := n.Driver.mounter.Mount(req.StagingTargetPath, req.TargetPath, fsType, options...)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
 	}
 
 	n.Driver.log.Info("Node Publish Volume: published")
@@ -161,10 +186,16 @@ func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.Node
 		"target-path": req.TargetPath,
 	}).Info("Node Unpublish Volume: called")
 
-	//todo check if mounted
-	err := n.Driver.mounter.UnMount(req.TargetPath)
+	mounted, err := n.Driver.mounter.IsMounted(req.TargetPath)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "cannot verify mount status for %v, %v", req.TargetPath, err.Error())
+	}
+
+	if mounted {
+		err := n.Driver.mounter.UnMount(req.TargetPath)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	n.Driver.log.Info("Node Publish Volume: unpublished")
