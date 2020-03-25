@@ -83,13 +83,6 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 
 	if !mounted {
 		if err := n.Driver.mounter.Mount(source, target, fsTpe, options...); err != nil {
-			n.Driver.log.WithFields(logrus.Fields{
-				"source":  source,
-				"target":  target,
-				"fs":      fsTpe,
-				"options": options,
-				"method":  "node-stage-method",
-			}).Warn("node stage volume mount")
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 	}
