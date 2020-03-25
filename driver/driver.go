@@ -21,56 +21,60 @@ import (
 )
 
 const (
-	DriverName     = "vultr-bs.csi.driver.com"
-	defaultTimeout = 1 * time.Minute
+	DefaultDriverName = "vultrbs.csi.driver.com"
+	defaultTimeout    = 1 * time.Minute
 )
 
 // VultrDriver struct
 type VultrDriver struct {
 	name     string
 	endpoint string
-	host     string
+	nodeID   string
 	region   string
 	client   *govultr.Client
+
+	publishVolumeID string
 
 	isController bool
 	waitTimeout  time.Duration
 
-	log *logrus.Entry
-	//mounter Mounter
+	log     *logrus.Entry
+	mounter Mounter
 
 	version string
 }
 
-func NewDriver(endpoint, token, driverName, version, node string) (*VultrDriver, error) {
+func NewDriver(endpoint, token, driverName, version, nodeID string) (*VultrDriver, error) {
 	if driverName == "" {
-		driverName = DriverName
+		driverName = DefaultDriverName
 	}
 
 	client := govultr.NewClient(nil, token)
 	client.UserAgent = "csi-vultr/" + version
 
-	instance, err := GetVultrByName(client, node)
+	instance, err := GetVultrByName(client, nodeID)
 	if err != nil {
 		return nil, err
 	}
 
+	log := logrus.New().WithFields(logrus.Fields{
+		"region":  instance.RegionID,
+		"host_id": instance.InstanceID,
+		"version": version,
+	})
+
 	return &VultrDriver{
 		name:     driverName,
 		endpoint: endpoint,
-		host:     instance.InstanceID,
+		nodeID:   instance.InstanceID,
 		region:   instance.RegionID,
 		client:   client,
 
 		isController: token != "",
 		waitTimeout:  defaultTimeout,
 
-		log: logrus.New().WithFields(logrus.Fields{
-			"region":  instance.RegionID,
-			"host_id": instance.InstanceID,
-			"version": version,
-		}),
-
+		log:     log,
+		mounter: NewMounter(log),
 
 		version: version,
 	}, nil
