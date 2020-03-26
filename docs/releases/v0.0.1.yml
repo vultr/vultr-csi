@@ -246,7 +246,7 @@ roleRef:
 apiVersion: storage.k8s.io/v1beta1
 kind: CSIDriver
 metadata:
-  name: vultr-bs.csi.driver.com
+  name: vultrbs.csi.driver.com
 spec:
   attachRequired: true
   podInfoOnMount: true
@@ -265,7 +265,7 @@ apiVersion: storage.k8s.io/v1
 metadata:
   name: vultr-block-storage-retain
   namespace: kube-system
-provisioner: vultr-bs.csi.driver.com
+provisioner: vultrbs.csi.driver.com
 reclaimPolicy: Retain
 
 ---
@@ -372,7 +372,7 @@ spec:
             - name: ADDRESS
               value: /csi/csi.sock
             - name: DRIVER_REG_SOCK_PATH
-              value: /var/lib/kubelet/plugins/vultr-bs.csi.driver.com/csi.sock
+              value: /var/lib/kubelet/plugins/vultrbs.csi.driver.com/csi.sock
             - name: KUBE_NODE_NAME
               valueFrom:
                 fieldRef:
@@ -425,7 +425,7 @@ spec:
             type: Directory
         - name: plugin-dir
           hostPath:
-            path: /var/lib/kubelet/plugins/vultr-bs.csi.driver.com
+            path: /var/lib/kubelet/plugins/vultrbs.csi.driver.com
             type: DirectoryOrCreate
         - name: pods-mount-dir
           hostPath:

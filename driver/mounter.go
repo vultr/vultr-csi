@@ -50,6 +50,13 @@ func (m *mounter) Format(source, fs string) error {
 		argument = []string{"-F", source}
 	}
 
+	m.log.WithFields(logrus.Fields{
+		"source": source,
+		"fs-type": fs,
+		"format-cmd": mkFs,
+		"format-args": argument,
+	}).Info("Format called")
+
 	out, err := exec.Command(mkFs, argument...).CombinedOutput()
 
 	if err != nil {
@@ -72,6 +79,12 @@ func (m *mounter) IsFormatted(source string) (bool, error) {
 	}
 
 	blkidArgs := []string{source}
+
+	m.log.WithFields(logrus.Fields{
+		"format-command": blkidCmd,
+		"format-args": blkidArgs,
+	}).Info("isFormatted called")
+
 	out, err := exec.Command(blkidCmd, blkidArgs...).CombinedOutput()
 	if err != nil {
 		return false, fmt.Errorf("checking formatting failed for %v: %v", blkidArgs, err)
@@ -82,6 +95,9 @@ func (m *mounter) IsFormatted(source string) (bool, error) {
 		return false, nil
 	}
 
+	m.log.WithFields(logrus.Fields{
+		"format-output": out,
+	}).Info("isFormatted end")
 	return true, nil
 }
 
@@ -122,10 +138,23 @@ func (m *mounter) Mount(source, target, fs string, opts ...string) error {
 	mountArguments = append(mountArguments, source)
 	mountArguments = append(mountArguments, target)
 
+	m.log.WithFields(logrus.Fields{
+		"mount command": mountCommand,
+		"mount arguments": mountArguments,
+	}).Info("mount command and arguments")
+
 	out, err := exec.Command(mountCommand, mountArguments...).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("mounting failed: %v cmd: '%s %s' output: %q",
 			err, mountCommand, strings.Join(mountArguments, " "), string(out))
+	}
+
+	if _, err := os.Stat(target + "/lost+found"); err == nil {
+		os.Remove(target + "/lost+found")
+	} else if os.IsNotExist(err) {
+		m.log.WithFields(logrus.Fields{
+			"error": err,
+		}).Info("mount command - removal of lost+found error")
 	}
 
 	return nil
