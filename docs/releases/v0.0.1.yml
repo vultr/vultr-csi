@@ -315,7 +315,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: vultr-csi-plugin
-          image: ddymko/vultr-csi:v0.7.1
+          image: vultr/vultr-csi:v0.0.1
           args :
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--token=$(VULTR_API_KEY)"
@@ -383,7 +383,7 @@ spec:
             - name: registration-dir
               mountPath: /registration/
         - name: csi-vultr-plugin
-          image: ddymko/vultr-csi:v0.7.1
+          image: vultr/vultr-csi:v0.0.1
           args :
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--token=$(VULTR_API_KEY)"
