@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/sirupsen/logrus"
 	"github.com/vultr/govultr"
 	"golang.org/x/sync/errgroup"
@@ -67,6 +68,10 @@ type fakeMounter struct {
 	mounted map[string]string
 }
 
+type fakeStorageDriver struct {
+	volumes map[string]*govultr.BlockStorage
+}
+
 func NewFakeMounter(log *logrus.Entry) *fakeMounter {
 	return &fakeMounter{log: log}
 }
@@ -89,5 +94,39 @@ func (f *fakeMounter) IsMounted(target string) (bool, error) {
 
 func (f *fakeMounter) UnMount(target string) error {
 	delete(f.mounted, target)
+	return nil
+}
+
+func (f *fakeStorageDriver) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*govultr.BlockStorage, error) {
+	volName := req.Name
+
+	var curVolume *govultr.BlockStorage
+	for _, volume := range f.volumes {
+		if volume.Label == volName {
+			curVolume = volume
+		}
+	}
+
+	if curVolume != nil {
+		return curVolume, nil
+	}
+
+	id := "123456"
+	vol := &govultr.BlockStorage{
+		BlockStorageID: id,
+		RegionID:       1,
+		Label:          volName,
+		SizeGB:         10,
+	}
+
+	storage := make(map[string]*govultr.BlockStorage)
+	f.volumes = storage
+	f.volumes[id] = vol
+
+	return vol, nil
+}
+
+func (f *fakeStorageDriver) DeleteVolume(ctx context.Context, id string) error {
+	delete(f.volumes, id)
 	return nil
 }
