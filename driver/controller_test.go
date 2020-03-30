@@ -5,13 +5,29 @@ import (
 	"testing"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/sirupsen/logrus"
 )
 
-func TestCreateVolume(t *testing.T) {
-	d := &fakeStorageDriver{}
+func NewFakeVultrControllerServer(testName string) *VultrControllerServer {
+	client := newFakeClient()
+	log := logrus.New().WithFields(logrus.Fields{
+		"test": testName,
+	})
 
-	_, err := d.CreateVolume(context.Background(), &csi.CreateVolumeRequest{
-		Name: "volume-name",
+	d := &VultrDriver{
+		client:       client,
+		isController: true,
+		log:          log,
+		region:       "1",
+	}
+
+	return NewVultrControllerServer(d)
+}
+func TestCreateVolume(t *testing.T) {
+	controller := NewFakeVultrControllerServer("create volume")
+
+	_, err := controller.CreateVolume(context.TODO(), &csi.CreateVolumeRequest{
+		Name: "volume-test-name",
 		VolumeCapabilities: []*csi.VolumeCapability{
 			&csi.VolumeCapability{
 				AccessType: &csi.VolumeCapability_Mount{
@@ -30,10 +46,10 @@ func TestCreateVolume(t *testing.T) {
 }
 
 func TestDeleteVolume(t *testing.T) {
-	d := &fakeStorageDriver{}
+	controller := NewFakeVultrControllerServer("delete volume")
 
 	volumeID := "123456"
-	_, err := d.DeleteVolume(context.Background(), &csi.DeleteVolumeRequest{
+	_, err := controller.DeleteVolume(context.Background(), &csi.DeleteVolumeRequest{
 		VolumeId: volumeID,
 	})
 
@@ -43,13 +59,22 @@ func TestDeleteVolume(t *testing.T) {
 }
 
 func TestPublishVolume(t *testing.T) {
-	d := &fakeStorageDriver{}
-	nodeId := "111111"
-	volumeID := "123456"
+	controller := NewFakeVultrControllerServer("delete volume")
 
-	_, err := d.ControllerPublishVolume(context.Background(), &csi.ControllerPublishVolumeRequest{
+	nodeId := "123456"
+	volumeID := "342512"
+
+	_, err := controller.ControllerPublishVolume(context.Background(), &csi.ControllerPublishVolumeRequest{
 		NodeId:   nodeId,
 		VolumeId: volumeID,
+		VolumeCapability: &csi.VolumeCapability{
+			AccessType: &csi.VolumeCapability_Mount{
+				Mount: &csi.VolumeCapability_MountVolume{},
+			},
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			},
+		},
 	})
 
 	if err != nil {
@@ -58,11 +83,12 @@ func TestPublishVolume(t *testing.T) {
 }
 
 func TestUnPublishVolume(t *testing.T) {
-	d := &fakeStorageDriver{}
-	nodeId := "111111"
-	volumeID := "123456"
+	controller := NewFakeVultrControllerServer("delete volume")
 
-	_, err := d.ControllerUnPublishVolume(context.Background(), &csi.ControllerUnpublishVolumeRequest{
+	nodeId := "123456"
+	volumeID := "342512"
+
+	_, err := controller.ControllerUnpublishVolume(context.Background(), &csi.ControllerUnpublishVolumeRequest{
 		NodeId:   nodeId,
 		VolumeId: volumeID,
 	})
