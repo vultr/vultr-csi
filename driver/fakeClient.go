@@ -29,24 +29,6 @@ func newFakeBS() *govultr.BlockStorage {
 	}
 }
 
-func newFakeInstance() *govultr.Server {
-	return &govultr.Server{
-		InstanceID:  "576965",
-		MainIP:      "149.28.225.110",
-		VPSCpus:     "4",
-		Location:    "New Jersey",
-		RegionID:    "1",
-		Status:      "running",
-		NetmaskV4:   "255.255.254.0",
-		GatewayV4:   "149.28.224.1",
-		PowerStatus: "",
-		ServerState: "",
-		PlanID:      "204",
-		Label:       "cluster-name",
-		InternalIP:  "10.1.95.4",
-	}
-}
-
 type fakeBS struct {
 	client *govultr.Client
 }
@@ -307,7 +289,7 @@ func (f *FakeInstance) ListByLabel(ctx context.Context, label string) ([]govultr
 			PowerStatus: "",
 			ServerState: "",
 			PlanID:      "204",
-			Label:       "ccm-test",
+			Label:       "csi-test",
 			InternalIP:  "10.1.95.4",
 		},
 	}, nil
@@ -334,7 +316,7 @@ func (f *FakeInstance) GetServer(ctx context.Context, instanceID string) (*govul
 		PowerStatus: "",
 		ServerState: "",
 		PlanID:      "204",
-		Label:       "ccm-test",
+		Label:       "csi-test",
 		InternalIP:  "10.1.95.4",
 	}, nil
 }
