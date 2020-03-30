@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"os"
 	"testing"
@@ -97,7 +98,7 @@ func (f *fakeMounter) UnMount(target string) error {
 	return nil
 }
 
-func (f *fakeStorageDriver) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*govultr.BlockStorage, error) {
+func (f *fakeStorageDriver) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
 	volName := req.Name
 
 	var curVolume *govultr.BlockStorage
@@ -108,25 +109,92 @@ func (f *fakeStorageDriver) CreateVolume(ctx context.Context, req *csi.CreateVol
 	}
 
 	if curVolume != nil {
-		return curVolume, nil
+		return &csi.CreateVolumeResponse{
+			Volume: &csi.Volume{
+				VolumeId:      curVolume.BlockStorageID,
+				CapacityBytes: int64(curVolume.SizeGB) * giB,
+			},
+		}, nil
 	}
 
 	id := "123456"
+	f.createSampleBSList(ctx, id)
+
+	res := &csi.CreateVolumeResponse{
+		Volume: &csi.Volume{
+			VolumeId:      f.volumes[id].Label,
+			CapacityBytes: int64(f.volumes[id].SizeGB),
+			AccessibleTopology: []*csi.Topology{
+				{
+					Segments: map[string]string{
+						"region": "1",
+					},
+				},
+			},
+		},
+	}
+
+	return res, nil
+}
+
+func (f *fakeStorageDriver) DeleteVolume(ctx context.Context, req *csi.DeleteVolumeRequest) (*csi.DeleteVolumeResponse, error) {
+	if req.VolumeId == "" {
+		return nil, fmt.Errorf("Test DeleteVolume: VolumeID must be provided")
+	}
+
+	delete(f.volumes, req.VolumeId)
+	return &csi.DeleteVolumeResponse{}, nil
+}
+
+func (f *fakeStorageDriver) ControllerPublishVolume(ctx context.Context, req *csi.ControllerPublishVolumeRequest) (*csi.ControllerPublishVolumeResponse, error) {
+	id := "123456"
+	f.createSampleBSList(ctx, id)
+
+	exists := false
+	for _, volume := range f.volumes {
+		if volume.BlockStorageID == req.VolumeId {
+			exists = true
+			volume.InstanceID = req.NodeId
+			break
+		}
+	}
+
+	if !exists {
+		return nil, fmt.Errorf("Volume ID %v does not exist", req.VolumeId)
+	}
+
+	return &csi.ControllerPublishVolumeResponse{}, nil
+}
+
+func (f *fakeStorageDriver) ControllerUnPublishVolume(ctx context.Context, req *csi.ControllerUnpublishVolumeRequest) (*csi.ControllerUnpublishVolumeResponse, error) {
+	id := "123456"
+	f.createSampleBSList(ctx, id)
+
+	exists := false
+	for _, volume := range f.volumes {
+		if volume.BlockStorageID == req.VolumeId {
+			exists = true
+			volume.InstanceID = ""
+			break
+		}
+	}
+
+	if !exists {
+		return nil, fmt.Errorf("Volume ID %v does not exist", req.VolumeId)
+	}
+
+	return &csi.ControllerUnpublishVolumeResponse{}, nil
+}
+
+func (f *fakeStorageDriver) createSampleBSList(ctx context.Context, id string) {
 	vol := &govultr.BlockStorage{
 		BlockStorageID: id,
 		RegionID:       1,
-		Label:          volName,
+		Label:          "test",
 		SizeGB:         10,
 	}
 
 	storage := make(map[string]*govultr.BlockStorage)
 	f.volumes = storage
 	f.volumes[id] = vol
-
-	return vol, nil
-}
-
-func (f *fakeStorageDriver) DeleteVolume(ctx context.Context, id string) error {
-	delete(f.volumes, id)
-	return nil
 }
