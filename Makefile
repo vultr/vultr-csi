@@ -15,3 +15,7 @@ docker-build:
 .PHONY: docker-push
 docker-push:
 	docker push $(REGISTRY)/vultr-csi:$(VERSION)
+
+.PHONY: test
+test:
+	go test -race github.com/vultr/vultr-csi/driver -v
