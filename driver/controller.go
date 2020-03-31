@@ -218,7 +218,7 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 	}
 
 	if req.VolumeCapability == nil {
-		return nil, status.Error(codes.InvalidArgument, "ControllerPublishVolume Volume ID is missing")
+		return nil, status.Error(codes.InvalidArgument, "ControllerPublishVolume VolumeCapability is missing")
 	}
 
 	if req.Readonly {

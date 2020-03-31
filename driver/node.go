@@ -86,7 +86,7 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 	}
-  
+
 	n.Driver.log.Info("Node Stage Volume: volume staged")
 	return &csi.NodeStageVolumeResponse{}, nil
 }
@@ -231,8 +231,7 @@ func (n *VultrNodeServer) NodeGetCapabilities(context.Context, *csi.NodeGetCapab
 }
 
 func (n *VultrNodeServer) NodeGetInfo(ctx context.Context, req *csi.NodeGetInfoRequest) (*csi.NodeGetInfoResponse, error) {
-	n.Driver.log.WithFields(logrus.Fields{
-	}).Info("Node Get Info: called")
+	n.Driver.log.WithFields(logrus.Fields{}).Info("Node Get Info: called")
 
 	return &csi.NodeGetInfoResponse{
 		NodeId: n.Driver.nodeID,
