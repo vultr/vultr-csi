@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
@@ -15,10 +16,11 @@ func NewFakeVultrControllerServer(testName string) *VultrControllerServer {
 	})
 
 	d := &VultrDriver{
-		client:       client,
-		isController: true,
-		log:          log,
-		region:       "1",
+		client:          client,
+		isController:    true,
+		log:             log,
+		region:          "1",
+		publishVolumeID: "test",
 	}
 
 	return NewVultrControllerServer(d)
@@ -26,7 +28,7 @@ func NewFakeVultrControllerServer(testName string) *VultrControllerServer {
 func TestCreateVolume(t *testing.T) {
 	controller := NewFakeVultrControllerServer("create volume")
 
-	_, err := controller.CreateVolume(context.TODO(), &csi.CreateVolumeRequest{
+	res, err := controller.CreateVolume(context.TODO(), &csi.CreateVolumeRequest{
 		Name: "volume-test-name",
 		VolumeCapabilities: []*csi.VolumeCapability{
 			&csi.VolumeCapability{
@@ -41,7 +43,25 @@ func TestCreateVolume(t *testing.T) {
 	})
 
 	if err != nil {
-		t.Errorf("Expected no error, got error : %v", err)
+		t.Errorf("got error, expected no error: %v", err)
+	}
+
+	expected := &csi.CreateVolumeResponse{
+		Volume: &csi.Volume{
+			VolumeId:      "342512",
+			CapacityBytes: 10737418240,
+			AccessibleTopology: []*csi.Topology{
+				{
+					Segments: map[string]string{
+						"region": "1",
+					},
+				},
+			},
+		},
+	}
+
+	if !reflect.DeepEqual(res, expected) {
+		t.Errorf("expected %+v got %+v", res, expected)
 	}
 }
 
@@ -49,12 +69,18 @@ func TestDeleteVolume(t *testing.T) {
 	controller := NewFakeVultrControllerServer("delete volume")
 
 	volumeID := "123456"
-	_, err := controller.DeleteVolume(context.Background(), &csi.DeleteVolumeRequest{
+	res, err := controller.DeleteVolume(context.Background(), &csi.DeleteVolumeRequest{
 		VolumeId: volumeID,
 	})
 
 	if err != nil {
 		t.Errorf("Expected no error, got error : %v", err)
+	}
+
+	expected := &csi.DeleteVolumeResponse{}
+
+	if !reflect.DeepEqual(res, expected) {
+		t.Errorf("expected %+v got %+v", res, expected)
 	}
 }
 
@@ -64,7 +90,7 @@ func TestPublishVolume(t *testing.T) {
 	nodeId := "123456"
 	volumeID := "342512"
 
-	_, err := controller.ControllerPublishVolume(context.Background(), &csi.ControllerPublishVolumeRequest{
+	res, err := controller.ControllerPublishVolume(context.Background(), &csi.ControllerPublishVolumeRequest{
 		NodeId:   nodeId,
 		VolumeId: volumeID,
 		VolumeCapability: &csi.VolumeCapability{
@@ -80,6 +106,16 @@ func TestPublishVolume(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected no error, got error : %v", err)
 	}
+
+	expected := &csi.ControllerPublishVolumeResponse{
+		PublishContext: map[string]string{
+			"test": "342512",
+		},
+	}
+
+	if !reflect.DeepEqual(res, expected) {
+		t.Errorf("expected %+v got %+v", res, expected)
+	}
 }
 
 func TestUnPublishVolume(t *testing.T) {
@@ -88,12 +124,18 @@ func TestUnPublishVolume(t *testing.T) {
 	nodeId := "123456"
 	volumeID := "342512"
 
-	_, err := controller.ControllerUnpublishVolume(context.Background(), &csi.ControllerUnpublishVolumeRequest{
+	res, err := controller.ControllerUnpublishVolume(context.Background(), &csi.ControllerUnpublishVolumeRequest{
 		NodeId:   nodeId,
 		VolumeId: volumeID,
 	})
 
 	if err != nil {
 		t.Errorf("Expected no error, got error : %v", err)
+	}
+
+	expected := &csi.ControllerUnpublishVolumeResponse{}
+
+	if !reflect.DeepEqual(res, expected) {
+		t.Errorf("expected %+v got %+v", res, expected)
 	}
 }
