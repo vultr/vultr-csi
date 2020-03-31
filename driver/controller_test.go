@@ -20,7 +20,7 @@ func NewFakeVultrControllerServer(testName string) *VultrControllerServer {
 		isController:    true,
 		log:             log,
 		region:          "1",
-		publishVolumeID: "test",
+		publishVolumeID: "342512",
 	}
 
 	return NewVultrControllerServer(d)
@@ -109,7 +109,7 @@ func TestPublishVolume(t *testing.T) {
 
 	expected := &csi.ControllerPublishVolumeResponse{
 		PublishContext: map[string]string{
-			"test": "342512",
+			controller.Driver.publishVolumeID: volumeID,
 		},
 	}
 

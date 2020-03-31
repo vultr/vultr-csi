@@ -51,9 +51,9 @@ func (m *mounter) Format(source, fs string) error {
 	}
 
 	m.log.WithFields(logrus.Fields{
-		"source": source,
-		"fs-type": fs,
-		"format-cmd": mkFs,
+		"source":      source,
+		"fs-type":     fs,
+		"format-cmd":  mkFs,
 		"format-args": argument,
 	}).Info("Format called")
 
@@ -82,7 +82,7 @@ func (m *mounter) IsFormatted(source string) (bool, error) {
 
 	m.log.WithFields(logrus.Fields{
 		"format-command": blkidCmd,
-		"format-args": blkidArgs,
+		"format-args":    blkidArgs,
 	}).Info("isFormatted called")
 
 	out, err := exec.Command(blkidCmd, blkidArgs...).CombinedOutput()
@@ -139,7 +139,7 @@ func (m *mounter) Mount(source, target, fs string, opts ...string) error {
 	mountArguments = append(mountArguments, target)
 
 	m.log.WithFields(logrus.Fields{
-		"mount command": mountCommand,
+		"mount command":   mountCommand,
 		"mount arguments": mountArguments,
 	}).Info("mount command and arguments")
 
