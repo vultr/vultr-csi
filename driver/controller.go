@@ -38,7 +38,7 @@ const (
 	minVolumeSizeInBytes      int64 = 1 * giB
 	maxVolumeSizeInBytes      int64 = 10 * tiB
 	defaultVolumeSizeInBytes  int64 = 10 * giB
-	volumeStatusCheckRetries        = 10
+	volumeStatusCheckRetries        = 20 // default: 10
 	volumeStatusCheckInterval       = 1
 )
 
@@ -135,7 +135,7 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 	}
 
 	if !volReady {
-		return nil, status.Errorf(codes.Internal, "volume is not active after %v seconds", volumeStatusCheckRetries)
+		return nil, status.Errorf(codes.Internal, "volume %v is not active after %v seconds", volume.BlockStorageID, volumeStatusCheckRetries)
 	}
 
 	res := &csi.CreateVolumeResponse{

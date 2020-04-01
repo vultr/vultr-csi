@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kubernetes-csi/csi-test/pkg/sanity"
 	"github.com/sirupsen/logrus"
 	"github.com/vultr/govultr"
 	"golang.org/x/sync/errgroup"
@@ -25,7 +26,7 @@ func TestDriverSuite(t *testing.T) {
 
 	nodeID := "123456"
 	region := "1"
-	token := "dummy"
+	token := "replace-with-your-api"
 	version := "dev"
 	client := govultr.NewClient(nil, token)
 
@@ -55,6 +56,13 @@ func TestDriverSuite(t *testing.T) {
 	_, cancel := context.WithCancel(context.Background())
 
 	var eg errgroup.Group
+
+	cfg := &sanity.Config{
+		TargetPath:  os.TempDir() + "/csi-target",
+		StagingPath: os.TempDir() + "/csi-staging",
+		Address:     endpoint,
+	}
+	sanity.Test(t, cfg)
 
 	cancel()
 	if err := eg.Wait(); err != nil {
