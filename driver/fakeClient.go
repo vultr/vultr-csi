@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/vultr/govultr"
 )
@@ -22,7 +23,7 @@ func newFakeBS() *govultr.BlockStorage {
 		DateCreated:    "",
 		CostPerMonth:   "10",
 		Status:         "active",
-		SizeGB:         10,
+		SizeGB:         20,
 		RegionID:       1,
 		InstanceID:     "123456",
 		Label:          "test-bs",
@@ -31,19 +32,56 @@ func newFakeBS() *govultr.BlockStorage {
 
 type fakeBS struct {
 	client *govultr.Client
+	volume []govultr.BlockStorage
 }
 
 func (f *fakeBS) Attach(ctx context.Context, blockID, InstanceID, liveAttach string) error {
-	panic("implement me")
+	panic("implement attach")
 }
 
 func (f *fakeBS) Create(ctx context.Context, regionID, size int, label string) (*govultr.BlockStorage, error) {
-	bsVolume := newFakeBS()
-	return bsVolume, nil
+	list, err := f.List(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("Could not create volume: %v", err)
+	}
+
+	for _, volume := range list {
+		if volume.Label == label && label != "" && volume.SizeGB == size {
+			return nil, fmt.Errorf("Volume with label %v already exists", label)
+		}
+	}
+
+	newBs := govultr.BlockStorage{
+		BlockStorageID: "342512",
+		DateCreated:    "",
+		CostPerMonth:   "10",
+		Status:         "active",
+		SizeGB:         size,
+		RegionID:       1,
+		InstanceID:     "",
+		Label:          label,
+	}
+
+	f.volume = append(f.volume, newBs)
+
+	return &newBs, nil
 }
 
 func (f *fakeBS) Delete(ctx context.Context, blockID string) error {
-	panic("implement me")
+	// list, err := f.List(ctx)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// for i, volume := range list {
+	// 	if volume.BlockStorageID == blockID {
+	// 		list = append(list[:i], list[i+1:]...)
+	// 	}
+	// }
+
+	// f.volume = list
+
+	return nil
 }
 
 func (f *fakeBS) Detach(ctx context.Context, blockID, liveDetach string) error {
@@ -55,6 +93,7 @@ func (f *fakeBS) Detach(ctx context.Context, blockID, liveDetach string) error {
 	for _, volume := range list {
 		if volume.BlockStorageID == blockID {
 			volume.InstanceID = ""
+			break
 		}
 	}
 
@@ -66,28 +105,13 @@ func (f *fakeBS) SetLabel(ctx context.Context, blockID, label string) error {
 }
 
 func (f *fakeBS) List(ctx context.Context) ([]govultr.BlockStorage, error) {
-	return []govultr.BlockStorage{
-		{
-			BlockStorageID: "342512",
-			DateCreated:    "",
-			CostPerMonth:   "10",
-			Status:         "active",
-			SizeGB:         10,
-			RegionID:       1,
-			InstanceID:     "123456",
-			Label:          "test-bs",
-		},
-		{
-			BlockStorageID: "342513",
-			DateCreated:    "",
-			CostPerMonth:   "20",
-			Status:         "active",
-			SizeGB:         20,
-			RegionID:       1,
-			InstanceID:     "123457",
-			Label:          "test-bs2",
-		},
-	}, nil
+	list := []govultr.BlockStorage{}
+
+	for _, volume := range f.volume {
+		list = append(list, volume)
+	}
+
+	return list, nil
 }
 
 func (f *fakeBS) Get(ctx context.Context, blockID string) (*govultr.BlockStorage, error) {
@@ -272,7 +296,23 @@ func (f *FakeInstance) Create(ctx context.Context, regionID, vpsPlanID, osID int
 }
 
 func (f *FakeInstance) List(ctx context.Context) ([]govultr.Server, error) {
-	panic("implement me")
+	return []govultr.Server{
+		{
+			InstanceID:  "576965",
+			MainIP:      "149.28.225.110",
+			VPSCpus:     "4",
+			Location:    "New Jersey",
+			RegionID:    "1",
+			Status:      "running",
+			NetmaskV4:   "255.255.254.0",
+			GatewayV4:   "149.28.224.1",
+			PowerStatus: "",
+			ServerState: "",
+			PlanID:      "204",
+			Label:       "csi-test",
+			InternalIP:  "10.1.95.4",
+		},
+	}, nil
 }
 
 func (f *FakeInstance) ListByLabel(ctx context.Context, label string) ([]govultr.Server, error) {
@@ -304,8 +344,12 @@ func (f *FakeInstance) ListByTag(ctx context.Context, tag string) ([]govultr.Ser
 }
 
 func (f *FakeInstance) GetServer(ctx context.Context, instanceID string) (*govultr.Server, error) {
+	if instanceID != "123456" {
+		return nil, fmt.Errorf("Invalid server ID: %v", instanceID)
+	}
+
 	return &govultr.Server{
-		InstanceID:  "576965",
+		InstanceID:  "123456",
 		MainIP:      "149.28.225.110",
 		VPSCpus:     "4",
 		Location:    "New Jersey",

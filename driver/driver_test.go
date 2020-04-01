@@ -9,7 +9,6 @@ import (
 
 	"github.com/kubernetes-csi/csi-test/pkg/sanity"
 	"github.com/sirupsen/logrus"
-	"github.com/vultr/govultr"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -26,9 +25,8 @@ func TestDriverSuite(t *testing.T) {
 
 	nodeID := "123456"
 	region := "1"
-	token := "replace-with-your-api"
 	version := "dev"
-	client := govultr.NewClient(nil, token)
+	client := newFakeClient()
 
 	log := logrus.New().WithFields(logrus.Fields{
 		"region":  "1",
@@ -56,10 +54,11 @@ func TestDriverSuite(t *testing.T) {
 	_, cancel := context.WithCancel(context.Background())
 
 	var eg errgroup.Group
+	randString := randString(5)
 
 	cfg := &sanity.Config{
-		TargetPath:  os.TempDir() + "/csi-target",
-		StagingPath: os.TempDir() + "/csi-staging",
+		TargetPath:  os.TempDir() + "/csi-target-" + randString,
+		StagingPath: os.TempDir() + "/csi-staging-" + randString,
 		Address:     endpoint,
 	}
 	sanity.Test(t, cfg)
@@ -98,4 +97,13 @@ func (f *fakeMounter) IsMounted(target string) (bool, error) {
 func (f *fakeMounter) UnMount(target string) error {
 	delete(f.mounted, target)
 	return nil
+}
+
+func randString(n int) string {
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }

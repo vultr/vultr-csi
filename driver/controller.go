@@ -38,7 +38,7 @@ const (
 	minVolumeSizeInBytes      int64 = 1 * giB
 	maxVolumeSizeInBytes      int64 = 10 * tiB
 	defaultVolumeSizeInBytes  int64 = 10 * giB
-	volumeStatusCheckRetries        = 20 // default: 10
+	volumeStatusCheckRetries        = 20
 	volumeStatusCheckInterval       = 1
 )
 
@@ -86,10 +86,21 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	size, err := getStorageBytes(req.CapacityRange)
+	if err != nil {
+		return nil, status.Errorf(codes.OutOfRange, "invalid volume capacity range: %v", err)
+	}
+
 	var curVolume *govultr.BlockStorage
 	for _, volume := range volumes {
+		// Fail for same name, different size
+		if volume.Label == volName && int(size/giB) != volume.SizeGB {
+			return nil, status.Errorf(codes.AlreadyExists, "cannot add volume with same label %v and different size: %v vs %v", volName, int(size/giB), volume.SizeGB)
+		}
+
 		if volume.Label == volName {
 			curVolume = &volume
+			break
 		}
 	}
 
@@ -106,10 +117,6 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 	region, err := strconv.Atoi(c.Driver.region)
 	if err != nil {
 		return nil, status.Error(codes.Aborted, "region code must be an int")
-	}
-	size, err := getStorageBytes(req.CapacityRange)
-	if err != nil {
-		return nil, status.Errorf(codes.OutOfRange, "invalid volume capacity range: %v", err)
 	}
 
 	volume, err := c.Driver.client.BlockStorage.Create(ctx, region, int(size/giB), volName)

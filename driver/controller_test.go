@@ -68,7 +68,7 @@ func TestCreateVolume(t *testing.T) {
 func TestDeleteVolume(t *testing.T) {
 	controller := NewFakeVultrControllerServer("delete volume")
 
-	volumeID := "123456"
+	volumeID := "342512"
 	res, err := controller.DeleteVolume(context.Background(), &csi.DeleteVolumeRequest{
 		VolumeId: volumeID,
 	})
