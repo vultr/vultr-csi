@@ -36,7 +36,21 @@ type fakeBS struct {
 }
 
 func (f *fakeBS) Attach(ctx context.Context, blockID, InstanceID, liveAttach string) error {
-	panic("implement attach")
+	list, err := f.List(ctx)
+	if err != nil {
+		return fmt.Errorf("Could not attach instance to volume: %v", err)
+	}
+
+	bsList := []govultr.BlockStorage{}
+	for _, volume := range list {
+		if volume.InstanceID == "" && volume.BlockStorageID == blockID {
+			volume.InstanceID = InstanceID
+		}
+		bsList = append(bsList, volume)
+	}
+
+	f.volume = bsList
+	return nil
 }
 
 func (f *fakeBS) Create(ctx context.Context, regionID, size int, label string) (*govultr.BlockStorage, error) {
@@ -68,35 +82,10 @@ func (f *fakeBS) Create(ctx context.Context, regionID, size int, label string) (
 }
 
 func (f *fakeBS) Delete(ctx context.Context, blockID string) error {
-	// list, err := f.List(ctx)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// for i, volume := range list {
-	// 	if volume.BlockStorageID == blockID {
-	// 		list = append(list[:i], list[i+1:]...)
-	// 	}
-	// }
-
-	// f.volume = list
-
 	return nil
 }
 
 func (f *fakeBS) Detach(ctx context.Context, blockID, liveDetach string) error {
-	list, err := f.List(ctx)
-	if err != nil {
-		return err
-	}
-
-	for _, volume := range list {
-		if volume.BlockStorageID == blockID {
-			volume.InstanceID = ""
-			break
-		}
-	}
-
 	return nil
 }
 
@@ -115,8 +104,18 @@ func (f *fakeBS) List(ctx context.Context) ([]govultr.BlockStorage, error) {
 }
 
 func (f *fakeBS) Get(ctx context.Context, blockID string) (*govultr.BlockStorage, error) {
-	bsVolume := newFakeBS()
-	return bsVolume, nil
+	list, err := f.List(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("Could not get requested volume: %v", err)
+	}
+
+	for _, volume := range list {
+		if volume.BlockStorageID == blockID {
+			return &volume, nil
+		}
+	}
+
+	return nil, fmt.Errorf("Could not get requested volume: %v", err)
 }
 
 func (f *fakeBS) Resize(ctx context.Context, blockID string, size int) error {
