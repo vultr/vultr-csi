@@ -9,7 +9,10 @@ import (
 
 func newFakeClient() *govultr.Client {
 	fakeInstance := FakeInstance{client: nil}
-	fakeBlockStorage := fakeBS{client: nil}
+	fakeBlockStorage := fakeBS{
+		client: nil,
+		volume: newFakeBS(),
+	}
 
 	return &govultr.Client{
 		Server:       &fakeInstance,
@@ -17,16 +20,18 @@ func newFakeClient() *govultr.Client {
 	}
 }
 
-func newFakeBS() *govultr.BlockStorage {
-	return &govultr.BlockStorage{
-		BlockStorageID: "342512",
-		DateCreated:    "",
-		CostPerMonth:   "10",
-		Status:         "active",
-		SizeGB:         20,
-		RegionID:       1,
-		InstanceID:     "123456",
-		Label:          "test-bs",
+func newFakeBS() []govultr.BlockStorage {
+	return []govultr.BlockStorage{
+		{
+			BlockStorageID: "342512",
+			DateCreated:    "",
+			CostPerMonth:   "10",
+			Status:         "active",
+			SizeGB:         20,
+			RegionID:       1,
+			InstanceID:     "123456",
+			Label:          "test-bs",
+		},
 	}
 }
 
