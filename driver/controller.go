@@ -378,7 +378,7 @@ func (c *VultrControllerServer) ListVolumes(ctx context.Context, req *csi.ListVo
 	if req.StartingToken != "" {
 		_, err := strconv.Atoi(req.StartingToken)
 		if err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "ListVolumes starting_token is invalid: %s", err)
+			return nil, status.Errorf(codes.Aborted, "ListVolumes starting_token is invalid: %s", err)
 		}
 	}
 
