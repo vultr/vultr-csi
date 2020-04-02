@@ -15,6 +15,7 @@ package driver
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -392,9 +393,38 @@ func (c *VultrControllerServer) ListVolumes(ctx context.Context, req *csi.ListVo
 			return nil, status.Errorf(codes.Aborted, "starting_token is invalid: %s", err)
 		}
 	}
+	fmt.Println(list)
+	fmt.Println(req.MaxEntries)
+
+	newList := []govultr.BlockStorage{}
+
+	// Vultr does not have paging
+	for {
+
+		size := len(list)
+		if req.MaxEntries > 0 {
+			size = int(req.MaxEntries)
+		} else {
+			newList = list
+			fmt.Println(newList)
+			break
+		}
+
+		if len(newList) == int(req.MaxEntries) {
+			break
+		}
+
+		list := list[:size]
+		newList = append(newList, list...)
+	}
+
+	fmt.Println("LIST")
+	fmt.Println(list)
+	fmt.Println("NEW LISt")
+	fmt.Println(newList)
 
 	var entries []*csi.ListVolumesResponse_Entry
-	for _, v := range list {
+	for _, v := range newList {
 		entries = append(entries, &csi.ListVolumesResponse_Entry{
 			Volume: &csi.Volume{
 				VolumeId:      v.BlockStorageID,
@@ -404,9 +434,9 @@ func (c *VultrControllerServer) ListVolumes(ctx context.Context, req *csi.ListVo
 	}
 
 	// Vultr doesn't currently support paging
-	p := len(list)
+	p := len(newList)
 	res := &csi.ListVolumesResponse{
-		Entries: entries,
+		Entries:   entries,
 		NextToken: strconv.Itoa(p),
 	}
 

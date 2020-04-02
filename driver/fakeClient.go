@@ -46,17 +46,7 @@ type fakeBS struct {
 }
 
 func (f *fakeBS) Attach(ctx context.Context, blockID, InstanceID, liveAttach string) error {
-	list, err := f.List(ctx)
-	if err != nil {
-		return fmt.Errorf("Could not attach instance to volume: %v", err)
-	}
-
-	for _, volume := range list {
-		if volume.InstanceID == "" && volume.BlockStorageID == blockID {
-			volume.InstanceID = InstanceID
-		}
-		f.volume[volume.BlockStorageID] = &volume
-	}
+	f.volume[blockID].InstanceID = InstanceID
 
 	return nil
 }
@@ -115,8 +105,12 @@ func (f *fakeBS) List(ctx context.Context) ([]govultr.BlockStorage, error) {
 func (f *fakeBS) Get(ctx context.Context, blockID string) (*govultr.BlockStorage, error) {
 	list, err := f.List(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("Could not get requested volume: %v", err)
+		return nil, fmt.Errorf("Could not get list of volumes: %v", err)
 	}
+
+	fmt.Println("!!*(!*(!*(!*(!*(!*(!*(!*(!*")
+	fmt.Println(list)
+	fmt.Println(blockID)
 
 	for _, volume := range list {
 		if volume.BlockStorageID == blockID {
