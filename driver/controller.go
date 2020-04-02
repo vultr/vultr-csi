@@ -93,7 +93,6 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 
 	var curVolume *govultr.BlockStorage
 	for _, volume := range volumes {
-		// Fail for same name, different size
 		if volume.Label == volName && int(size/giB) != volume.SizeGB {
 			return nil, status.Errorf(codes.AlreadyExists, "cannot add volume with same label %v and different size: %v vs %v", volName, int(size/giB), volume.SizeGB)
 		}
