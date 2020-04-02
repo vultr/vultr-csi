@@ -393,8 +393,6 @@ func (c *VultrControllerServer) ListVolumes(ctx context.Context, req *csi.ListVo
 			return nil, status.Errorf(codes.Aborted, "starting_token is invalid: %s", err)
 		}
 	}
-	fmt.Println(list)
-	fmt.Println(req.MaxEntries)
 
 	newList := []govultr.BlockStorage{}
 
@@ -417,11 +415,6 @@ func (c *VultrControllerServer) ListVolumes(ctx context.Context, req *csi.ListVo
 		list := list[:size]
 		newList = append(newList, list...)
 	}
-
-	fmt.Println("LIST")
-	fmt.Println(list)
-	fmt.Println("NEW LISt")
-	fmt.Println(newList)
 
 	var entries []*csi.ListVolumesResponse_Entry
 	for _, v := range newList {
