@@ -60,7 +60,11 @@ func TestCreateVolume(t *testing.T) {
 		},
 	}
 
-	if !reflect.DeepEqual(res, expected) {
+	if !reflect.DeepEqual(expected.Volume.AccessibleTopology, res.Volume.AccessibleTopology) {
+		t.Errorf("expected %+v got %+v", res, expected)
+	}
+
+	if expected.Volume.CapacityBytes != res.Volume.CapacityBytes {
 		t.Errorf("expected %+v got %+v", res, expected)
 	}
 }
@@ -87,12 +91,23 @@ func TestDeleteVolume(t *testing.T) {
 func TestPublishVolume(t *testing.T) {
 	controller := NewFakeVultrControllerServer("delete volume")
 
-	nodeId := "123456"
-	volumeID := "342512"
+	create, _ := controller.CreateVolume(context.TODO(), &csi.CreateVolumeRequest{
+		Name: "volume-test-name",
+		VolumeCapabilities: []*csi.VolumeCapability{
+			&csi.VolumeCapability{
+				AccessType: &csi.VolumeCapability_Mount{
+					Mount: &csi.VolumeCapability_MountVolume{},
+				},
+				AccessMode: &csi.VolumeCapability_AccessMode{
+					Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+				},
+			},
+		},
+	})
 
 	res, err := controller.ControllerPublishVolume(context.Background(), &csi.ControllerPublishVolumeRequest{
-		NodeId:   nodeId,
-		VolumeId: volumeID,
+		NodeId:   "123456",
+		VolumeId: create.Volume.VolumeId,
 		VolumeCapability: &csi.VolumeCapability{
 			AccessType: &csi.VolumeCapability_Mount{
 				Mount: &csi.VolumeCapability_MountVolume{},
@@ -109,7 +124,7 @@ func TestPublishVolume(t *testing.T) {
 
 	expected := &csi.ControllerPublishVolumeResponse{
 		PublishContext: map[string]string{
-			controller.Driver.publishVolumeID: volumeID,
+			controller.Driver.publishVolumeID: create.Volume.VolumeId,
 		},
 	}
 

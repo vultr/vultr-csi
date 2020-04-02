@@ -386,6 +386,13 @@ func (c *VultrControllerServer) ListVolumes(ctx context.Context, req *csi.ListVo
 		return nil, status.Errorf(codes.Internal, "ListVolumes cannot retrieve list of volumes. %v", err.Error())
 	}
 
+	if req.StartingToken != "" {
+		_, err = strconv.Atoi(req.StartingToken)
+		if err != nil {
+			return nil, status.Errorf(codes.Aborted, "starting_token is invalid: %s", err)
+		}
+	}
+
 	var entries []*csi.ListVolumesResponse_Entry
 	for _, v := range list {
 		entries = append(entries, &csi.ListVolumesResponse_Entry{
@@ -396,8 +403,11 @@ func (c *VultrControllerServer) ListVolumes(ctx context.Context, req *csi.ListVo
 		})
 	}
 
+	// Vultr doesn't currently support paging
+	p := len(list)
 	res := &csi.ListVolumesResponse{
 		Entries: entries,
+		NextToken: strconv.Itoa(p),
 	}
 
 	c.Driver.log.WithFields(logrus.Fields{

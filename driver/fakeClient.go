@@ -3,15 +3,17 @@ package driver
 import (
 	"context"
 	"fmt"
-
 	"github.com/vultr/govultr"
 )
 
 func newFakeClient() *govultr.Client {
 	fakeInstance := FakeInstance{client: nil}
+	fake := map[string]*govultr.BlockStorage{}
+
 	fakeBlockStorage := fakeBS{
 		client: nil,
-		volume: newFakeBS(),
+		//volume: fake,
+		volume: fake,
 	}
 
 	return &govultr.Client{
@@ -20,24 +22,27 @@ func newFakeClient() *govultr.Client {
 	}
 }
 
-func newFakeBS() []govultr.BlockStorage {
-	return []govultr.BlockStorage{
-		{
-			BlockStorageID: "342512",
-			DateCreated:    "",
-			CostPerMonth:   "10",
-			Status:         "active",
-			SizeGB:         20,
-			RegionID:       1,
-			InstanceID:     "123456",
-			Label:          "test-bs",
-		},
+func newFakeBS() map[string]*govultr.BlockStorage {
+	entry := map[string]*govultr.BlockStorage{}
+
+	entry["342512"] = &govultr.BlockStorage{
+		BlockStorageID: "342512",
+		DateCreated:    "",
+		CostPerMonth:   "10",
+		Status:         "active",
+		SizeGB:         20,
+		RegionID:       1,
+		InstanceID:     "123456",
+		Label:          "test-bs",
 	}
+
+	return entry
+
 }
 
 type fakeBS struct {
 	client *govultr.Client
-	volume []govultr.BlockStorage
+	volume map[string]*govultr.BlockStorage
 }
 
 func (f *fakeBS) Attach(ctx context.Context, blockID, InstanceID, liveAttach string) error {
@@ -46,15 +51,13 @@ func (f *fakeBS) Attach(ctx context.Context, blockID, InstanceID, liveAttach str
 		return fmt.Errorf("Could not attach instance to volume: %v", err)
 	}
 
-	bsList := []govultr.BlockStorage{}
 	for _, volume := range list {
 		if volume.InstanceID == "" && volume.BlockStorageID == blockID {
 			volume.InstanceID = InstanceID
 		}
-		bsList = append(bsList, volume)
+		f.volume[volume.BlockStorageID] = &volume
 	}
 
-	f.volume = bsList
 	return nil
 }
 
@@ -69,9 +72,9 @@ func (f *fakeBS) Create(ctx context.Context, regionID, size int, label string) (
 			return nil, fmt.Errorf("Volume with label %v already exists", label)
 		}
 	}
-
-	newBs := govultr.BlockStorage{
-		BlockStorageID: "342512",
+	bsID := randString(10)
+	newBs := &govultr.BlockStorage{
+		BlockStorageID: bsID,
 		DateCreated:    "",
 		CostPerMonth:   "10",
 		Status:         "active",
@@ -81,12 +84,13 @@ func (f *fakeBS) Create(ctx context.Context, regionID, size int, label string) (
 		Label:          label,
 	}
 
-	f.volume = append(f.volume, newBs)
+	f.volume[bsID] = newBs
 
-	return &newBs, nil
+	return newBs, nil
 }
 
 func (f *fakeBS) Delete(ctx context.Context, blockID string) error {
+	delete(f.volume, blockID)
 	return nil
 }
 
@@ -102,7 +106,7 @@ func (f *fakeBS) List(ctx context.Context) ([]govultr.BlockStorage, error) {
 	list := []govultr.BlockStorage{}
 
 	for _, volume := range f.volume {
-		list = append(list, volume)
+		list = append(list, *volume)
 	}
 
 	return list, nil
@@ -368,3 +372,12 @@ func (f *FakeInstance) GetServer(ctx context.Context, instanceID string) (*govul
 		InternalIP:  "10.1.95.4",
 	}, nil
 }
+
+//func randString(n int) string {
+//	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+//	b := make([]byte, n)
+//	for i := range b {
+//		b[i] = letters[rand.Intn(len(letters))]
+//	}
+//	return string(b)
+//}
