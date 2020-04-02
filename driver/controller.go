@@ -38,7 +38,7 @@ const (
 	minVolumeSizeInBytes      int64 = 1 * giB
 	maxVolumeSizeInBytes      int64 = 10 * tiB
 	defaultVolumeSizeInBytes  int64 = 10 * giB
-	volumeStatusCheckRetries        = 10
+	volumeStatusCheckRetries        = 15
 	volumeStatusCheckInterval       = 1
 )
 
@@ -375,6 +375,13 @@ func (c *VultrControllerServer) ValidateVolumeCapabilities(ctx context.Context, 
 }
 
 func (c *VultrControllerServer) ListVolumes(ctx context.Context, req *csi.ListVolumesRequest) (*csi.ListVolumesResponse, error) {
+	if req.StartingToken != "" {
+		_, err := strconv.Atoi(req.StartingToken)
+		if err != nil {
+			return nil, status.Errorf(codes.Aborted, "ListVolumes starting_token is invalid: %s", err)
+		}
+	}
+
 	list, err := c.Driver.client.BlockStorage.List(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "ListVolumes cannot retrieve list of volumes. %v", err.Error())
