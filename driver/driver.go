@@ -18,6 +18,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/vultr/govultr"
+	"github.com/vultr/metadata"
 )
 
 const (
@@ -44,7 +45,7 @@ type VultrDriver struct {
 	version string
 }
 
-func NewDriver(endpoint, token, driverName, version, nodeID string) (*VultrDriver, error) {
+func NewDriver(endpoint, token, driverName, version string) (*VultrDriver, error) {
 	if driverName == "" {
 		driverName = DefaultDriverName
 	}
@@ -52,22 +53,23 @@ func NewDriver(endpoint, token, driverName, version, nodeID string) (*VultrDrive
 	client := govultr.NewClient(nil, token)
 	client.UserAgent = "csi-vultr/" + version
 
-	instance, err := GetVultrByName(client, nodeID)
+	c := metadata.NewClient()
+	meta, err := c.Metadata()
 	if err != nil {
 		return nil, err
 	}
 
 	log := logrus.New().WithFields(logrus.Fields{
-		"region":  instance.RegionID,
-		"host_id": instance.InstanceID,
+		"region":  metadata.RegionCodeToID(meta.Region.RegionCode),
+		"host_id": meta.InstanceID,
 		"version": version,
 	})
 
 	return &VultrDriver{
 		name:     driverName,
 		endpoint: endpoint,
-		nodeID:   instance.InstanceID,
-		region:   instance.RegionID,
+		nodeID:   meta.InstanceID,
+		region:   metadata.RegionCodeToID(meta.Region.RegionCode),
 		client:   client,
 
 		isController: token != "",
