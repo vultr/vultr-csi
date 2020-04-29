@@ -8,7 +8,7 @@
 ### Docker Image
 [CSI Container v0.0.2](https://hub.docker.com/layers/vultr/vultr-csi/v0.0.2/images/sha256-bf31b1d0c92a8af3fc26d67f24ace41cab853f8baeec225e18487259bd7147a8?context=explore)
 
-## [v0.0.1](https://github.com/vultr/vultr-csi) (2020-03-11)
+## [v0.0.1](https://github.com/vultr/vultr-csi) (2020-04-02)
 
 ### Initial Release
 
