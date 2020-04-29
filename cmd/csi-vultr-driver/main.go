@@ -27,7 +27,6 @@ func main() {
 		endpoint   = flag.String("endpoint", "unix:///var/lib/kubelet/plugins"+driver.DefaultDriverName+"/csi.sock", "CSI endpoint")
 		token      = flag.String("token", "", "Vultr API Token")
 		driverName = flag.String("driver-name", driver.DefaultDriverName, "Name of driver")
-		nodeID     = flag.String("node-id", "", "Vultr Hostname")
 	)
 	flag.Parse()
 
@@ -35,7 +34,7 @@ func main() {
 		log.Fatal("version must be defined at compilation")
 	}
 
-	d, err := driver.NewDriver(*endpoint, *token, *driverName, version, *nodeID)
+	d, err := driver.NewDriver(*endpoint, *token, *driverName, version)
 	if err != nil {
 		log.Fatalln(err)
 	}
