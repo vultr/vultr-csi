@@ -407,6 +407,34 @@ func (c *VultrControllerServer) ListVolumes(ctx context.Context, req *csi.ListVo
 	return res, nil
 }
 
+func (c *VultrControllerServer) ControllerGetVolume(ctx context.Context, request *csi.ControllerGetVolumeRequest) (*csi.ControllerGetVolumeResponse, error) {
+	list, err := c.Driver.client.BlockStorage.List(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "ListVolumes cannot retrieve list of volumes. %v", err.Error())
+	}
+
+	var volume *govultr.BlockStorage
+	for _, v := range list {
+		if request.VolumeId == v.BlockStorageID {
+			volume = &v
+		}
+	}
+
+	if volume == nil {
+		return nil, status.Errorf(codes.NotFound, "cannot get volume")
+	}
+
+	return &csi.ControllerGetVolumeResponse{
+		Volume: &csi.Volume{
+			CapacityBytes: int64(volume.SizeGB) * giB,
+			VolumeId:      volume.BlockStorageID,
+		},
+		Status: &csi.ControllerGetVolumeResponse_VolumeStatus{
+			PublishedNodeIds: []string{volume.InstanceID},
+		},
+	}, nil
+}
+
 func (c *VultrControllerServer) GetCapacity(context.Context, *csi.GetCapacityRequest) (*csi.GetCapacityResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "")
 }
@@ -428,6 +456,7 @@ func (c *VultrControllerServer) ControllerGetCapabilities(context.Context, *csi.
 		csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME,
 		csi.ControllerServiceCapability_RPC_PUBLISH_UNPUBLISH_VOLUME,
 		csi.ControllerServiceCapability_RPC_LIST_VOLUMES,
+		csi.ControllerServiceCapability_RPC_GET_VOLUME,
 	} {
 		capabilities = append(capabilities, capability(caps))
 	}
