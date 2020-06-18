@@ -341,7 +341,7 @@ func (c *VultrControllerServer) ControllerUnpublishVolume(ctx context.Context, r
 	c.Driver.log.WithFields(logrus.Fields{
 		"volume-id": req.VolumeId,
 		"node-id":   req.NodeId,
-	}).Info("Controller Unublish Volume: unpublished")
+	}).Info("Controller Unpublish Volume: unpublished")
 
 	return &csi.ControllerUnpublishVolumeResponse{}, nil
 }
@@ -421,8 +421,13 @@ func (c *VultrControllerServer) ControllerGetVolume(ctx context.Context, request
 	}
 
 	if volume == nil {
-		return nil, status.Errorf(codes.NotFound, "cannot get volume")
+		return nil, status.Error(codes.NotFound, "cannot get volume")
 	}
+
+	c.Driver.log.WithFields(logrus.Fields{
+		"volume-name": volume.Label,
+		"volume-id":   volume.BlockStorageID,
+	}).Info("Controller Get Volume")
 
 	return &csi.ControllerGetVolumeResponse{
 		Volume: &csi.Volume{
