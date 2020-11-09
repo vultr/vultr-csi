@@ -139,7 +139,7 @@ spec:
         app: csi-vultr-controller
         role: csi-vultr
     spec:
-      serviceAccountName: csi-controller-sa
+      serviceAccountName: csi-vultr-controller-sa
       containers:
         - name: csi-provisioner
           image: quay.io/k8scsi/csi-provisioner:v1.6.0
@@ -192,7 +192,7 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: csi-controller-sa
+  name: csi-vultr-controller-sa
   namespace: kube-system
 
 ## Attacher Role + Binding
@@ -200,7 +200,7 @@ metadata:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: external-attacher-role
+  name: csi-vultr-attacher-role
   namespace: kube-system
 rules:
   - apiGroups: [""]
@@ -224,11 +224,11 @@ metadata:
   namespace: kube-system
 subjects:
   - kind: ServiceAccount
-    name: csi-controller-sa
+    name: csi-vultr-controller-sa
     namespace: kube-system
 roleRef:
   kind: ClusterRole
-  name: external-attacher-role
+  name: csi-vultr-attacher-role
   apiGroup: rbac.authorization.k8s.io
 
 ## Provisioner Role + Binding
@@ -236,7 +236,7 @@ roleRef:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: external-provisioner-role
+  name: csi-vultr-provisioner-role
   namespace: kube-system
 rules:
   - apiGroups: [""]
@@ -269,11 +269,11 @@ metadata:
   namespace: kube-system
 subjects:
   - kind: ServiceAccount
-    name: csi-controller-sa
+    name: csi-vultr-controller-sa
     namespace: kube-system
 roleRef:
   kind: ClusterRole
-  name: external-provisioner-role
+  name: csi-vultr-provisioner-role
   apiGroup: rbac.authorization.k8s.io
 
 
@@ -296,7 +296,7 @@ spec:
         app: csi-vultr-node
         role: csi-vultr
     spec:
-      serviceAccountName: csi-node-sa
+      serviceAccountName: csi-vultr-node-sa
       hostNetwork: true
       containers:
         - name: driver-registrar
@@ -381,7 +381,7 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: csi-node-sa
+  name: csi-vultr-node-sa
   namespace: kube-system
 
 ---
@@ -392,18 +392,18 @@ metadata:
   namespace: kube-system
 subjects:
   - kind: ServiceAccount
-    name: csi-node-sa
+    name: csi-vultr-node-sa
     namespace: kube-system
 roleRef:
   kind: ClusterRole
-  name: driver-registrar-role
+  name: csi-vultr-node-driver-registrar-role
   apiGroup: rbac.authorization.k8s.io
 
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: driver-registrar-role
+  name: csi-vultr-node-driver-registrar-role
   namespace: kube-system
 rules:
   - apiGroups: [""]
