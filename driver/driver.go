@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	DefaultDriverName = "vultrbs.csi.driver.com"
+	DefaultDriverName = "block.csi.vultr.com"
 	defaultTimeout    = 1 * time.Minute
 )
 

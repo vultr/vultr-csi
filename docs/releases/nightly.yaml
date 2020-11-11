@@ -4,7 +4,7 @@
 apiVersion: storage.k8s.io/v1beta1
 kind: CSIDriver
 metadata:
-  name: vultrbs.csi.driver.com
+  name: block.csi.vultr.com
 spec:
   attachRequired: true
   podInfoOnMount: true
@@ -17,7 +17,7 @@ metadata:
   namespace: kube-system
   annotations:
     storageclass.kubernetes.io/is-default-class: "true"
-provisioner: vultrbs.csi.driver.com
+provisioner: block.csi.vultr.com
 
 ---
 kind: StorageClass
@@ -25,7 +25,7 @@ apiVersion: storage.k8s.io/v1
 metadata:
   name: vultr-block-storage-retain
   namespace: kube-system
-provisioner: vultrbs.csi.driver.com
+provisioner: block.csi.vultr.com
 reclaimPolicy: Retain
 
 #########
@@ -168,7 +168,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: vultr-csi-plugin
-          image: vultr/vultr-csi:v0.0.3
+          image: vultr/vultr-csi:nightly
           args :
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--token=$(VULTR_API_KEY)"
@@ -309,7 +309,7 @@ spec:
             - name: ADDRESS
               value: /csi/csi.sock
             - name: DRIVER_REG_SOCK_PATH
-              value: /var/lib/kubelet/plugins/vultrbs.csi.driver.com/csi.sock
+              value: /var/lib/kubelet/plugins/block.csi.vultr.com/csi.sock
             - name: KUBE_NODE_NAME
               valueFrom:
                 fieldRef:
@@ -320,7 +320,7 @@ spec:
             - name: registration-dir
               mountPath: /registration/
         - name: csi-vultr-plugin
-          image: vultr/vultr-csi:v0.0.3
+          image: vultr/vultr-csi:nightly
           args :
             - "--endpoint=$(CSI_ENDPOINT)"
           env:
@@ -351,7 +351,7 @@ spec:
             type: Directory
         - name: plugin-dir
           hostPath:
-            path: /var/lib/kubelet/plugins/vultrbs.csi.driver.com
+            path: /var/lib/kubelet/plugins/block.csi.vultr.com
             type: DirectoryOrCreate
         - name: pods-mount-dir
           hostPath:
@@ -408,4 +408,4 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["events"]
-    verbs: ["get", "list", "watch", "create", "update", "patch"]  
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
