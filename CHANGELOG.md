@@ -1,5 +1,16 @@
 # Change Log
 
+## [v0.0.4](https://github.com/vultr/vultr-csi) (2020-11-12)
+### Bug Fixes
+*  default socket location had wrong path [31](https://github.com/vultr/vultr-csi/pull/31)
+
+### Enhancements
+* Cleaned up naming on kubernetes resources to be more uniformed [31](https://github.com/vultr/vultr-csi/pull/31)
+
+### Docker Image
+[CSI Container v0.0.4](https://hub.docker.com/r/vultr/vultr-csi/tags)
+
+
 ## [v0.0.3](https://github.com/vultr/vultr-csi) (2020-04-29)
 ### Dependecies
 *  quay.io/k8scsi/csi-attacher v1.0.0 -> v2.2.0[#29](https://github.com/vultr/vultr-csi/pull/29)

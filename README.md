@@ -51,8 +51,8 @@ The deployment will create a [Storage Class](https://kubernetes.io/docs/concepts
 ```sh
 $ kubectl get storageclass
 NAME                            PROVISIONER              RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
-vultr-block-storage (default)   vultrbs.csi.driver.com   Delete          Immediate           false                  131m
-vultr-block-storage-retain      vultrbs.csi.driver.com   Retain          Immediate           false                  131m
+vultr-block-storage (default)   block.csi.vultr.com   Delete          Immediate           false                  131m
+vultr-block-storage-retain      block.csi.vultr.com   Retain          Immediate           false                  131m
 ```
 
 To further validate the CSI, create a [PersistentVolumeClaim](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)
