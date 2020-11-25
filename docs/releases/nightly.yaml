@@ -168,8 +168,8 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: vultr-csi-plugin
-          image: vultr/vultr-csi:nightly
-          args :
+          image: ddymko/vultr-csi:nightly
+          args:
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--token=$(VULTR_API_KEY)"
           env:
@@ -186,7 +186,7 @@ spec:
               mountPath: /var/lib/csi/sockets/pluginproxy/
       volumes:
         - name: socket-dir
-          emptyDir: {}
+          emptyDir: { }
 
 ---
 apiVersion: v1
@@ -203,18 +203,18 @@ metadata:
   name: csi-vultr-attacher-role
   namespace: kube-system
 rules:
-  - apiGroups: [""]
-    resources: ["persistentvolumes"]
-    verbs: ["get", "list", "watch", "update", "patch"]
-  - apiGroups: [""]
-    resources: ["nodes"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["storage.k8s.io"]
-    resources: ["csinodes"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["storage.k8s.io"]
-    resources: ["volumeattachments"]
-    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: [ "" ]
+    resources: [ "persistentvolumes" ]
+    verbs: [ "get", "list", "watch", "update", "patch" ]
+  - apiGroups: [ "" ]
+    resources: [ "nodes" ]
+    verbs: [ "get", "list", "watch" ]
+  - apiGroups: [ "storage.k8s.io" ]
+    resources: [ "csinodes" ]
+    verbs: [ "get", "list", "watch" ]
+  - apiGroups: [ "storage.k8s.io" ]
+    resources: [ "volumeattachments" ]
+    verbs: [ "get", "list", "watch", "update", "patch" ]
 
 ---
 kind: ClusterRoleBinding
@@ -239,27 +239,27 @@ metadata:
   name: csi-vultr-provisioner-role
   namespace: kube-system
 rules:
-  - apiGroups: [""]
-    resources: ["secrets"]
-    verbs: ["get", "list"]
-  - apiGroups: [""]
-    resources: ["persistentvolumes"]
-    verbs: ["get", "list", "watch", "create", "delete"]
-  - apiGroups: [""]
-    resources: ["persistentvolumeclaims"]
-    verbs: ["get", "list", "watch", "update"]
-  - apiGroups: ["storage.k8s.io"]
-    resources: ["storageclasses"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["storage.k8s.io"]
-    resources: ["csinodes"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: [""]
-    resources: ["events"]
-    verbs: ["list", "watch", "create", "update", "patch"]
-  - apiGroups: [""]
-    resources: ["nodes"]
-    verbs: ["get", "list", "watch"]
+  - apiGroups: [ "" ]
+    resources: [ "secrets" ]
+    verbs: [ "get", "list" ]
+  - apiGroups: [ "" ]
+    resources: [ "persistentvolumes" ]
+    verbs: [ "get", "list", "watch", "create", "delete" ]
+  - apiGroups: [ "" ]
+    resources: [ "persistentvolumeclaims" ]
+    verbs: [ "get", "list", "watch", "update" ]
+  - apiGroups: [ "storage.k8s.io" ]
+    resources: [ "storageclasses" ]
+    verbs: [ "get", "list", "watch" ]
+  - apiGroups: [ "storage.k8s.io" ]
+    resources: [ "csinodes" ]
+    verbs: [ "get", "list", "watch" ]
+  - apiGroups: [ "" ]
+    resources: [ "events" ]
+    verbs: [ "list", "watch", "create", "update", "patch" ]
+  - apiGroups: [ "" ]
+    resources: [ "nodes" ]
+    verbs: [ "get", "list", "watch" ]
 
 ---
 kind: ClusterRoleBinding
@@ -320,17 +320,23 @@ spec:
             - name: registration-dir
               mountPath: /registration/
         - name: csi-vultr-plugin
-          image: vultr/vultr-csi:nightly
-          args :
+          image: ddymko/vultr-csi:nightly
+          args:
             - "--endpoint=$(CSI_ENDPOINT)"
+            - "--token=$(VULTR_API_KEY)"
           env:
             - name: CSI_ENDPOINT
               value: unix:///csi/csi.sock
+            - name: VULTR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: vultr-csi
+                  key: api-key
           imagePullPolicy: "Always"
           securityContext:
             privileged: true
             capabilities:
-              add: ["SYS_ADMIN"]
+              add: [ "SYS_ADMIN" ]
             allowPrivilegeEscalation: true
           volumeMounts:
             - name: plugin-dir
@@ -406,6 +412,6 @@ metadata:
   name: csi-vultr-node-driver-registrar-role
   namespace: kube-system
 rules:
-  - apiGroups: [""]
-    resources: ["events"]
-    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: [ "" ]
+    resources: [ "events" ]
+    verbs: [ "get", "list", "watch", "create", "update", "patch" ]
