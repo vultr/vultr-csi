@@ -502,6 +502,11 @@ func (c *VultrControllerServer) ControllerExpandVolume(context.Context, *csi.Con
 	return nil, status.Error(codes.Unimplemented, "")
 }
 
+// This relates to being able to get health checks on a PV. We do not have this
+func (c *VultrControllerServer) ControllerGetVolume(ctx context.Context, request *csi.ControllerGetVolumeRequest) (*csi.ControllerGetVolumeResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "")
+}
+
 func isValidCapability(caps []*csi.VolumeCapability) bool {
 	for _, capacity := range caps {
 		if capacity == nil {

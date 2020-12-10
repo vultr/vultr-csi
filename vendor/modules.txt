@@ -1,6 +1,8 @@
-# github.com/container-storage-interface/spec v1.2.0
+# github.com/container-storage-interface/spec v1.3.0
+## explicit
 github.com/container-storage-interface/spec/lib/go/csi
 # github.com/golang/protobuf v1.4.2
+## explicit
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/protoc-gen-go/descriptor
 github.com/golang/protobuf/ptypes
@@ -17,10 +19,13 @@ github.com/hashicorp/go-retryablehttp
 # github.com/konsorten/go-windows-terminal-sequences v1.0.1
 github.com/konsorten/go-windows-terminal-sequences
 # github.com/sirupsen/logrus v1.4.2
+## explicit
 github.com/sirupsen/logrus
 # github.com/vultr/govultr/v2 v2.2.0
+## explicit
 github.com/vultr/govultr/v2
 # github.com/vultr/metadata v1.0.2
+## explicit
 github.com/vultr/metadata
 # golang.org/x/net v0.0.0-20200822124328-c89045814202
 golang.org/x/net/context
@@ -32,9 +37,11 @@ golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
 # golang.org/x/oauth2 v0.0.0-20201109201403-9fd604954f58
+## explicit
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
 # golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
+## explicit
 golang.org/x/sync/errgroup
 # golang.org/x/sys v0.0.0-20200803210538-64077c9b5642
 golang.org/x/sys/internal/unsafeheader
@@ -55,6 +62,7 @@ google.golang.org/appengine/urlfetch
 # google.golang.org/genproto v0.0.0-20200825200019-8632dd797987
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.31.0
+## explicit
 google.golang.org/grpc
 google.golang.org/grpc/attributes
 google.golang.org/grpc/backoff
