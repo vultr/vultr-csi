@@ -38,7 +38,7 @@ func (f *fakeBS) Create(ctx context.Context, blockReq *govultr.BlockStorageCreat
 }
 
 func (f *fakeBS) Get(ctx context.Context, blockID string) (*govultr.BlockStorage, error) {
-	panic("implement me")
+	return newFakeBS(), nil
 }
 
 func (f *fakeBS) Update(ctx context.Context, blockID string, blockReq *govultr.BlockStorageUpdate) error {
@@ -46,32 +46,38 @@ func (f *fakeBS) Update(ctx context.Context, blockID string, blockReq *govultr.B
 }
 
 func (f *fakeBS) Delete(ctx context.Context, blockID string) error {
-	panic("implement me")
+	return nil
 }
 
 func (f *fakeBS) List(ctx context.Context, options *govultr.ListOptions) ([]govultr.BlockStorage, *govultr.Meta, error) {
 	return []govultr.BlockStorage{
-		{
-			ID:                 "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
-			DateCreated:        "",
-			Cost:               10,
-			Status:             "active",
-			SizeGB:             10,
-			Region:             "ewr",
-			AttachedToInstance: "245bb2fe-b55c-44a0-9a1e-ab80e4b5f088",
-			Label:              "test-bs",
-		},
-		{
-			ID:                 "bda4f333-bfd7-477b-84c2-e4df0ec9e5bf",
-			DateCreated:        "",
-			Cost:               20,
-			Status:             "active",
-			SizeGB:             20,
-			Region:             "ewr",
-			AttachedToInstance: "b9d23eb3-1880-4746-acc7-f1ef56565320",
-			Label:              "test-bs2",
-		},
-	}, nil, nil
+			{
+				ID:                 "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
+				DateCreated:        "",
+				Cost:               10,
+				Status:             "active",
+				SizeGB:             10,
+				Region:             "ewr",
+				AttachedToInstance: "245bb2fe-b55c-44a0-9a1e-ab80e4b5f088",
+				Label:              "test-bs",
+			},
+			{
+				ID:                 "bda4f333-bfd7-477b-84c2-e4df0ec9e5bf",
+				DateCreated:        "",
+				Cost:               20,
+				Status:             "active",
+				SizeGB:             20,
+				Region:             "ewr",
+				AttachedToInstance: "b9d23eb3-1880-4746-acc7-f1ef56565320",
+				Label:              "test-bs2",
+			},
+		}, &govultr.Meta{
+			Total: 0,
+			Links: &govultr.Links{
+				Next: "",
+				Prev: "",
+			},
+		}, nil
 }
 
 func (f *fakeBS) Attach(ctx context.Context, blockID string, attach *govultr.BlockStorageAttach) error {
