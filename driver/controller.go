@@ -208,9 +208,6 @@ func (c *VultrControllerServer) DeleteVolume(ctx context.Context, req *csi.Delet
 			listOptions.Cursor = meta.Links.Next
 			continue
 		}
-		c.Driver.log.WithFields(logrus.Fields{
-			"volume-id": req.VolumeId,
-		}).Info("!!!!!!!!!!!!!!!!!!!!!!!!!!")
 		return &csi.DeleteVolumeResponse{}, nil
 	}
 
