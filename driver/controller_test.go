@@ -19,8 +19,8 @@ func NewFakeVultrControllerServer(testName string) *VultrControllerServer {
 		client:          client,
 		isController:    true,
 		log:             log,
-		region:          "1",
-		publishVolumeID: "342512",
+		region:          "ewr",
+		publishVolumeID: "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
 	}
 
 	return NewVultrControllerServer(d)
@@ -31,7 +31,7 @@ func TestCreateVolume(t *testing.T) {
 	res, err := controller.CreateVolume(context.TODO(), &csi.CreateVolumeRequest{
 		Name: "volume-test-name",
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{
+			{
 				AccessType: &csi.VolumeCapability_Mount{
 					Mount: &csi.VolumeCapability_MountVolume{},
 				},
@@ -48,12 +48,12 @@ func TestCreateVolume(t *testing.T) {
 
 	expected := &csi.CreateVolumeResponse{
 		Volume: &csi.Volume{
-			VolumeId:      "342512",
+			VolumeId:      "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
 			CapacityBytes: 10737418240,
 			AccessibleTopology: []*csi.Topology{
 				{
 					Segments: map[string]string{
-						"region": "1",
+						"region": "ewr",
 					},
 				},
 			},
@@ -68,7 +68,7 @@ func TestCreateVolume(t *testing.T) {
 func TestDeleteVolume(t *testing.T) {
 	controller := NewFakeVultrControllerServer("delete volume")
 
-	volumeID := "123456"
+	volumeID := "c56c7b6e-15c2-445e-9a5d-1063ab5828ec"
 	res, err := controller.DeleteVolume(context.Background(), &csi.DeleteVolumeRequest{
 		VolumeId: volumeID,
 	})
@@ -87,8 +87,8 @@ func TestDeleteVolume(t *testing.T) {
 func TestPublishVolume(t *testing.T) {
 	controller := NewFakeVultrControllerServer("delete volume")
 
-	nodeId := "123456"
-	volumeID := "342512"
+	nodeId := "245bb2fe-b55c-44a0-9a1e-ab80e4b5f088"
+	volumeID := "c56c7b6e-15c2-445e-9a5d-1063ab5828ec"
 
 	res, err := controller.ControllerPublishVolume(context.Background(), &csi.ControllerPublishVolumeRequest{
 		NodeId:   nodeId,
@@ -121,8 +121,8 @@ func TestPublishVolume(t *testing.T) {
 func TestUnPublishVolume(t *testing.T) {
 	controller := NewFakeVultrControllerServer("delete volume")
 
-	nodeId := "123456"
-	volumeID := "342512"
+	nodeId := "c56c7b6e-15c2-445e-9a5d-1063ab5828ec"
+	volumeID := "245bb2fe-b55c-44a0-9a1e-ab80e4b5f088"
 
 	res, err := controller.ControllerUnpublishVolume(context.Background(), &csi.ControllerUnpublishVolumeRequest{
 		NodeId:   nodeId,

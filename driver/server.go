@@ -17,14 +17,14 @@ package driver
 import (
 	"context"
 	"fmt"
-	log "github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
 	"net"
 	"net/url"
 	"os"
 	"sync"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
+	log "github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
 )
 
 // Defines Non blocking GRPC server interfaces

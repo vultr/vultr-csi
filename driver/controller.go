@@ -21,7 +21,7 @@ import (
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/sirupsen/logrus"
-	"github.com/vultr/govultr"
+	"github.com/vultr/govultr/v2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -81,38 +81,52 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 	}).Info("Create Volume: called")
 
 	// check that the volume doesnt already exist
-	volumes, err := c.Driver.client.BlockStorage.List(ctx)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
+	listOptions := &govultr.ListOptions{}
 	var curVolume *govultr.BlockStorage
-	for _, volume := range volumes {
-		if volume.Label == volName {
-			curVolume = &volume
-		}
-	}
 
-	if curVolume != nil {
-		return &csi.CreateVolumeResponse{
-			Volume: &csi.Volume{
-				VolumeId:      curVolume.BlockStorageID,
-				CapacityBytes: int64(curVolume.SizeGB) * giB,
-			},
-		}, nil
+	for {
+		volumes, meta, err := c.Driver.client.BlockStorage.List(ctx, listOptions)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		for _, v := range volumes {
+			if v.Label == volName {
+				curVolume = &v
+				break
+			}
+		}
+
+		if curVolume != nil {
+			return &csi.CreateVolumeResponse{
+				Volume: &csi.Volume{
+					VolumeId:      curVolume.ID,
+					CapacityBytes: int64(curVolume.SizeGB) * giB,
+				},
+			}, nil
+		}
+
+		if meta.Links.Next != "" {
+			listOptions.Cursor = meta.Links.Next
+			continue
+		}
+
+		break
 	}
 
 	// if applicable, create volume
-	region, err := strconv.Atoi(c.Driver.region)
-	if err != nil {
-		return nil, status.Error(codes.Aborted, "region code must be an int")
-	}
 	size, err := getStorageBytes(req.CapacityRange)
 	if err != nil {
 		return nil, status.Errorf(codes.OutOfRange, "invalid volume capacity range: %v", err)
 	}
 
-	volume, err := c.Driver.client.BlockStorage.Create(ctx, region, int(size/giB), volName)
+	blockReq := &govultr.BlockStorageCreate{
+		Region: c.Driver.region,
+		SizeGB: int(size / giB),
+		Label:  volName,
+	}
+
+	volume, err := c.Driver.client.BlockStorage.Create(ctx, blockReq)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -122,7 +136,7 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 
 	for i := 0; i < volumeStatusCheckRetries; i++ {
 		time.Sleep(volumeStatusCheckInterval * time.Second)
-		bs, err := c.Driver.client.BlockStorage.Get(ctx, volume.BlockStorageID)
+		bs, err := c.Driver.client.BlockStorage.Get(ctx, volume.ID)
 
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
@@ -140,7 +154,7 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 
 	res := &csi.CreateVolumeResponse{
 		Volume: &csi.Volume{
-			VolumeId:      volume.BlockStorageID,
+			VolumeId:      volume.ID,
 			CapacityBytes: size,
 			AccessibleTopology: []*csi.Topology{
 				{
@@ -154,7 +168,7 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 
 	c.Driver.log.WithFields(logrus.Fields{
 		"size":        size,
-		"volume-id":   volume.BlockStorageID,
+		"volume-id":   volume.ID,
 		"volume-name": volume.Label,
 		"volume-size": volume.SizeGB,
 	}).Info("Create Volume: created volume")
@@ -171,25 +185,37 @@ func (c *VultrControllerServer) DeleteVolume(ctx context.Context, req *csi.Delet
 		"volume-id": req.VolumeId,
 	}).Info("Delete volume: called")
 
-	list, err := c.Driver.client.BlockStorage.List(ctx)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
+	listOptions := &govultr.ListOptions{}
 	exists := false
-	for _, v := range list {
-		if v.BlockStorageID == req.VolumeId {
-			exists = true
+	for {
+		list, meta, err := c.Driver.client.BlockStorage.List(ctx, listOptions)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		for _, v := range list {
+			if v.ID == req.VolumeId {
+				exists = true
+				break
+			}
+		}
+
+		if exists == true {
 			break
 		}
-	}
 
-	if !exists {
+		if meta.Links.Next != "" {
+			listOptions.Cursor = meta.Links.Next
+			continue
+		}
 		return &csi.DeleteVolumeResponse{}, nil
 	}
 
 	// detach just to be safe
-	err = c.Driver.client.BlockStorage.Detach(ctx, req.VolumeId, "yes")
+	detach := &govultr.BlockStorageDetach{
+		Live: govultr.BoolToBoolPtr(true),
+	}
+	err := c.Driver.client.BlockStorage.Detach(ctx, req.VolumeId, detach)
 	if err != nil {
 		if !strings.Contains(err.Error(), "Block storage volume is not currently attached to a server") {
 			return nil, status.Errorf(codes.Internal, "cannot detach volume in delete, %v", err.Error())
@@ -230,23 +256,23 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 		return nil, status.Errorf(codes.NotFound, "cannot get volume: %v", err.Error())
 	}
 
-	_, err = c.Driver.client.Server.GetServer(ctx, req.NodeId)
+	_, err = c.Driver.client.Instance.Get(ctx, req.NodeId)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "cannot get node: %v", err.Error())
 	}
 
 	// node is already attached, do nothing
-	if volume.InstanceID == req.NodeId {
+	if volume.AttachedToInstance == req.NodeId {
 		return &csi.ControllerPublishVolumeResponse{
 			PublishContext: map[string]string{
-				c.Driver.publishVolumeID: volume.BlockStorageID,
+				c.Driver.publishVolumeID: volume.ID,
 			},
 		}, nil
 	}
 
 	// assuming its attached & to the wrong node
-	if volume.InstanceID != "" {
-		return nil, status.Errorf(codes.FailedPrecondition, "cannot attach volume to node because it is already attached to a different node ID: %v", volume.InstanceID)
+	if volume.AttachedToInstance != "" {
+		return nil, status.Errorf(codes.FailedPrecondition, "cannot attach volume to node because it is already attached to a different node ID: %v", volume.AttachedToInstance)
 	}
 
 	c.Driver.log.WithFields(logrus.Fields{
@@ -254,7 +280,11 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 		"node-id":   req.NodeId,
 	}).Info("Controller Publish Volume: called")
 
-	err = c.Driver.client.BlockStorage.Attach(ctx, req.VolumeId, req.NodeId, "yes")
+	attach := &govultr.BlockStorageAttach{
+		InstanceID: req.NodeId,
+		Live:       govultr.BoolToBoolPtr(true),
+	}
+	err = c.Driver.client.BlockStorage.Attach(ctx, req.VolumeId, attach)
 	if err != nil {
 		// Desired node could still be spinning up
 		if strings.Contains(err.Error(), "Server is currently locked") {
@@ -264,7 +294,7 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 		if strings.Contains(err.Error(), "Block storage volume is already attached to a server") {
 			return &csi.ControllerPublishVolumeResponse{
 				PublishContext: map[string]string{
-					c.Driver.publishVolumeID: volume.BlockStorageID,
+					c.Driver.publishVolumeID: volume.ID,
 				},
 			}, nil
 		}
@@ -273,13 +303,12 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 	attachReady := false
 	for i := 0; i < volumeStatusCheckRetries; i++ {
 		time.Sleep(volumeStatusCheckInterval * time.Second)
-		bs, err := c.Driver.client.BlockStorage.Get(ctx, volume.BlockStorageID)
-
+		bs, err := c.Driver.client.BlockStorage.Get(ctx, volume.ID)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		if bs.InstanceID == req.NodeId {
+		if bs.AttachedToInstance == req.NodeId {
 			attachReady = true
 			break
 		}
@@ -296,7 +325,7 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 
 	return &csi.ControllerPublishVolumeResponse{
 		PublishContext: map[string]string{
-			c.Driver.publishVolumeID: volume.BlockStorageID,
+			c.Driver.publishVolumeID: volume.ID,
 		},
 	}, nil
 }
@@ -321,16 +350,19 @@ func (c *VultrControllerServer) ControllerUnpublishVolume(ctx context.Context, r
 	}
 
 	// node is already unattached, do nothing
-	if volume.InstanceID == "" {
+	if volume.AttachedToInstance == "" {
 		return &csi.ControllerUnpublishVolumeResponse{}, nil
 	}
 
-	_, err = c.Driver.client.Server.GetServer(ctx, req.NodeId)
+	_, err = c.Driver.client.Instance.Get(ctx, req.NodeId)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "cannot get node: %v", err.Error())
 	}
+	detach := &govultr.BlockStorageDetach{
+		Live: govultr.BoolToBoolPtr(true),
+	}
 
-	err = c.Driver.client.BlockStorage.Detach(ctx, req.VolumeId, "yes")
+	err = c.Driver.client.BlockStorage.Detach(ctx, req.VolumeId, detach)
 	if err != nil {
 		if strings.Contains(err.Error(), "Block storage volume is not currently attached to a server") {
 			return &csi.ControllerUnpublishVolumeResponse{}, nil
@@ -375,6 +407,7 @@ func (c *VultrControllerServer) ValidateVolumeCapabilities(ctx context.Context, 
 }
 
 func (c *VultrControllerServer) ListVolumes(ctx context.Context, req *csi.ListVolumesRequest) (*csi.ListVolumesResponse, error) {
+	//todo setup paging
 	if req.StartingToken != "" {
 		_, err := strconv.Atoi(req.StartingToken)
 		if err != nil {
@@ -382,19 +415,28 @@ func (c *VultrControllerServer) ListVolumes(ctx context.Context, req *csi.ListVo
 		}
 	}
 
-	list, err := c.Driver.client.BlockStorage.List(ctx)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "ListVolumes cannot retrieve list of volumes. %v", err.Error())
-	}
-
+	listOptions := &govultr.ListOptions{}
 	var entries []*csi.ListVolumesResponse_Entry
-	for _, v := range list {
-		entries = append(entries, &csi.ListVolumesResponse_Entry{
-			Volume: &csi.Volume{
-				VolumeId:      v.BlockStorageID,
-				CapacityBytes: int64(v.SizeGB) * giB,
-			},
-		})
+
+	for {
+		list, meta, err := c.Driver.client.BlockStorage.List(ctx, listOptions) //todo
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "ListVolumes cannot retrieve list of volumes. %v", err.Error())
+		}
+		for _, v := range list {
+			entries = append(entries, &csi.ListVolumesResponse_Entry{
+				Volume: &csi.Volume{
+					VolumeId:      v.ID,
+					CapacityBytes: int64(v.SizeGB) * giB,
+				},
+			})
+		}
+
+		if meta.Links.Next != "" {
+			listOptions.Cursor = meta.Links.Next
+			continue
+		}
+		break
 	}
 
 	res := &csi.ListVolumesResponse{

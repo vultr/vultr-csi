@@ -15,8 +15,9 @@ package main
 
 import (
 	"flag"
-	"github.com/vultr/vultr-csi/driver"
 	"log"
+
+	"github.com/vultr/vultr-csi/driver"
 )
 
 var version string

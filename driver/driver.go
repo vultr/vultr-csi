@@ -14,11 +14,13 @@ limitations under the License.
 package driver
 
 import (
+	"context"
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/vultr/govultr"
+	"github.com/vultr/govultr/v2"
 	"github.com/vultr/metadata"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -50,7 +52,11 @@ func NewDriver(endpoint, token, driverName, version string) (*VultrDriver, error
 		driverName = DefaultDriverName
 	}
 
-	client := govultr.NewClient(nil, token)
+	ctx := context.Background()
+	config := &oauth2.Config{}
+	ts := config.TokenSource(ctx, &oauth2.Token{AccessToken: token})
+	client := govultr.NewClient(oauth2.NewClient(ctx, ts))
+
 	client.UserAgent = "csi-vultr/" + version
 
 	c := metadata.NewClient()
@@ -59,17 +65,25 @@ func NewDriver(endpoint, token, driverName, version string) (*VultrDriver, error
 		return nil, err
 	}
 
+	id := meta.InstanceV2ID
+	if meta.InstanceV2ID == "" {
+		id, err = getUUID(ctx, client, meta.InstanceID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	log := logrus.New().WithFields(logrus.Fields{
-		"region":  metadata.RegionCodeToID(meta.Region.RegionCode),
-		"host_id": meta.InstanceID,
+		"region":  meta.Region.RegionCode,
+		"host_id": id,
 		"version": version,
 	})
 
 	return &VultrDriver{
 		name:     driverName,
 		endpoint: endpoint,
-		nodeID:   meta.InstanceID,
-		region:   metadata.RegionCodeToID(meta.Region.RegionCode),
+		nodeID:   id,
+		region:   meta.Region.RegionCode,
 		client:   client,
 
 		isController: token != "",

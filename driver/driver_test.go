@@ -2,13 +2,14 @@ package driver
 
 import (
 	"context"
+	"golang.org/x/oauth2"
 	"math/rand"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/vultr/govultr"
+	"github.com/vultr/govultr/v2"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -23,15 +24,18 @@ func TestDriverSuite(t *testing.T) {
 		t.Fatalf("failed to remove unix domain socket %s, error: %s", socket, err)
 	}
 
-	nodeID := "123456"
-	region := "1"
+	nodeID := "245bb2fe-b55c-44a0-9a1e-ab80e4b5f088"
+	region := "ewr"
 	token := "dummy"
 	version := "dev"
-	client := govultr.NewClient(nil, token)
+	ctx := context.Background()
+	config := &oauth2.Config{}
+	ts := config.TokenSource(ctx, &oauth2.Token{AccessToken: token})
+	client := govultr.NewClient(oauth2.NewClient(ctx, ts))
 
 	log := logrus.New().WithFields(logrus.Fields{
-		"region":  "1",
-		"host_id": "12345",
+		"region":  "ewr",
+		"host_id": "245bb2fe-b55c-44a0-9a1e-ab80e4b5f088",
 		"version": "dev",
 	})
 
