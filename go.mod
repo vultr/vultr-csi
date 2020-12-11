@@ -1,9 +1,9 @@
 module github.com/vultr/vultr-csi
 
-go 1.13
+go 1.14
 
 require (
-	github.com/container-storage-interface/spec v1.2.0
+	github.com/container-storage-interface/spec v1.3.0
 	github.com/golang/protobuf v1.4.2
 	github.com/sirupsen/logrus v1.4.2
 	github.com/vultr/govultr/v2 v2.2.0
