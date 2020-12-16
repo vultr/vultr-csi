@@ -206,16 +206,29 @@ func (n *VultrNodeServer) NodeGetVolumeStats(context.Context, *csi.NodeGetVolume
 	return nil, status.Error(codes.Unimplemented, "")
 }
 
-func (n *VultrNodeServer) NodeExpandVolume(context.Context, *csi.NodeExpandVolumeRequest) (*csi.NodeExpandVolumeResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "")
+func (n *VultrNodeServer) NodeExpandVolume(ctx context.Context, req *csi.NodeExpandVolumeRequest) (*csi.NodeExpandVolumeResponse, error) {
+	n.Driver.log.WithFields(logrus.Fields{
+		"required_bytes": req.CapacityRange.RequiredBytes,
+	}).Info("Node Expand Volume: called")
+
+	return &csi.NodeExpandVolumeResponse{
+		CapacityBytes: req.CapacityRange.RequiredBytes,
+	}, nil
 }
 
 func (n *VultrNodeServer) NodeGetCapabilities(context.Context, *csi.NodeGetCapabilitiesRequest) (*csi.NodeGetCapabilitiesResponse, error) {
 	nodeCapabilities := []*csi.NodeServiceCapability{
-		&csi.NodeServiceCapability{
+		{
 			Type: &csi.NodeServiceCapability_Rpc{
 				Rpc: &csi.NodeServiceCapability_RPC{
 					Type: csi.NodeServiceCapability_RPC_STAGE_UNSTAGE_VOLUME,
+				},
+			},
+		},
+		{
+			Type: &csi.NodeServiceCapability_Rpc{
+				Rpc: &csi.NodeServiceCapability_RPC{
+					Type: csi.NodeServiceCapability_RPC_EXPAND_VOLUME,
 				},
 			},
 		},

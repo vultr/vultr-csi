@@ -15,6 +15,7 @@ package driver
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -470,6 +471,7 @@ func (c *VultrControllerServer) ControllerGetCapabilities(context.Context, *csi.
 		csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME,
 		csi.ControllerServiceCapability_RPC_PUBLISH_UNPUBLISH_VOLUME,
 		csi.ControllerServiceCapability_RPC_LIST_VOLUMES,
+		csi.ControllerServiceCapability_RPC_EXPAND_VOLUME,
 	} {
 		capabilities = append(capabilities, capability(caps))
 	}
@@ -498,8 +500,35 @@ func (c *VultrControllerServer) ListSnapshots(context.Context, *csi.ListSnapshot
 	return nil, status.Error(codes.Unimplemented, "")
 }
 
-func (c *VultrControllerServer) ControllerExpandVolume(context.Context, *csi.ControllerExpandVolumeRequest) (*csi.ControllerExpandVolumeResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "")
+func (c *VultrControllerServer) ControllerExpandVolume(ctx context.Context, req *csi.ControllerExpandVolumeRequest) (*csi.ControllerExpandVolumeResponse, error) {
+	volumeID := req.GetVolumeId()
+	if volumeID == "" {
+		return nil, status.Error(codes.InvalidArgument, "NodeExpandVolume volume id must be provided")
+	}
+
+	if _, err := c.Driver.client.BlockStorage.Get(ctx, volumeID); err != nil {
+		return nil, status.Errorf(codes.Internal, "ControllerExpandVolume could not retrieve existing volume: %v", err)
+	}
+
+	expanded, err := getStorage(req.CapacityRange)
+	if err != nil {
+		return nil, status.Errorf(codes.OutOfRange, "ControllerExpandVolume invalid capacity range: %v", err)
+	}
+
+	c.Driver.log.WithFields(logrus.Fields{
+		"volume-id": req.VolumeId,
+		"size":      int(expanded / giB),
+	}).Info("Controller Expand Volume: called")
+
+	blockReq := &govultr.BlockStorageUpdate{
+		SizeGB: int(expanded / giB),
+	}
+
+	if err := c.Driver.client.BlockStorage.Update(ctx, volumeID, blockReq); err != nil {
+		return nil, status.Errorf(codes.Internal, "cannot resize volume %s: %s", req.GetVolumeId(), err.Error())
+	}
+
+	return &csi.ControllerExpandVolumeResponse{CapacityBytes: expanded, NodeExpansionRequired: false}, nil
 }
 
 // This relates to being able to get health checks on a PV. We do not have this
@@ -541,4 +570,56 @@ func getStorageBytes(capRange *csi.CapacityRange) (int64, error) {
 
 	capacity := capRange.GetRequiredBytes()
 	return capacity, nil
+}
+
+func getStorage(capRange *csi.CapacityRange) (int64, error) {
+	if capRange == nil {
+		return defaultVolumeSizeInBytes, nil
+	}
+
+	requiredBytes := capRange.GetRequiredBytes()
+	requiredSet := 0 < requiredBytes
+	limitBytes := capRange.GetLimitBytes()
+	limitSet := 0 < limitBytes
+
+	if !requiredSet && !limitSet {
+		return defaultVolumeSizeInBytes, nil
+	}
+
+	if requiredSet {
+		if requiredBytes > maxVolumeSizeInBytes {
+			return 0, fmt.Errorf("required (%v) can not exceed maximum supported volume size (%v)", int(requiredBytes/giB), int(maxVolumeSizeInBytes/giB))
+		}
+		if !limitSet && requiredBytes < minVolumeSizeInBytes {
+			return 0, fmt.Errorf("required (%v) can not be less than minimum supported volume size (%v)", int(requiredBytes/giB), int(minVolumeSizeInBytes/giB))
+		}
+	}
+
+	if limitSet {
+		if requiredSet && limitBytes < requiredBytes {
+			return 0, fmt.Errorf("limit (%v) can not be less than required (%v) size", int(limitBytes/giB), int(requiredBytes/giB))
+		}
+
+		if limitBytes < minVolumeSizeInBytes {
+			return 0, fmt.Errorf("limit (%v) can not be less than minimum supported volume size (%v)", int(limitBytes/giB), int(minVolumeSizeInBytes/giB))
+		}
+
+		if !requiredSet && limitBytes > maxVolumeSizeInBytes {
+			return 0, fmt.Errorf("limit (%v) can not exceed maximum supported volume size (%v)", int(limitBytes/giB), int(maxVolumeSizeInBytes/giB))
+		}
+	}
+
+	if requiredSet && limitSet && requiredBytes == limitBytes {
+		return requiredBytes, nil
+	}
+
+	if requiredSet {
+		return requiredBytes, nil
+	}
+
+	if limitSet {
+		return limitBytes, nil
+	}
+
+	return defaultVolumeSizeInBytes, nil
 }
