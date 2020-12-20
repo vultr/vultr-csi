@@ -211,7 +211,7 @@ func (f *FakeInstance) IPV6Info(ctx context.Context, instanceID string) ([]govul
 	panic("implement me")
 }
 
-func (f *FakeInstance) AddIPV4(ctx context.Context, instanceID string) error {
+func (f *FakeInstance) AddIPV4(ctx context.Context, instanceID string, reboot string) (*govultr.IP, error) {
 	panic("implement me")
 }
 
@@ -320,3 +320,12 @@ func (f *FakeInstance) GetServer(ctx context.Context, instanceID string) (*govul
 		InternalIP:  "10.1.95.4",
 	}, nil
 }
+
+func (f *FakeInstance) EnableDDOS(ctx context.Context, instanceID string) error {
+	panic("implement me")
+}
+
+func (f *FakeInstance) DisableDDOS(ctx context.Context, instanceID string) error {
+	panic("implement me")
+}
+
