@@ -2,7 +2,6 @@ package govultr
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -342,7 +341,7 @@ func (b *BareMetalServerServiceHandler) Create(ctx context.Context, regionID, pl
 			values.Add("APPID", options.AppID)
 		}
 		if options.UserData != "" {
-			values.Add("userdata", base64.StdEncoding.EncodeToString([]byte(options.UserData)))
+			values.Add("userdata", options.UserData)
 		}
 		if options.NotifyActivate != "" {
 			values.Add("notify_activate", options.NotifyActivate)
@@ -767,11 +766,9 @@ func (b *BareMetalServerServiceHandler) SetTag(ctx context.Context, serverID, ta
 func (b *BareMetalServerServiceHandler) SetUserData(ctx context.Context, serverID, userData string) error {
 	uri := "/v1/baremetal/set_user_data"
 
-	encodedUserData := base64.StdEncoding.EncodeToString([]byte(userData))
-
 	values := url.Values{
 		"SUBID":    {serverID},
-		"userdata": {encodedUserData},
+		"userdata": {userData},
 	}
 
 	req, err := b.client.NewRequest(ctx, http.MethodPost, uri, values)
