@@ -265,7 +265,7 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 	if volume.AttachedToInstance == req.NodeId {
 		return &csi.ControllerPublishVolumeResponse{
 			PublishContext: map[string]string{
-				c.Driver.publishVolumeID: volume.ID,
+				c.Driver.publishVolumeID: volume.MountID,
 			},
 		}, nil
 	}
@@ -294,7 +294,7 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 		if strings.Contains(err.Error(), "Block storage volume is already attached to a server") {
 			return &csi.ControllerPublishVolumeResponse{
 				PublishContext: map[string]string{
-					c.Driver.publishVolumeID: volume.ID,
+					c.Driver.publishVolumeID: volume.MountID,
 				},
 			}, nil
 		}
@@ -325,7 +325,7 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 
 	return &csi.ControllerPublishVolumeResponse{
 		PublishContext: map[string]string{
-			c.Driver.publishVolumeID: volume.ID,
+			c.Driver.publishVolumeID: volume.MountID,
 		},
 	}, nil
 }

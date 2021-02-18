@@ -65,24 +65,16 @@ func NewDriver(endpoint, token, driverName, version string) (*VultrDriver, error
 		return nil, err
 	}
 
-	id := meta.InstanceV2ID
-	if meta.InstanceV2ID == "" {
-		id, err = getUUID(ctx, client, meta.InstanceID)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	log := logrus.New().WithFields(logrus.Fields{
 		"region":  meta.Region.RegionCode,
-		"host_id": id,
+		"host_id": meta.InstanceV2ID,
 		"version": version,
 	})
 
 	return &VultrDriver{
 		name:     driverName,
 		endpoint: endpoint,
-		nodeID:   id,
+		nodeID:   meta.InstanceV2ID,
 		region:   meta.Region.RegionCode,
 		client:   client,
 
