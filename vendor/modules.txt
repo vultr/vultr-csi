@@ -21,7 +21,7 @@ github.com/konsorten/go-windows-terminal-sequences
 # github.com/sirupsen/logrus v1.4.2
 ## explicit
 github.com/sirupsen/logrus
-# github.com/vultr/govultr/v2 v2.2.0
+# github.com/vultr/govultr/v2 v2.4.0
 ## explicit
 github.com/vultr/govultr/v2
 # github.com/vultr/metadata v1.0.2
