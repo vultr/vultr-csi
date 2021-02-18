@@ -26,6 +26,7 @@ func newFakeBS() *govultr.BlockStorage {
 		Region:             "ewr",
 		AttachedToInstance: "245bb2fe-b55c-44a0-9a1e-ab80e4b5f088",
 		Label:              "test-bs",
+		MountID:            "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
 	}
 }
 
@@ -60,6 +61,7 @@ func (f *fakeBS) List(ctx context.Context, options *govultr.ListOptions) ([]govu
 				Region:             "ewr",
 				AttachedToInstance: "245bb2fe-b55c-44a0-9a1e-ab80e4b5f088",
 				Label:              "test-bs",
+				MountID:            "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
 			},
 			{
 				ID:                 "bda4f333-bfd7-477b-84c2-e4df0ec9e5bf",
@@ -70,6 +72,7 @@ func (f *fakeBS) List(ctx context.Context, options *govultr.ListOptions) ([]govu
 				Region:             "ewr",
 				AttachedToInstance: "b9d23eb3-1880-4746-acc7-f1ef56565320",
 				Label:              "test-bs2",
+				MountID:            "b9d23eb3-1880-4746-acc7-f1ef56565320",
 			},
 		}, &govultr.Meta{
 			Total: 0,
