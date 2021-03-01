@@ -6,8 +6,6 @@
 * Update CSI deps [34](https://github.com/vultr/vultr-csi/pull/34)
 * Update to use `mountID` from Vultr API v2 to identify mount path [36](https://github.com/vultr/vultr-csi/pull/36)
 
-
-
 ## [v0.0.4](https://github.com/vultr/vultr-csi) (2020-11-12)
 ### Bug Fixes
 *  default socket location had wrong path [31](https://github.com/vultr/vultr-csi/pull/31)
