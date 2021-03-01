@@ -37,6 +37,7 @@ type VultrDriver struct {
 	client   *govultr.Client
 
 	publishVolumeID string
+	mountID         string
 
 	isController bool
 	waitTimeout  time.Duration
