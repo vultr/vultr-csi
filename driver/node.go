@@ -13,7 +13,7 @@ import (
 
 const (
 	diskPath   = "/dev/disk/by-id"
-	diskPrefix = "virtio-SUBID"
+	diskPrefix = "virtio-"
 )
 
 var _ csi.NodeServer = &VultrNodeServer{}
@@ -45,7 +45,7 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 		"capacity": req.VolumeCapability,
 	}).Info("Node Stage Volume: called")
 
-	volumeID, ok := req.GetPublishContext()[n.Driver.publishVolumeID]
+	volumeID, ok := req.GetPublishContext()[n.Driver.mountID]
 	if !ok {
 		return nil, status.Error(codes.InvalidArgument, "Could not find the volume id")
 	}
@@ -212,7 +212,7 @@ func (n *VultrNodeServer) NodeExpandVolume(context.Context, *csi.NodeExpandVolum
 
 func (n *VultrNodeServer) NodeGetCapabilities(context.Context, *csi.NodeGetCapabilitiesRequest) (*csi.NodeGetCapabilitiesResponse, error) {
 	nodeCapabilities := []*csi.NodeServiceCapability{
-		&csi.NodeServiceCapability{
+		{
 			Type: &csi.NodeServiceCapability_Rpc{
 				Rpc: &csi.NodeServiceCapability_RPC{
 					Type: csi.NodeServiceCapability_RPC_STAGE_UNSTAGE_VOLUME,
