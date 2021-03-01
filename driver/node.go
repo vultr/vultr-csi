@@ -45,7 +45,7 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 		"capacity": req.VolumeCapability,
 	}).Info("Node Stage Volume: called")
 
-	volumeID, ok := req.GetPublishContext()[n.Driver.publishVolumeID]
+	volumeID, ok := req.GetPublishContext()[n.Driver.mountID]
 	if !ok {
 		return nil, status.Error(codes.InvalidArgument, "Could not find the volume id")
 	}
