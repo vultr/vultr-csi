@@ -1,5 +1,10 @@
 # Change Log
 
+## [v0.1.1](https://github.com/vultr/vultr-csi) (2021-03-25)
+### Dependencies
+* Update vultr/metadata to v1.0.3 [38](https://github.com/vultr/vultr-csi/pull/38)
+
+
 ## [v0.1.0](https://github.com/vultr/vultr-csi) (2021-03-01)
 ### Enhancements
 * Update to use API v2 [33](https://github.com/vultr/vultr-csi/pull/33)
@@ -18,7 +23,7 @@
 
 
 ## [v0.0.3](https://github.com/vultr/vultr-csi) (2020-04-29)
-### Dependecies
+### Dependencies
 *  quay.io/k8scsi/csi-attacher v1.0.0 -> v2.2.0[#29](https://github.com/vultr/vultr-csi/pull/29)
 *  quay.io/k8scsi/driver-registrar v1.0-canary -> v2.2.0[#29](https://github.com/vultr/vultr-csi/pull/29)
 *  quay.io/k8scsi/csi-attacher v1.0.0 -> quay.io/k8scsi/csi-node-driver-registrar:v1.3.0 [#29](https://github.com/vultr/vultr-csi/pull/29)
