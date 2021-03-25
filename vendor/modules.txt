@@ -24,7 +24,7 @@ github.com/sirupsen/logrus
 # github.com/vultr/govultr/v2 v2.4.0
 ## explicit
 github.com/vultr/govultr/v2
-# github.com/vultr/metadata v1.0.2
+# github.com/vultr/metadata v1.0.3
 ## explicit
 github.com/vultr/metadata
 # golang.org/x/net v0.0.0-20200822124328-c89045814202
