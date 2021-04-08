@@ -58,6 +58,7 @@ spec:
             - "--volume-name-uuid-length=16"
             - "--csi-address=$(ADDRESS)"
             - "--v=5"
+            - "--default-fstype=ext4"
           env:
             - name: ADDRESS
               value: /var/lib/csi/sockets/pluginproxy/csi.sock
