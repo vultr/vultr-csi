@@ -4,7 +4,7 @@ deploy: build-linux docker-build docker-push
 .PHONY: build-linux
 build-linux:
 	@echo "building vultr csi for linux"
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags '-X main.version=$(VERSION)' -o csi-vultr-plugin ./cmd/csi-vultr-driver
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags '-X main.version=$(VERSION)' -o csi-vultr-plugin ./cmd/csi-vultr-driver
 
 
 .PHONY: docker-build
