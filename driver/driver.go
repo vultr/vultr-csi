@@ -15,6 +15,7 @@ package driver
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -48,7 +49,7 @@ type VultrDriver struct {
 	version string
 }
 
-func NewDriver(endpoint, token, driverName, version string) (*VultrDriver, error) {
+func NewDriver(endpoint, token, driverName, version, userAgent string) (*VultrDriver, error) {
 	if driverName == "" {
 		driverName = DefaultDriverName
 	}
@@ -59,6 +60,12 @@ func NewDriver(endpoint, token, driverName, version string) (*VultrDriver, error
 	client := govultr.NewClient(oauth2.NewClient(ctx, ts))
 
 	client.UserAgent = "csi-vultr/" + version
+
+	if userAgent != "" {
+		client.UserAgent = fmt.Sprintf("csi-vultr/%s/%s", version, userAgent)
+	} else {
+		client.UserAgent = "csi-vultr/" + version
+	}
 
 	c := metadata.NewClient()
 	meta, err := c.Metadata()
