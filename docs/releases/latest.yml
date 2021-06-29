@@ -240,15 +240,9 @@ spec:
           image: vultr/vultr-csi:v0.2.0
           args:
             - "--endpoint=$(CSI_ENDPOINT)"
-            - "--token=$(VULTR_API_KEY)"
           env:
             - name: CSI_ENDPOINT
               value: unix:///csi/csi.sock
-            - name: VULTR_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: vultr-csi
-                  key: api-key
           imagePullPolicy: "Always"
           securityContext:
             privileged: true
