@@ -179,7 +179,7 @@ func (f *FakeInstance) GetNeighbors(ctx context.Context, instanceID string) (*go
 	panic("implement me")
 }
 
-func (f *FakeInstance) ListPrivateNetworks(ctx context.Context, instanceID string) ([]govultr.PrivateNetwork, *govultr.Meta, error) {
+func (f *FakeInstance) ListPrivateNetworks(ctx context.Context, instanceID string, options *govultr.ListOptions) ([]govultr.PrivateNetwork, *govultr.Meta, error) {
 	panic("implement me")
 }
 
