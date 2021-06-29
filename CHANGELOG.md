@@ -1,5 +1,12 @@
 # Change Log
 
+## [v0.2.0](https://github.com/vultr/vultr-csi) (2021-06-29)
+### Dependencies
+* Updated all quay images to pull from GCR + updated their versions [45](https://github.com/vultr/vultr-csi/pull/45)
+
+### Enhancements
+* Ability to set custom useragent [43](https://github.com/vultr/vultr-csi/pull/43)
+
 ## [v0.1.1](https://github.com/vultr/vultr-csi) (2021-03-25)
 ### Dependencies
 * Update vultr/metadata to v1.0.3 [38](https://github.com/vultr/vultr-csi/pull/38)
