@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/container-storage-interface/spec v1.5.0
 	github.com/golang/protobuf v1.5.2
+	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/vultr/govultr/v2 v2.8.1
 	github.com/vultr/metadata v1.0.3
