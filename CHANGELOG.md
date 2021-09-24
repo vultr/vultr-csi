@@ -1,5 +1,11 @@
 # Change Log
 
+## [v0.3.0](https://github.com/vultr/vultr-csi) (2021-09-24)
+### Dependencies
+* Updated all quay images [48](https://github.com/vultr/vultr-csi/pull/48)
+* Bumped Go from 1.15 to 1.16 [48](https://github.com/vultr/vultr-csi/pull/48)
+
+
 ## [v0.2.0](https://github.com/vultr/vultr-csi) (2021-06-29)
 ### Dependencies
 * Updated all quay images to pull from GCR + updated their versions [45](https://github.com/vultr/vultr-csi/pull/45)
