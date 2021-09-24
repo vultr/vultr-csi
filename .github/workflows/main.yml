@@ -33,7 +33,7 @@ jobs:
       id: get_version_mm
       run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
     - run: |
-        echo "{\"text\":\"Packer : Release https://github.com/vultr/vultr-csi/releases/tag/${{ steps.get_version.outputs.VERSION }} \"}" > mattermost.json
+        echo "{\"text\":\"Vultr CSI : Release https://github.com/vultr/vultr-csi/releases/tag/${{ steps.get_version.outputs.VERSION }} \"}" > mattermost.json
     - uses: mattermost/action-mattermost-notify@master
       env:
         MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
