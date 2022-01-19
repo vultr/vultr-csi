@@ -1,9 +1,6 @@
 name: "Unit/Coverage Tests" 
 
 on:
-  push:
-    branches:
-      - master
   pull_request_target:
     branches:
       - master

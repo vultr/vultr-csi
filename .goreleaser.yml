@@ -4,6 +4,8 @@ before:
     - go generate ./...
 builds:
   -
+    main: ./cmd/csi-vultr-driver/
+    
     env:
       - CGO_ENABLED=0
 
@@ -14,7 +16,6 @@ builds:
 
     goos:
       - linux
-      - windows
       - darwin
 
     goarch:
