@@ -1,4 +1,7 @@
 # Change Log
+## [v0.4.0](https://github.com/vultr/vultr-csi) (2022-01-19)
+### Enhancements
+* Update CSIDriver Kind to use API v1 1.22 support [52](https://github.com/vultr/vultr-csi/pull/52)
 
 ## [v0.3.0](https://github.com/vultr/vultr-csi) (2021-09-24)
 ### Dependencies
