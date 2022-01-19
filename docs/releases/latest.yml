@@ -237,7 +237,7 @@ spec:
             - name: registration-dir
               mountPath: /registration/
         - name: csi-vultr-plugin
-          image: vultr/vultr-csi:v0.3.0
+          image: vultr/vultr-csi:v0.4.0
           args:
             - "--endpoint=$(CSI_ENDPOINT)"
           env:

@@ -3,7 +3,24 @@ before:
     - go mod download
     - go generate ./...
 builds:
- - skip: true
+  -
+    env:
+      - CGO_ENABLED=0
+
+    binary: csi-vultr-plugin
+    
+    flags:
+      - -trimpath #removes all file system paths from the compiled executable
+
+    goos:
+      - linux
+      - windows
+      - darwin
+
+    goarch:
+      - amd64
+      - arm64
+
 
 checksum:
   name_template: "{{ .ProjectName }}_v{{ .Version }}_checksums.txt"
@@ -18,6 +35,12 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+
+dockers:
+  - dockerfile: Dockerfile
+    image_templates:
+      - "vultr/vultr-csi:release"
+      - "vultr/vultr-csi:{{ .Tag }}"
 
 release:
   github:
