@@ -85,7 +85,7 @@ Adapt and use [this](examples/volume.tf) config to test.
 
 ### Validate
 
-To validate run [example job](examples/example.job.hcl) and the following
+To validate run [example job](examples/example.nomad.hcl) and the following
 commands:
 
 ```shell
