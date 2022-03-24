@@ -7,12 +7,14 @@ must be enabled in Nomad config.
 
 ### Components
 
-To make vultr csi work you need to run two components: csi-controller and
-csi-node.
+To make vultr csi work you need to run two components:
+
+- csi-controller
+- csi-node
 
 csi-controller and csi-node uses the same binary, but different
 [schedulers](https://www.nomadproject.io/docs/schedulers). csi-controller should
-be run as service and csi-node should be run as system (==run on every node).
+be run as _service_ and csi-node should be run as _system_ (run on every host).
 
 See more at Nomad documentation on CSI
 [here](https://www.nomadproject.io/docs/internals/plugins/csi).
@@ -33,7 +35,6 @@ API key can be passed to csi-controller securely via
 Example snippet:
 
 ```hcl
-...
       task "csi-controller" {
         driver = "docker"
 
@@ -59,12 +60,12 @@ Example snippet:
           change_mode = "restart"
           env         = true
         }
-...
 ```
 
 ### Run Vultr CSI
 
 Adapt and run example jobs definitions:
+
 - [controller](examples/csi-controller.nomad.hcl)
 - [node](examples/csi-node.nomad.hcl)
 
@@ -72,8 +73,8 @@ In Nomad UI in Storage tab make sure plugin is healthy.
 
 ### Create and register example volume
 
-Nomad will not create volume on demand. You need to create a volume
-yourself either by hand or with
+Nomad will not create volume on demand. You need to create a volume yourself
+either by hand or with
 [Terraform](https://registry.terraform.io/providers/vultr/vultr/latest/docs/resources/block_storage)
 and then register it in Nomad, again by hand with
 [`nomad volume create`](https://www.nomadproject.io/docs/commands/volume/create)
@@ -83,7 +84,9 @@ command or with
 Adapt and use [this](examples/volume.tf) config to test.
 
 ### Validate
-To validate run [example job](examples/example.job.hcl) and the following commands:
+
+To validate run [example job](examples/example.job.hcl) and the following
+commands:
 
 ```shell
 nomad exec -job example touch /data/example
