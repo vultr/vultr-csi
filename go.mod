@@ -7,7 +7,7 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/sirupsen/logrus v1.8.1
-	github.com/vultr/govultr/v2 v2.14.1
+	github.com/vultr/govultr/v2 v2.14.2
 	github.com/vultr/metadata v1.0.3
 	golang.org/x/net v0.0.0-20210917221730-978cfadd31cf // indirect
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f
