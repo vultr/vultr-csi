@@ -20,7 +20,7 @@ github.com/hashicorp/go-retryablehttp
 # github.com/sirupsen/logrus v1.8.1
 ## explicit
 github.com/sirupsen/logrus
-# github.com/vultr/govultr/v2 v2.15.0
+# github.com/vultr/govultr/v2 v2.15.1
 ## explicit
 github.com/vultr/govultr/v2
 # github.com/vultr/metadata v1.0.3

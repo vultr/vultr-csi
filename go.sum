@@ -151,8 +151,8 @@ github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81P
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
 github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
-github.com/vultr/govultr/v2 v2.15.0 h1:bsr0FQfVyqOpaitVd2pwB9v2pOpVwGWLhBJs3adWAAo=
-github.com/vultr/govultr/v2 v2.15.0/go.mod h1:jbiv34j+vv4fVD1+qnSCqYlV95U2xLHxOtU+F+k/l2M=
+github.com/vultr/govultr/v2 v2.15.1 h1:UooxPwrkNg8zeBYL+WUrlYFrm5ap1P/jlwtDlxvRJ9U=
+github.com/vultr/govultr/v2 v2.15.1/go.mod h1:jbiv34j+vv4fVD1+qnSCqYlV95U2xLHxOtU+F+k/l2M=
 github.com/vultr/metadata v1.0.3 h1:sM2KjASP7A49Kltf/fRzAgpCfxV8/HLsgZJB9QXeU1A=
 github.com/vultr/metadata v1.0.3/go.mod h1:9W0P2cGZYdhwzzfeOPGSoa2jqWiBpl333rEF9ml9E4A=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
