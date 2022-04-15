@@ -1,3 +1,31 @@
+## Block Types
+
+As of version `v0.6.0` there are two available Block Storage types that you can deploy against your Kubernetes cluster.
+
+### NVME Block Type
+
+This Block type uses the storage class `vultr-block-storage`. It has a minimum deployment size of 10gb and a maximum of 100tb.
+
+It is currently available in the following regions:
+
+- New Jersey
+- Amsterdam
+- Los Angeles
+- London
+- Singapore
+- Sydney
+- Tokyo
+
+### HDD Block Type
+
+This Block type uses the storage class `vultr-block-storage-hdd`. It has a minimum deployment size of 40gb and a maximum of 40tb.
+
+It is currently available in every region **expect** for the following:
+
+- Sydney
+- Brazil
+- Mexico City
+
 ## Installation
 
 ### Requirements
