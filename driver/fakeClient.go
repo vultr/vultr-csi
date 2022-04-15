@@ -183,11 +183,23 @@ func (f *FakeInstance) ListPrivateNetworks(ctx context.Context, instanceID strin
 	panic("implement me")
 }
 
+func (f *FakeInstance) ListVPCInfo(ctx context.Context, instanceID string, options *govultr.ListOptions) ([]govultr.VPCInfo, *govultr.Meta, error) {
+	panic("implement me")
+}
+
 func (f *FakeInstance) AttachPrivateNetwork(ctx context.Context, instanceID, networkID string) error {
 	panic("implement me")
 }
 
+func (f *FakeInstance) AttachVPC(ctx context.Context, instanceID, networkID string) error {
+	panic("implement me")
+}
+
 func (f *FakeInstance) DetachPrivateNetwork(ctx context.Context, instanceID, networkID string) error {
+	panic("implement me")
+}
+
+func (f *FakeInstance) DetachVPC(ctx context.Context, instanceID, networkID string) error {
 	panic("implement me")
 }
 

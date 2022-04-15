@@ -35,11 +35,21 @@ const (
 )
 
 const (
-	minVolumeSizeInBytes      int64 = 1 * giB
-	maxVolumeSizeInBytes      int64 = 10 * tiB
-	defaultVolumeSizeInBytes  int64 = 10 * giB
-	volumeStatusCheckRetries        = 15
-	volumeStatusCheckInterval       = 1
+
+	// NVME defaults
+	blockTypeNvme                  = "high_perf"
+	nvmeVolumeSizeInBytes    int64 = 10 * giB
+	nvmeMinVolumeSizeInBytes int64 = 10 * giB
+	nvmeMaxVolumeSizeInBytes int64 = 10 * tiB
+
+	// HDD defaults
+	blockTypeHDD                      = "storage_opt"
+	hddDefaultVolumeSizeInBytes int64 = 40 * giB
+	hddMinVolumeSizeInBytes     int64 = 40 * giB
+	hddMaxVolumeSizeInBytes     int64 = 40 * tiB
+
+	volumeStatusCheckRetries  = 15
+	volumeStatusCheckInterval = 1
 )
 
 var (
@@ -61,13 +71,16 @@ func NewVultrControllerServer(driver *VultrDriver) *VultrControllerServer {
 // CreateVolume provisions a new volume on behalf of the user
 func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
 	volName := req.Name
-
 	if volName == "" {
 		return nil, status.Error(codes.InvalidArgument, "CreateVolume Name is missing")
 	}
 
 	if req.VolumeCapabilities == nil || len(req.VolumeCapabilities) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "CreateVolume Volume Capabilities is missing")
+	}
+
+	if req.Parameters["block_type"] == "" {
+		return nil, status.Error(codes.InvalidArgument, "CreateVolume Volume parameter `block_type` is missing")
 	}
 
 	// Validate
@@ -115,15 +128,16 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 	}
 
 	// if applicable, create volume
-	size, err := getStorageBytes(req.CapacityRange)
+	size, err := getStorageBytes(req.CapacityRange, req.Parameters["block_type"])
 	if err != nil {
 		return nil, status.Errorf(codes.OutOfRange, "invalid volume capacity range: %v", err)
 	}
 
 	blockReq := &govultr.BlockStorageCreate{
-		Region: c.Driver.region,
-		SizeGB: int(size / giB),
-		Label:  volName,
+		Region:    c.Driver.region,
+		SizeGB:    int(size / giB),
+		Label:     volName,
+		BlockType: req.Parameters["block_type"],
 	}
 
 	volume, err := c.Driver.client.BlockStorage.Create(ctx, blockReq)
@@ -502,7 +516,7 @@ func (c *VultrControllerServer) ControllerExpandVolume(context.Context, *csi.Con
 	return nil, status.Error(codes.Unimplemented, "")
 }
 
-// This relates to being able to get health checks on a PV. We do not have this
+// ControllerGetVolume This relates to being able to get health checks on a PV. We do not have this
 func (c *VultrControllerServer) ControllerGetVolume(ctx context.Context, request *csi.ControllerGetVolumeRequest) (*csi.ControllerGetVolumeResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "")
 }
@@ -534,9 +548,13 @@ func isValidCapability(caps []*csi.VolumeCapability) bool {
 }
 
 // getStorageBytes returns storage size in bytes
-func getStorageBytes(capRange *csi.CapacityRange) (int64, error) {
-	if capRange == nil {
-		return defaultVolumeSizeInBytes, nil
+func getStorageBytes(capRange *csi.CapacityRange, blockType string) (int64, error) {
+
+	// Default for HDD block is 40gb, NVME block is 10gb
+	if capRange == nil && blockType == blockTypeNvme {
+		return nvmeVolumeSizeInBytes, nil
+	} else if capRange == nil && blockType == blockTypeHDD {
+		return hddDefaultVolumeSizeInBytes, nil
 	}
 
 	capacity := capRange.GetRequiredBytes()

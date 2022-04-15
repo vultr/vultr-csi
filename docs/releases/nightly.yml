@@ -15,9 +15,9 @@ apiVersion: storage.k8s.io/v1
 metadata:
   name: vultr-block-storage
   namespace: kube-system
-  annotations:
-    storageclass.kubernetes.io/is-default-class: "true"
 provisioner: block.csi.vultr.com
+parameters:
+  block_type: high_perf
 
 ---
 kind: StorageClass
@@ -27,6 +27,29 @@ metadata:
   namespace: kube-system
 provisioner: block.csi.vultr.com
 reclaimPolicy: Retain
+parameters:
+  block_type: high_perf
+
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: vultr-block-storage-hdd
+  namespace: kube-system
+provisioner: block.csi.vultr.com
+parameters:
+  block_type: storage_opt
+
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: vultr-block-storage-hdd-retain
+  namespace: kube-system
+provisioner: block.csi.vultr.com
+reclaimPolicy: Retain
+parameters:
+  block_type: storage_opt
 
 ###################
 ### CSI Controller
