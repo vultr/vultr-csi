@@ -1,4 +1,16 @@
 # Change Log
+
+## [v0.6.0](https://github.com/vultr/vultr-csi) (2022-04-15)
+### Enhancements 
+* Added support for multi-block [71](https://github.com/vultr/vultr-csi/pull/71)
+
+### Dependencies
+* GoVultr bump to v2.15.1 [71](https://github.com/vultr/vultr-csi/pull/71)
+
+### Documentation
+* Nomad documentation [66](https://github.com/vultr/vultr-csi/pull/66)
+* Block Types information [71](https://github.com/vultr/vultr-csi/pull/71)
+
 ## [v0.5.0](https://github.com/vultr/vultr-csi) (2022-03-11)
 ### Dependencies
 * Bump google.golang.org/grpc from 1.40.0 to 1.44.0 [58](https://github.com/vultr/vultr-csi/pull/58)
