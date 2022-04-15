@@ -29,7 +29,8 @@ func TestCreateVolume(t *testing.T) {
 	controller := NewFakeVultrControllerServer("create volume")
 
 	res, err := controller.CreateVolume(context.TODO(), &csi.CreateVolumeRequest{
-		Name: "volume-test-name",
+		Name:       "volume-test-name",
+		Parameters: map[string]string{"block_type": "high_perf"},
 		VolumeCapabilities: []*csi.VolumeCapability{
 			{
 				AccessType: &csi.VolumeCapability_Mount{
