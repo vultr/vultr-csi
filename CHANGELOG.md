@@ -11,11 +11,6 @@
 * Nomad documentation [66](https://github.com/vultr/vultr-csi/pull/66)
 * Block Types information [71](https://github.com/vultr/vultr-csi/pull/71)
 
-### Dependencies
-* Bump google.golang.org/grpc from 1.40.0 to 1.44.0 [58](https://github.com/vultr/vultr-csi/pull/58)
-* Bump google.golang.org/grpc from 1.44.0 to 1.45.0 [61](https://github.com/vultr/vultr-csi/pull/61)
-* GoVultr bump to v2.14.1 & fixed FakeInstance [60](https://github.com/vultr/vultr-csi/pull/60)
-
 ## [v0.5.0](https://github.com/vultr/vultr-csi) (2022-03-11)
 ### Dependencies
 * Bump google.golang.org/grpc from 1.40.0 to 1.44.0 [58](https://github.com/vultr/vultr-csi/pull/58)
