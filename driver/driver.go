@@ -49,7 +49,7 @@ type VultrDriver struct {
 	version string
 }
 
-func NewDriver(endpoint, token, driverName, version, userAgent string) (*VultrDriver, error) {
+func NewDriver(endpoint, token, driverName, version, userAgent, apiURL string) (*VultrDriver, error) {
 	if driverName == "" {
 		driverName = DefaultDriverName
 	}
@@ -65,6 +65,12 @@ func NewDriver(endpoint, token, driverName, version, userAgent string) (*VultrDr
 		client.UserAgent = fmt.Sprintf("csi-vultr/%s/%s", version, userAgent)
 	} else {
 		client.UserAgent = "csi-vultr/" + version
+	}
+
+	if apiURL != "" {
+		if err := client.SetBaseURL(apiURL); err != nil {
+			return nil, err
+		}
 	}
 
 	c := metadata.NewClient()
