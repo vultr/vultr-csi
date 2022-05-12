@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/vultr/govultr/v2 v2.16.0
-	github.com/vultr/metadata v1.0.3
+	github.com/vultr/metadata v1.1.0
 	golang.org/x/oauth2 v0.0.0-20220309155454-6242fa91716a
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/appengine v1.6.7 // indirect
