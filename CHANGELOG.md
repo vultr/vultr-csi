@@ -1,7 +1,17 @@
 # Change Log
 
-## [v0.6.0](https://github.com/vultr/vultr-csi) (2022-04-15)
-### Enhancements 
+## [v0.7.0](https://github.com/vultr/vultr-csi) (2022-05-13)
+### Enhancements
+* Allow changing Vultr API url by @ddymko in https://github.com/vultr/vultr-csi/pull/75
+
+### Dependencies
+* Bump github.com/container-storage-interface/spec from 1.5.0 to 1.6.0 by @dependabot in https://github.com/vultr/vultr-csi/pull/69
+* Bump github.com/vultr/metadata from 1.0.3 to 1.1.0 by @dependabot in https://github.com/vultr/vultr-csi/pull/76
+* Bump google.golang.org/grpc from 1.45.0 to 1.46.0 by @dependabot in https://github.com/vultr/vultr-csi/pull/73
+* Bump GO to 1.17 by @ddymko in https://github.com/vultr/vultr-csi/pull/77
+* Bump github.com/vultr/govultr/v2 from 2.15.1 to 2.16.0 by @dependabot in https://github.com/vultr/vultr-csi/pull/74
+
+
 * Added support for multi-block [71](https://github.com/vultr/vultr-csi/pull/71)
 
 ### Dependencies
