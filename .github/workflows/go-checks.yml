@@ -17,7 +17,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: '1.16.6'
+          go-version: 1.17
 
       - name: Install dependencies
         run: |
@@ -40,11 +40,11 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: '1.16.6'
+          go-version: 1.17
 
       - name: Run fmt
         run: |
-          gofmt_files=$(gofmt -l .)
+          gofmt_files=$(gofmt -l driver/.)
           if [[ -n ${gofmt_files} ]]; then
               echo 'gofmt needs running on the following files:'
               echo "${gofmt_files}"
