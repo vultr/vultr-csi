@@ -12,6 +12,8 @@
 * Bump github.com/vultr/govultr/v2 from 2.15.1 to 2.16.0 by @dependabot in https://github.com/vultr/vultr-csi/pull/74
 
 
+## [v0.6.0](https://github.com/vultr/vultr-csi) (2022-04-15)
+### Enhancements
 * Added support for multi-block [71](https://github.com/vultr/vultr-csi/pull/71)
 
 ### Dependencies
