@@ -20,7 +20,7 @@ It is currently available in the following regions:
 
 This Block type uses the storage class `vultr-block-storage-hdd`. It has a minimum deployment size of 40gb and a maximum of 40tb.
 
-It is currently available in every region **expect** for the following:
+It is currently available in every region **except** for the following:
 
 - Sydney
 - Brazil
