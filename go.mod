@@ -3,7 +3,7 @@ module github.com/vultr/vultr-csi
 go 1.17
 
 require (
-	github.com/container-storage-interface/spec v1.6.0
+	github.com/container-storage-interface/spec v1.7.0
 	github.com/golang/protobuf v1.5.2
 	github.com/sirupsen/logrus v1.8.1
 	github.com/vultr/govultr/v2 v2.16.0
