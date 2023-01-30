@@ -5,7 +5,7 @@
 * Bump github.com/vultr/govultr/v2 v2.17.2
 * Bump google.golang.org/grpc v1.52.3
 * Bump github.com/container-storage-interface/spec v1.7.0
-
+  
 ## [v0.7.0](https://github.com/vultr/vultr-csi) (2022-05-13)
 ### Enhancements
 * Allow changing Vultr API url by @ddymko in https://github.com/vultr/vultr-csi/pull/75
