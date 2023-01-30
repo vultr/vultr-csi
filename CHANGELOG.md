@@ -1,4 +1,10 @@
 # Change Log
+## [v0.8.0](https://github.com/vultr/vultr-csi) (2023-01-30)
+### Dependencies
+* Bump github.com/sirupsen/logrus v1.9.0
+* Bump github.com/vultr/govultr/v2 v2.17.2
+* Bump google.golang.org/grpc v1.52.3
+* Bump github.com/container-storage-interface/spec v1.7.0
 
 ## [v0.7.0](https://github.com/vultr/vultr-csi) (2022-05-13)
 ### Enhancements

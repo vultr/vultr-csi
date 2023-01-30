@@ -75,7 +75,7 @@ spec:
       serviceAccountName: csi-vultr-controller-sa
       containers:
         - name: csi-provisioner
-          image: k8s.gcr.io/sig-storage/csi-provisioner:v3.1.0
+          image: k8s.gcr.io/sig-storage/csi-provisioner:v3.4.0
           args:
             - "--volume-name-prefix=pvc"
             - "--volume-name-uuid-length=16"
@@ -90,7 +90,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: csi-attacher
-          image: k8s.gcr.io/sig-storage/csi-attacher:v3.4.0
+          image: k8s.gcr.io/sig-storage/csi-attacher:v4.1.0
           args:
             - "--v=5"
             - "--csi-address=$(ADDRESS)"
@@ -102,7 +102,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: csi-vultr-plugin
-          image: vultr/vultr-csi:nightly
+          image: vultr/vultr-csi:v0.8.0
           args:
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--token=$(VULTR_API_KEY)"
@@ -240,7 +240,7 @@ spec:
       hostNetwork: true
       containers:
         - name: driver-registrar
-          image: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.5.0
+          image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.7.0
           args:
             - "--v=5"
             - "--csi-address=$(ADDRESS)"
@@ -260,18 +260,12 @@ spec:
             - name: registration-dir
               mountPath: /registration/
         - name: csi-vultr-plugin
-          image: vultr/vultr-csi:nightly
+          image: vultr/vultr-csi:v0.7.0
           args:
             - "--endpoint=$(CSI_ENDPOINT)"
-            - "--token=$(VULTR_API_KEY)"
           env:
             - name: CSI_ENDPOINT
               value: unix:///csi/csi.sock
-            - name: VULTR_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: vultr-csi
-                  key: api-key
           imagePullPolicy: "Always"
           securityContext:
             privileged: true
