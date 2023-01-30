@@ -40,7 +40,7 @@ changelog:
 dockers:
   - dockerfile: Dockerfile
     image_templates:
-      - "vultr/vultr-csi:release"
+      - "vultr/vultr-csi:latest"
       - "vultr/vultr-csi:{{ .Tag }}"
 
 release:
