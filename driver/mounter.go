@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"github.com/sirupsen/logrus"
+	"golang.org/x/sys/unix"
 )
 
 type Mounter interface {
@@ -16,6 +18,13 @@ type Mounter interface {
 	Mount(source, target, fs string, opts ...string) error
 	IsMounted(target string) (bool, error)
 	UnMount(target string) error
+	GetStatistics(target string) (volumeStatistics, error)
+	IsBlockDevice(target string) (bool, error)
+}
+
+type volumeStatistics struct {
+	availableBytes, totalBytes, usedBytes    int64
+	availableInodes, totalInodes, usedInodes int64
 }
 
 type mounter struct {
@@ -216,4 +225,55 @@ func (m *mounter) UnMount(target string) error {
 	}
 
 	return nil
+}
+
+func (m *mounter) GetStatistics(target string) (volumeStatistics, error) {
+	isBlock, err := m.IsBlockDevice(target)
+	if err != nil {
+		return volumeStatistics{}, fmt.Errorf("failed to determine if volume %s is block device: %v", target, err)
+	}
+
+	if isBlock {
+		output, err := exec.Command("blockdev", "getsize64", target).CombinedOutput()
+		if err != nil {
+			return volumeStatistics{}, fmt.Errorf("error when getting size of block volume at path %s: output: %s, err: %v", target, string(output), err)
+		}
+		strOut := strings.TrimSpace(string(output))
+		gotSizeBytes, err := strconv.ParseInt(strOut, 10, 64)
+		if err != nil {
+			return volumeStatistics{}, fmt.Errorf("failed to parse size %s into int", strOut)
+		}
+
+		return volumeStatistics{
+			totalBytes: gotSizeBytes,
+		}, nil
+	}
+
+	var statfs unix.Statfs_t
+	err = unix.Statfs(target, &statfs)
+	if err != nil {
+		return volumeStatistics{}, err
+	}
+
+	volStats := volumeStatistics{
+		availableBytes: int64(statfs.Bavail) * int64(statfs.Bsize),
+		totalBytes:     int64(statfs.Blocks) * int64(statfs.Bsize),
+		usedBytes:      (int64(statfs.Blocks) - int64(statfs.Bfree)) * int64(statfs.Bsize),
+
+		availableInodes: int64(statfs.Ffree),
+		totalInodes:     int64(statfs.Files),
+		usedInodes:      int64(statfs.Files) - int64(statfs.Ffree),
+	}
+
+	return volStats, nil
+}
+
+func (m *mounter) IsBlockDevice(devicePath string) (bool, error) {
+	var stat unix.Stat_t
+	err := unix.Stat(devicePath, &stat)
+	if err != nil {
+		return false, err
+	}
+
+	return (stat.Mode & unix.S_IFMT) == unix.S_IFBLK, nil
 }

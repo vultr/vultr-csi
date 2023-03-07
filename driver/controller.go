@@ -214,7 +214,7 @@ func (c *VultrControllerServer) DeleteVolume(ctx context.Context, req *csi.Delet
 			}
 		}
 
-		if exists == true {
+		if exists {
 			break
 		}
 

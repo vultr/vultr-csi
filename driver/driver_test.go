@@ -2,11 +2,12 @@ package driver
 
 import (
 	"context"
-	"golang.org/x/oauth2"
 	"math/rand"
 	"os"
 	"testing"
 	"time"
+
+	"golang.org/x/oauth2"
 
 	"github.com/sirupsen/logrus"
 	"github.com/vultr/govultr/v2"
@@ -94,4 +95,20 @@ func (f *fakeMounter) IsMounted(target string) (bool, error) {
 func (f *fakeMounter) UnMount(target string) error {
 	delete(f.mounted, target)
 	return nil
+}
+
+func (f *fakeMounter) GetStatistics(volumePath string) (volumeStatistics, error) {
+	return volumeStatistics{
+		availableBytes: 3 * giB,
+		totalBytes:     10 * giB,
+		usedBytes:      7 * giB,
+
+		availableInodes: 3000,
+		totalInodes:     10000,
+		usedInodes:      7000,
+	}, nil
+}
+
+func (f *fakeMounter) IsBlockDevice(volumePath string) (bool, error) {
+	return false, nil
 }
