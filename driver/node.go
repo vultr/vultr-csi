@@ -14,6 +14,11 @@ import (
 const (
 	diskPath   = "/dev/disk/by-id"
 	diskPrefix = "virtio-"
+
+	maxVolumesPerNode = 16
+
+	volumeModeBlock      = "block"
+	volumeModeFilesystem = "filesystem"
 )
 
 var _ csi.NodeServer = &VultrNodeServer{}
@@ -147,9 +152,7 @@ func (n *VultrNodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePu
 	}
 
 	mnt := req.VolumeCapability.GetMount()
-	for _, flag := range mnt.MountFlags {
-		options = append(options, flag)
-	}
+	options = append(options, mnt.MountFlags...)
 
 	fsType := "ext4"
 	if mnt.FsType != "" {
@@ -202,8 +205,85 @@ func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.Node
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
 
-func (n *VultrNodeServer) NodeGetVolumeStats(context.Context, *csi.NodeGetVolumeStatsRequest) (*csi.NodeGetVolumeStatsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "")
+func (n *VultrNodeServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeGetVolumeStatsRequest) (*csi.NodeGetVolumeStatsResponse, error) {
+	if req.VolumeId == "" {
+		return nil, status.Error(codes.InvalidArgument, "NodeGetVolumeStats Volume ID must be provided")
+	}
+
+	volumePath := req.VolumePath
+	if volumePath == "" {
+		return nil, status.Error(codes.InvalidArgument, "NodeGetVolumeStats Volume Path must be provided")
+	}
+
+	log := n.Driver.log.WithFields(logrus.Fields{
+		"volume_id":   req.VolumeId,
+		"volume_path": req.VolumePath,
+		"method":      "node_get_volume_stats",
+	})
+	log.Info("node get volume stats called")
+
+	mounted, err := n.Driver.mounter.IsMounted(volumePath)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to check if volume path %q is mounted: %s", volumePath, err)
+	}
+
+	if !mounted {
+		return nil, status.Errorf(codes.NotFound, "volume path %q is not mounted", volumePath)
+	}
+
+	isBlock, err := n.Driver.mounter.IsBlockDevice(volumePath)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to determine if %q is block device: %s", volumePath, err)
+	}
+
+	stats, err := n.Driver.mounter.GetStatistics(volumePath)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to retrieve capacity statistics for volume path %q: %s", volumePath, err)
+	}
+
+	// only can retrieve total capacity for a block device
+	if isBlock {
+		log.WithFields(logrus.Fields{
+			"volume_mode": volumeModeBlock,
+			"bytes_total": stats.totalBytes,
+		}).Info("node capacity statistics retrieved")
+
+		return &csi.NodeGetVolumeStatsResponse{
+			Usage: []*csi.VolumeUsage{
+				{
+					Unit:  csi.VolumeUsage_BYTES,
+					Total: stats.totalBytes,
+				},
+			},
+		}, nil
+	}
+
+	log.WithFields(logrus.Fields{
+		"volume_mode":      volumeModeFilesystem,
+		"bytes_available":  stats.availableBytes,
+		"bytes_total":      stats.totalBytes,
+		"bytes_used":       stats.usedBytes,
+		"inodes_available": stats.availableInodes,
+		"inodes_total":     stats.totalInodes,
+		"inodes_used":      stats.usedInodes,
+	}).Info("node capacity statistics retrieved")
+
+	return &csi.NodeGetVolumeStatsResponse{
+		Usage: []*csi.VolumeUsage{
+			{
+				Available: stats.availableBytes,
+				Total:     stats.totalBytes,
+				Used:      stats.usedBytes,
+				Unit:      csi.VolumeUsage_BYTES,
+			},
+			{
+				Available: stats.availableInodes,
+				Total:     stats.totalInodes,
+				Used:      stats.usedInodes,
+				Unit:      csi.VolumeUsage_INODES,
+			},
+		},
+	}, nil
 }
 
 func (n *VultrNodeServer) NodeExpandVolume(context.Context, *csi.NodeExpandVolumeRequest) (*csi.NodeExpandVolumeResponse, error) {
@@ -216,6 +296,13 @@ func (n *VultrNodeServer) NodeGetCapabilities(context.Context, *csi.NodeGetCapab
 			Type: &csi.NodeServiceCapability_Rpc{
 				Rpc: &csi.NodeServiceCapability_RPC{
 					Type: csi.NodeServiceCapability_RPC_STAGE_UNSTAGE_VOLUME,
+				},
+			},
+		},
+		{
+			Type: &csi.NodeServiceCapability_Rpc{
+				Rpc: &csi.NodeServiceCapability_RPC{
+					Type: csi.NodeServiceCapability_RPC_GET_VOLUME_STATS,
 				},
 			},
 		},
@@ -234,7 +321,8 @@ func (n *VultrNodeServer) NodeGetInfo(ctx context.Context, req *csi.NodeGetInfoR
 	n.Driver.log.WithFields(logrus.Fields{}).Info("Node Get Info: called")
 
 	return &csi.NodeGetInfoResponse{
-		NodeId: n.Driver.nodeID,
+		NodeId:            n.Driver.nodeID,
+		MaxVolumesPerNode: maxVolumesPerNode,
 		AccessibleTopology: &csi.Topology{
 			Segments: map[string]string{
 				"region": n.Driver.region,
