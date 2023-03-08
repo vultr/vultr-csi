@@ -1,4 +1,10 @@
 # Change Log
+## [v0.9.0](https://github.com/vultr/vultr-csi) (2023-03-06)
+### Enhancements
+* Added volume expansion capability in https://github.com/vultr/vultr-csi/pull/116
+* Added volume statistics capability in https://github.com/vultr/vultr-csi/pull/115
+
+
 ## [v0.8.0](https://github.com/vultr/vultr-csi) (2023-01-30)
 ### Dependencies
 * Bump github.com/sirupsen/logrus v1.9.0
