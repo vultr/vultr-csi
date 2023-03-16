@@ -7,9 +7,15 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
+)
+
+const (
+	runningState                 = "running"
+	blkidExitStatusNoIdentifiers = 2
 )
 
 type Mounter interface {
@@ -94,19 +100,22 @@ func (m *mounter) IsFormatted(source string) (bool, error) {
 		"format-args":    blkidArgs,
 	}).Info("isFormatted called")
 
-	out, err := exec.Command(blkidCmd, blkidArgs...).CombinedOutput()
+	exitCode := 0
+	cmd := exec.Command(blkidCmd, blkidArgs...)
+	err = cmd.Run()
 	if err != nil {
-		return false, fmt.Errorf("checking formatting failed for %v: %v", blkidArgs, err)
+		exitError, ok := err.(*exec.ExitError)
+		if !ok {
+			return false, fmt.Errorf("checking formatting failed: %v cmd: %q, args: %q", err, blkidCmd, blkidArgs)
+		}
+		ws := exitError.Sys().(syscall.WaitStatus)
+		exitCode = ws.ExitStatus()
+		if exitCode == blkidExitStatusNoIdentifiers {
+			return false, nil
+		}
+		return false, fmt.Errorf("checking formatting failed: %v cmd: %q, args: %q", err, blkidCmd, blkidArgs)
 	}
 
-	// assume not formatted
-	if string(out) == "" {
-		return false, nil
-	}
-
-	m.log.WithFields(logrus.Fields{
-		"format-output": out,
-	}).Info("isFormatted end")
 	return true, nil
 }
 
