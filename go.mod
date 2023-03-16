@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/container-storage-interface/spec v1.7.0
-	github.com/golang/protobuf v1.5.2
+	github.com/golang/protobuf v1.5.3
 	github.com/sirupsen/logrus v1.9.0
 	github.com/vultr/govultr/v2 v2.17.2
 	github.com/vultr/metadata v1.1.0
