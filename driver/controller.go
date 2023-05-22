@@ -103,9 +103,9 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		for _, v := range volumes {
-			if v.Label == volName {
-				curVolume = &v
+		for i := range volumes {
+			if volumes[i].Label == volName {
+				curVolume = &volumes[i]
 				break
 			}
 		}
@@ -207,8 +207,8 @@ func (c *VultrControllerServer) DeleteVolume(ctx context.Context, req *csi.Delet
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		for _, v := range list {
-			if v.ID == req.VolumeId {
+		for i := range list {
+			if list[i].ID == req.VolumeId {
 				exists = true
 				break
 			}
@@ -437,11 +437,11 @@ func (c *VultrControllerServer) ListVolumes(ctx context.Context, req *csi.ListVo
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "ListVolumes cannot retrieve list of volumes. %v", err.Error())
 		}
-		for _, v := range list {
+		for i := range list {
 			entries = append(entries, &csi.ListVolumesResponse_Entry{
 				Volume: &csi.Volume{
-					VolumeId:      v.ID,
-					CapacityBytes: int64(v.SizeGB) * giB,
+					VolumeId:      list[i].ID,
+					CapacityBytes: int64(list[i].SizeGB) * giB,
 				},
 			})
 		}

@@ -93,9 +93,9 @@ func (f *fakeBS) Detach(ctx context.Context, blockID string, detach *govultr.Blo
 		return err
 	}
 
-	for _, volume := range list {
-		if volume.ID == blockID {
-			volume.AttachedToInstance = ""
+	for i := range list {
+		if list[i].ID == blockID {
+			list[i].AttachedToInstance = ""
 		}
 	}
 
