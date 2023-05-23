@@ -60,16 +60,18 @@ var (
 
 var _ csi.ControllerServer = &VultrControllerServer{}
 
+// VultrControllerServer is the struct type for the VultrDriver
 type VultrControllerServer struct {
 	Driver *VultrDriver
 }
 
+// NewVultrControllerServer returns a VultrControllerServer
 func NewVultrControllerServer(driver *VultrDriver) *VultrControllerServer {
 	return &VultrControllerServer{Driver: driver}
 }
 
 // CreateVolume provisions a new volume on behalf of the user
-func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
+func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) { //nolint:gocyclo,lll
 	volName := req.Name
 	if volName == "" {
 		return nil, status.Error(codes.InvalidArgument, "CreateVolume Name is missing")
@@ -103,9 +105,9 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		for _, v := range volumes {
-			if v.Label == volName {
-				curVolume = &v
+		for i := range volumes {
+			if volumes[i].Label == volName {
+				curVolume = &volumes[i]
 				break
 			}
 		}
@@ -128,10 +130,7 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 	}
 
 	// if applicable, create volume
-	size, err := getStorageBytes(req.CapacityRange, req.Parameters["block_type"])
-	if err != nil {
-		return nil, status.Errorf(codes.OutOfRange, "invalid volume capacity range: %v", err)
-	}
+	size := getStorageBytes(req.CapacityRange, req.Parameters["block_type"])
 
 	blockReq := &govultr.BlockStorageCreate{
 		Region:    c.Driver.region,
@@ -190,6 +189,7 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 	return res, nil
 }
 
+// DeleteVolume performs the volume deletion
 func (c *VultrControllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVolumeRequest) (*csi.DeleteVolumeResponse, error) {
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "DeleteVolume VolumeID is missing")
@@ -207,8 +207,8 @@ func (c *VultrControllerServer) DeleteVolume(ctx context.Context, req *csi.Delet
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		for _, v := range list {
-			if v.ID == req.VolumeId {
+		for i := range list {
+			if list[i].ID == req.VolumeId {
 				exists = true
 				break
 			}
@@ -248,7 +248,8 @@ func (c *VultrControllerServer) DeleteVolume(ctx context.Context, req *csi.Delet
 	return &csi.DeleteVolumeResponse{}, nil
 }
 
-func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req *csi.ControllerPublishVolumeRequest) (*csi.ControllerPublishVolumeResponse, error) {
+// ControllerPublishVolume performs the volume publish for the controller
+func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req *csi.ControllerPublishVolumeRequest) (*csi.ControllerPublishVolumeResponse, error) { //nolint:lll,gocyclo
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "ControllerPublishVolume Volume ID is missing")
 	}
@@ -286,7 +287,8 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 
 	// assuming its attached & to the wrong node
 	if volume.AttachedToInstance != "" {
-		return nil, status.Errorf(codes.FailedPrecondition, "cannot attach volume to node because it is already attached to a different node ID: %v", volume.AttachedToInstance)
+		return nil, status.Errorf(codes.FailedPrecondition,
+			"cannot attach volume to node because it is already attached to a different node ID: %v", volume.AttachedToInstance)
 	}
 
 	c.Driver.log.WithFields(logrus.Fields{
@@ -344,7 +346,8 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 	}, nil
 }
 
-func (c *VultrControllerServer) ControllerUnpublishVolume(ctx context.Context, req *csi.ControllerUnpublishVolumeRequest) (*csi.ControllerUnpublishVolumeResponse, error) {
+// ControllerUnpublishVolume performs the volume un-publish
+func (c *VultrControllerServer) ControllerUnpublishVolume(ctx context.Context, req *csi.ControllerUnpublishVolumeRequest) (*csi.ControllerUnpublishVolumeResponse, error) { //nolint:lll
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "ControllerUnpublishVolume Volume ID is missing")
 	}
@@ -393,7 +396,7 @@ func (c *VultrControllerServer) ControllerUnpublishVolume(ctx context.Context, r
 }
 
 // ValidateVolumeCapabilities checks if requested capabilities are supported
-func (c *VultrControllerServer) ValidateVolumeCapabilities(ctx context.Context, req *csi.ValidateVolumeCapabilitiesRequest) (*csi.ValidateVolumeCapabilitiesResponse, error) {
+func (c *VultrControllerServer) ValidateVolumeCapabilities(ctx context.Context, req *csi.ValidateVolumeCapabilitiesRequest) (*csi.ValidateVolumeCapabilitiesResponse, error) { //nolint:lll
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "ValidateVolumeCapabilities Volume ID is missing")
 	}
@@ -420,8 +423,9 @@ func (c *VultrControllerServer) ValidateVolumeCapabilities(ctx context.Context, 
 	return res, nil
 }
 
+// ListVolumes performs the list volume function
 func (c *VultrControllerServer) ListVolumes(ctx context.Context, req *csi.ListVolumesRequest) (*csi.ListVolumesResponse, error) {
-	//todo setup paging
+	// TODO setup paging
 	if req.StartingToken != "" {
 		_, err := strconv.Atoi(req.StartingToken)
 		if err != nil {
@@ -433,15 +437,15 @@ func (c *VultrControllerServer) ListVolumes(ctx context.Context, req *csi.ListVo
 	var entries []*csi.ListVolumesResponse_Entry
 
 	for {
-		list, meta, err := c.Driver.client.BlockStorage.List(ctx, listOptions) //todo
+		list, meta, err := c.Driver.client.BlockStorage.List(ctx, listOptions)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "ListVolumes cannot retrieve list of volumes. %v", err.Error())
 		}
-		for _, v := range list {
+		for i := range list {
 			entries = append(entries, &csi.ListVolumesResponse_Entry{
 				Volume: &csi.Volume{
-					VolumeId:      v.ID,
-					CapacityBytes: int64(v.SizeGB) * giB,
+					VolumeId:      list[i].ID,
+					CapacityBytes: int64(list[i].SizeGB) * giB,
 				},
 			})
 		}
@@ -468,7 +472,7 @@ func (c *VultrControllerServer) GetCapacity(context.Context, *csi.GetCapacityReq
 }
 
 // ControllerGetCapabilities get capabilities of the controller
-func (c *VultrControllerServer) ControllerGetCapabilities(context.Context, *csi.ControllerGetCapabilitiesRequest) (*csi.ControllerGetCapabilitiesResponse, error) {
+func (c *VultrControllerServer) ControllerGetCapabilities(context.Context, *csi.ControllerGetCapabilitiesRequest) (*csi.ControllerGetCapabilitiesResponse, error) { //nolint:lll
 	capability := func(capability csi.ControllerServiceCapability_RPC_Type) *csi.ControllerServiceCapability {
 		return &csi.ControllerServiceCapability{
 			Type: &csi.ControllerServiceCapability_Rpc{
@@ -501,19 +505,23 @@ func (c *VultrControllerServer) ControllerGetCapabilities(context.Context, *csi.
 	return resp, nil
 }
 
+// CreateSnapshot provides snapshot creation
 func (c *VultrControllerServer) CreateSnapshot(context.Context, *csi.CreateSnapshotRequest) (*csi.CreateSnapshotResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "")
 }
 
+// DeleteSnapshot provides snapshot deletion
 func (c *VultrControllerServer) DeleteSnapshot(context.Context, *csi.DeleteSnapshotRequest) (*csi.DeleteSnapshotResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "")
 }
 
+// ListSnapshots provides the list snapshot
 func (c *VultrControllerServer) ListSnapshots(context.Context, *csi.ListSnapshotsRequest) (*csi.ListSnapshotsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "")
 }
 
-func (c *VultrControllerServer) ControllerExpandVolume(ctx context.Context, req *csi.ControllerExpandVolumeRequest) (*csi.ControllerExpandVolumeResponse, error) {
+// ControllerExpandVolume provides the expand volume
+func (c *VultrControllerServer) ControllerExpandVolume(ctx context.Context, req *csi.ControllerExpandVolumeRequest) (*csi.ControllerExpandVolumeResponse, error) { //nolint:lll
 	volumeID := req.GetVolumeId()
 	if volumeID == "" {
 		return nil, status.Error(codes.InvalidArgument, "NodeExpandVolume volume id must be provided")
@@ -528,10 +536,7 @@ func (c *VultrControllerServer) ControllerExpandVolume(ctx context.Context, req 
 		return nil, status.Errorf(codes.Internal, "%v", err)
 	}
 
-	expanded, err := getStorageBytes(req.CapacityRange, currentBlock.BlockType)
-	if err != nil {
-		return nil, status.Errorf(codes.OutOfRange, "ControllerExpandVolume invalid capacity range: %v", err)
-	}
+	expanded := getStorageBytes(req.CapacityRange, currentBlock.BlockType)
 
 	c.Driver.log.WithFields(logrus.Fields{
 		"volume-id": req.VolumeId,
@@ -550,7 +555,7 @@ func (c *VultrControllerServer) ControllerExpandVolume(ctx context.Context, req 
 }
 
 // ControllerGetVolume This relates to being able to get health checks on a PV. We do not have this
-func (c *VultrControllerServer) ControllerGetVolume(ctx context.Context, request *csi.ControllerGetVolumeRequest) (*csi.ControllerGetVolumeResponse, error) {
+func (c *VultrControllerServer) ControllerGetVolume(ctx context.Context, request *csi.ControllerGetVolumeRequest) (*csi.ControllerGetVolumeResponse, error) { //nolint:lll
 	return nil, status.Error(codes.Unimplemented, "")
 }
 
@@ -581,15 +586,14 @@ func isValidCapability(caps []*csi.VolumeCapability) bool {
 }
 
 // getStorageBytes returns storage size in bytes
-func getStorageBytes(capRange *csi.CapacityRange, blockType string) (int64, error) {
-
+func getStorageBytes(capRange *csi.CapacityRange, blockType string) int64 {
 	// Default for HDD block is 40gb, NVME block is 10gb
 	if capRange == nil && blockType == blockTypeNvme {
-		return nvmeVolumeSizeInBytes, nil
+		return nvmeVolumeSizeInBytes
 	} else if capRange == nil && blockType == blockTypeHDD {
-		return hddDefaultVolumeSizeInBytes, nil
+		return hddDefaultVolumeSizeInBytes
 	}
 
 	capacity := capRange.GetRequiredBytes()
-	return capacity, nil
+	return capacity
 }

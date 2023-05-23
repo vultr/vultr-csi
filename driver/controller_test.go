@@ -69,7 +69,7 @@ func TestCreateVolume(t *testing.T) {
 func TestDeleteVolume(t *testing.T) {
 	controller := NewFakeVultrControllerServer("delete volume")
 
-	volumeID := "c56c7b6e-15c2-445e-9a5d-1063ab5828ec"
+	volumeID := "c56c7b6e-15c2-445e-9a5d-1063ab5828ec" //nolint:goconst
 	res, err := controller.DeleteVolume(context.Background(), &csi.DeleteVolumeRequest{
 		VolumeId: volumeID,
 	})
@@ -88,11 +88,11 @@ func TestDeleteVolume(t *testing.T) {
 func TestPublishVolume(t *testing.T) {
 	controller := NewFakeVultrControllerServer("delete volume")
 
-	nodeId := "245bb2fe-b55c-44a0-9a1e-ab80e4b5f088"
+	nodeID := "245bb2fe-b55c-44a0-9a1e-ab80e4b5f088" //nolint:goconst
 	volumeID := "c56c7b6e-15c2-445e-9a5d-1063ab5828ec"
 
 	res, err := controller.ControllerPublishVolume(context.Background(), &csi.ControllerPublishVolumeRequest{
-		NodeId:   nodeId,
+		NodeId:   nodeID,
 		VolumeId: volumeID,
 		VolumeCapability: &csi.VolumeCapability{
 			AccessType: &csi.VolumeCapability_Mount{
@@ -122,11 +122,11 @@ func TestPublishVolume(t *testing.T) {
 func TestUnPublishVolume(t *testing.T) {
 	controller := NewFakeVultrControllerServer("delete volume")
 
-	nodeId := "c56c7b6e-15c2-445e-9a5d-1063ab5828ec"
+	nodeID := "c56c7b6e-15c2-445e-9a5d-1063ab5828ec"
 	volumeID := "245bb2fe-b55c-44a0-9a1e-ab80e4b5f088"
 
 	res, err := controller.ControllerUnpublishVolume(context.Background(), &csi.ControllerUnpublishVolumeRequest{
-		NodeId:   nodeId,
+		NodeId:   nodeID,
 		VolumeId: volumeID,
 	})
 

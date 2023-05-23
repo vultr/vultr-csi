@@ -22,11 +22,12 @@ import (
 
 var _ csi.IdentityServer = &VultrIdentityServer{}
 
-// VultrIdentityServer
+// VultrIdentityServer provides the Driver
 type VultrIdentityServer struct {
 	Driver *VultrDriver
 }
 
+// NewVultrIdentityServer initializes the VultrIdentityServer
 func NewVultrIdentityServer(driver *VultrDriver) *VultrIdentityServer {
 	return &VultrIdentityServer{driver}
 }
@@ -43,7 +44,7 @@ func (vultrIdentity *VultrIdentityServer) GetPluginInfo(context.Context, *csi.Ge
 }
 
 // GetPluginCapabilities returns plugins available capabilities
-func (vultrIdentity *VultrIdentityServer) GetPluginCapabilities(_ context.Context, req *csi.GetPluginCapabilitiesRequest) (*csi.GetPluginCapabilitiesResponse, error) {
+func (vultrIdentity *VultrIdentityServer) GetPluginCapabilities(_ context.Context, req *csi.GetPluginCapabilitiesRequest) (*csi.GetPluginCapabilitiesResponse, error) { //nolint:lll
 	vultrIdentity.Driver.log.Infof("VultrIdentityServer.GetPluginCapabilities called with request : %v", req)
 
 	return &csi.GetPluginCapabilitiesResponse{
@@ -66,6 +67,7 @@ func (vultrIdentity *VultrIdentityServer) GetPluginCapabilities(_ context.Contex
 	}, nil
 }
 
+// Probe logs the request
 func (vultrIdentity *VultrIdentityServer) Probe(_ context.Context, req *csi.ProbeRequest) (*csi.ProbeResponse, error) {
 	vultrIdentity.Driver.log.Infof("VultrIdentityServer.Probe called with request : %v", req)
 
