@@ -39,6 +39,7 @@ type NonBlockingGRPCServer interface {
 	ForceStop()
 }
 
+// NewNonBlockingGRPCServer provides the non-blocking GRPC server
 func NewNonBlockingGRPCServer() NonBlockingGRPCServer {
 	return &nonBlockingGRPCServer{}
 }
@@ -71,25 +72,25 @@ func (n *nonBlockingGRPCServer) serve(endpoint string, ids csi.IdentityServer, c
 		grpc.UnaryInterceptor(GRPCLogger),
 	}
 
-	url, err := url.Parse(endpoint)
+	serveURL, err := url.Parse(endpoint)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
 	var addr string
-	if url.Scheme == "unix" {
-		addr = url.Path
-		if err := os.Remove(addr); err != nil && !os.IsNotExist(err) {
-			log.Fatalf("Failed to remove %s, error: %s", addr, err.Error())
+	if serveURL.Scheme == "unix" {
+		addr = serveURL.Path
+		if errRemove := os.Remove(addr); err != nil && !os.IsNotExist(err) {
+			log.Fatalf("Failed to remove %s, error: %s", addr, errRemove.Error())
 		}
-	} else if url.Scheme == "tcp" {
-		addr = url.Host
+	} else if serveURL.Scheme == "tcp" {
+		addr = serveURL.Host
 	} else {
-		log.Fatalf("%v endpoint scheme not supported", url.Scheme)
+		log.Fatalf("%v endpoint scheme not supported", serveURL.Scheme)
 	}
 
-	log.Infof("Start listening with scheme %v, addr %v", url.Scheme, addr)
-	listener, err := net.Listen(url.Scheme, addr)
+	log.Infof("Start listening with scheme %v, addr %v", serveURL.Scheme, addr)
+	listener, err := net.Listen(serveURL.Scheme, addr)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
@@ -108,7 +109,7 @@ func (n *nonBlockingGRPCServer) serve(endpoint string, ids csi.IdentityServer, c
 	}
 
 	log.WithFields(log.Fields{
-		"proto":   url.Scheme,
+		"proto":   serveURL.Scheme,
 		"address": addr,
 	}).Infof("Listening for connections on address: %#v", listener.Addr())
 

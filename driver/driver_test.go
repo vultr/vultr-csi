@@ -14,7 +14,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-func init() {
+func init() { //nolint:gochecknoinits
 	rand.Seed(time.Now().UnixNano())
 }
 

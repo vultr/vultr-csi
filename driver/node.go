@@ -23,14 +23,17 @@ const (
 
 var _ csi.NodeServer = &VultrNodeServer{}
 
+// VultrNodeServer type provides the VultrDriver
 type VultrNodeServer struct {
 	Driver *VultrDriver
 }
 
+// NewVultrNodeDriver provides a VultrNodeServer
 func NewVultrNodeDriver(driver *VultrDriver) *VultrNodeServer {
 	return &VultrNodeServer{Driver: driver}
 }
 
+// NodeStageVolume provides stages the node volume
 func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVolumeRequest) (*csi.NodeStageVolumeResponse, error) {
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "NodeStageVolume Volume ID must be provided")
@@ -96,7 +99,8 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 	return &csi.NodeStageVolumeResponse{}, nil
 }
 
-func (n *VultrNodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstageVolumeRequest) (*csi.NodeUnstageVolumeResponse, error) {
+// NodeUnstageVolume provides the node volume unstage functionality
+func (n *VultrNodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstageVolumeRequest) (*csi.NodeUnstageVolumeResponse, error) { //nolint:dupl,lll
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "VolumeID must be provided")
 	}
@@ -126,7 +130,8 @@ func (n *VultrNodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUn
 	return &csi.NodeUnstageVolumeResponse{}, nil
 }
 
-func (n *VultrNodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublishVolumeRequest) (*csi.NodePublishVolumeResponse, error) {
+// NodePublishVolume allows the volume publish
+func (n *VultrNodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublishVolumeRequest) (*csi.NodePublishVolumeResponse, error) { //nolint:lll
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "VolumeID must be provided")
 	}
@@ -175,7 +180,8 @@ func (n *VultrNodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePu
 	return &csi.NodePublishVolumeResponse{}, nil
 }
 
-func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpublishVolumeRequest) (*csi.NodeUnpublishVolumeResponse, error) {
+// NodeUnpublishVolume allows the volume to be unpublished
+func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpublishVolumeRequest) (*csi.NodeUnpublishVolumeResponse, error) { //nolint:dupl,lll
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "VolumeID must be provided")
 	}
@@ -205,7 +211,8 @@ func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.Node
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
 
-func (n *VultrNodeServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeGetVolumeStatsRequest) (*csi.NodeGetVolumeStatsResponse, error) {
+// NodeGetVolumeStats provides the volume stats
+func (n *VultrNodeServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeGetVolumeStatsRequest) (*csi.NodeGetVolumeStatsResponse, error) { //nolint:lll
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "NodeGetVolumeStats Volume ID must be provided")
 	}
@@ -286,6 +293,7 @@ func (n *VultrNodeServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeG
 	}, nil
 }
 
+// NodeExpandVolume provides the node volume expansion
 func (n *VultrNodeServer) NodeExpandVolume(ctx context.Context, req *csi.NodeExpandVolumeRequest) (*csi.NodeExpandVolumeResponse, error) {
 	n.Driver.log.WithFields(logrus.Fields{
 		"required_bytes": req.CapacityRange.RequiredBytes,
@@ -296,6 +304,7 @@ func (n *VultrNodeServer) NodeExpandVolume(ctx context.Context, req *csi.NodeExp
 	}, nil
 }
 
+// NodeGetCapabilities provides the node capabilities
 func (n *VultrNodeServer) NodeGetCapabilities(context.Context, *csi.NodeGetCapabilitiesRequest) (*csi.NodeGetCapabilitiesResponse, error) {
 	nodeCapabilities := []*csi.NodeServiceCapability{
 		{
@@ -330,6 +339,7 @@ func (n *VultrNodeServer) NodeGetCapabilities(context.Context, *csi.NodeGetCapab
 	}, nil
 }
 
+// NodeGetInfo provides the node info
 func (n *VultrNodeServer) NodeGetInfo(ctx context.Context, req *csi.NodeGetInfoRequest) (*csi.NodeGetInfoResponse, error) {
 	n.Driver.log.WithFields(logrus.Fields{}).Info("Node Get Info: called")
 
