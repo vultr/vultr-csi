@@ -1,4 +1,4 @@
-name: "Unit/Coverage Tests" 
+name: "Unit/Coverage Tests"
 
 on:
   pull_request_target:
@@ -16,7 +16,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.19
+          go-version: "1.20"
 
       - name: Run unit tests and coverage test
         id: test-coverage
@@ -28,10 +28,10 @@ jobs:
         if: always()
         run: |
           CONTENT=$(cat output.txt)
-          CONTENT="${CONTENT//'%'/'%25'}" 
-          CONTENT="${CONTENT//$'\n'/'%0A'}" 
-          CONTENT="${CONTENT//$'\r'/'%0D'}" 
-          echo "::set-output name=content::$CONTENT" 
+          CONTENT="${CONTENT//'%'/'%25'}"
+          CONTENT="${CONTENT//$'\n'/'%0A'}"
+          CONTENT="${CONTENT//$'\r'/'%0D'}"
+          echo "::set-output name=content::$CONTENT"
 
   comment:
     runs-on: ubuntu-latest
