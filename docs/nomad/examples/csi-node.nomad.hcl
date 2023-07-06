@@ -18,7 +18,7 @@ job "vultr-csi-nodes" {
       }
 
       csi_plugin {
-        id        = "vultr-amd"
+        id        = "vultr-ams"
         type      = "node"
         mount_dir = "/csi"
       }

@@ -16,8 +16,10 @@ import (
 const (
 	runningState                 = "running"
 	blkidExitStatusNoIdentifiers = 2
+	mkDirMode                    = 0750
 )
 
+// Mounter is the type interface for the mounter
 type Mounter interface {
 	Format(source, fs string) error
 	IsFormatted(source string) (bool, error)
@@ -37,6 +39,7 @@ type mounter struct {
 	log *logrus.Entry
 }
 
+// NewMounter initializes the mounter
 func NewMounter(log *logrus.Entry) *mounter {
 	return &mounter{log: log}
 }
@@ -61,7 +64,7 @@ func (m *mounter) Format(source, fs string) error {
 
 	argument := []string{}
 	argument = append(argument, source)
-	if fs == "ext4" || fs == "ext3" {
+	if fs == "ext4" || fs == "ext3" { //nolint:goconst
 		argument = []string{"-F", source}
 	}
 
@@ -144,7 +147,7 @@ func (m *mounter) Mount(source, target, fs string, opts ...string) error {
 	mountArguments := []string{}
 
 	mountArguments = append(mountArguments, "-t", fs)
-	err := os.MkdirAll(target, 0750)
+	err := os.MkdirAll(target, mkDirMode)
 	if err != nil {
 		return err
 	}
@@ -153,8 +156,7 @@ func (m *mounter) Mount(source, target, fs string, opts ...string) error {
 		mountArguments = append(mountArguments, "-o", strings.Join(opts, ","))
 	}
 
-	mountArguments = append(mountArguments, source)
-	mountArguments = append(mountArguments, target)
+	mountArguments = append(mountArguments, source, target)
 
 	m.log.WithFields(logrus.Fields{
 		"mount command":   mountCommand,
@@ -203,7 +205,7 @@ func (m *mounter) IsMounted(target string) (bool, error) {
 		return false, fmt.Errorf("checking mount failed with command %v: %v", findmntCmd, err)
 	}
 
-	if string(out) == "" {
+	if len(out) == 0 {
 		return false, nil
 	}
 
@@ -243,13 +245,14 @@ func (m *mounter) GetStatistics(target string) (volumeStatistics, error) {
 	}
 
 	if isBlock {
-		output, err := exec.Command("blockdev", "getsize64", target).CombinedOutput()
-		if err != nil {
-			return volumeStatistics{}, fmt.Errorf("error when getting size of block volume at path %s: output: %s, err: %v", target, string(output), err)
+		output, errCommand := exec.Command("blockdev", "getsize64", target).CombinedOutput()
+		if errCommand != nil {
+			errFmt := fmt.Errorf("error when getting size of block volume at path %s: output: %s, err: %v", target, string(output), err)
+			return volumeStatistics{}, errFmt
 		}
 		strOut := strings.TrimSpace(string(output))
-		gotSizeBytes, err := strconv.ParseInt(strOut, 10, 64)
-		if err != nil {
+		gotSizeBytes, errParse := strconv.ParseInt(strOut, 10, 64)
+		if errParse != nil {
 			return volumeStatistics{}, fmt.Errorf("failed to parse size %s into int", strOut)
 		}
 
@@ -259,15 +262,15 @@ func (m *mounter) GetStatistics(target string) (volumeStatistics, error) {
 	}
 
 	var statfs unix.Statfs_t
-	err = unix.Statfs(target, &statfs)
-	if err != nil {
-		return volumeStatistics{}, err
+	errStatfs := unix.Statfs(target, &statfs)
+	if errStatfs != nil {
+		return volumeStatistics{}, errStatfs
 	}
 
 	volStats := volumeStatistics{
-		availableBytes: int64(statfs.Bavail) * int64(statfs.Bsize),
-		totalBytes:     int64(statfs.Blocks) * int64(statfs.Bsize),
-		usedBytes:      (int64(statfs.Blocks) - int64(statfs.Bfree)) * int64(statfs.Bsize),
+		availableBytes: int64(statfs.Bavail) * statfs.Bsize,
+		totalBytes:     int64(statfs.Blocks) * statfs.Bsize,
+		usedBytes:      (int64(statfs.Blocks) - int64(statfs.Bfree)) * statfs.Bsize,
 
 		availableInodes: int64(statfs.Ffree),
 		totalInodes:     int64(statfs.Files),
