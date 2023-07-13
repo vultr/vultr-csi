@@ -100,7 +100,7 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 	var curVolume *govultr.BlockStorage
 
 	for {
-		volumes, meta, _, err := c.Driver.client.BlockStorage.List(ctx, listOptions)
+		volumes, meta, _, err := c.Driver.client.BlockStorage.List(ctx, listOptions) //nolint:bodyclose
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
@@ -139,7 +139,7 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 		BlockType: req.Parameters["block_type"],
 	}
 
-	volume, _, err := c.Driver.client.BlockStorage.Create(ctx, blockReq)
+	volume, _, err := c.Driver.client.BlockStorage.Create(ctx, blockReq) //nolint:bodyclose
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -149,7 +149,7 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 
 	for i := 0; i < volumeStatusCheckRetries; i++ {
 		time.Sleep(volumeStatusCheckInterval * time.Second)
-		bs, _, err := c.Driver.client.BlockStorage.Get(ctx, volume.ID)
+		bs, _, err := c.Driver.client.BlockStorage.Get(ctx, volume.ID) //nolint:bodyclose
 
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
@@ -202,7 +202,7 @@ func (c *VultrControllerServer) DeleteVolume(ctx context.Context, req *csi.Delet
 	listOptions := &govultr.ListOptions{}
 	exists := false
 	for {
-		list, meta, _, err := c.Driver.client.BlockStorage.List(ctx, listOptions)
+		list, meta, _, err := c.Driver.client.BlockStorage.List(ctx, listOptions) //nolint:bodyclose
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
@@ -266,12 +266,12 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 		return nil, status.Error(codes.InvalidArgument, "ControllerPublishVolume read only is not currently supported")
 	}
 
-	volume, _, err := c.Driver.client.BlockStorage.Get(ctx, req.VolumeId)
+	volume, _, err := c.Driver.client.BlockStorage.Get(ctx, req.VolumeId) //nolint:bodyclose
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "cannot get volume: %v", err.Error())
 	}
 
-	if _, _, err = c.Driver.client.Instance.Get(ctx, req.NodeId); err != nil {
+	if _, _, err = c.Driver.client.Instance.Get(ctx, req.NodeId); err != nil { //nolint:bodyclose
 		return nil, status.Errorf(codes.NotFound, "cannot get node: %v", err.Error())
 	}
 
@@ -318,7 +318,7 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 	attachReady := false
 	for i := 0; i < volumeStatusCheckRetries; i++ {
 		time.Sleep(volumeStatusCheckInterval * time.Second)
-		bs, _, err := c.Driver.client.BlockStorage.Get(ctx, volume.ID)
+		bs, _, err := c.Driver.client.BlockStorage.Get(ctx, volume.ID) //nolint:bodyclose
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
@@ -360,7 +360,7 @@ func (c *VultrControllerServer) ControllerUnpublishVolume(ctx context.Context, r
 		"node-id":   req.NodeId,
 	}).Info("Controller Publish Unpublish: called")
 
-	volume, _, err := c.Driver.client.BlockStorage.Get(ctx, req.VolumeId)
+	volume, _, err := c.Driver.client.BlockStorage.Get(ctx, req.VolumeId) //nolint:bodyclose
 	if err != nil {
 		return &csi.ControllerUnpublishVolumeResponse{}, nil
 	}
@@ -370,7 +370,7 @@ func (c *VultrControllerServer) ControllerUnpublishVolume(ctx context.Context, r
 		return &csi.ControllerUnpublishVolumeResponse{}, nil
 	}
 
-	if _, _, err = c.Driver.client.Instance.Get(ctx, req.NodeId); err != nil {
+	if _, _, err = c.Driver.client.Instance.Get(ctx, req.NodeId); err != nil { //nolint:bodyclose
 		return nil, status.Errorf(codes.NotFound, "cannot get node: %v", err.Error())
 	}
 	detach := &govultr.BlockStorageDetach{
@@ -403,7 +403,7 @@ func (c *VultrControllerServer) ValidateVolumeCapabilities(ctx context.Context, 
 		return nil, status.Error(codes.InvalidArgument, "ValidateVolumeCapabilities Volume Capabilities is missing")
 	}
 
-	if _, _, err := c.Driver.client.BlockStorage.Get(ctx, req.VolumeId); err != nil {
+	if _, _, err := c.Driver.client.BlockStorage.Get(ctx, req.VolumeId); err != nil { //nolint:bodyclose
 		return nil, status.Errorf(codes.NotFound, "cannot get volume: %v", err.Error())
 	}
 
@@ -434,7 +434,7 @@ func (c *VultrControllerServer) ListVolumes(ctx context.Context, req *csi.ListVo
 	var entries []*csi.ListVolumesResponse_Entry
 
 	for {
-		list, meta, _, err := c.Driver.client.BlockStorage.List(ctx, listOptions)
+		list, meta, _, err := c.Driver.client.BlockStorage.List(ctx, listOptions) //nolint:bodyclose
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "ListVolumes cannot retrieve list of volumes. %v", err.Error())
 		}
@@ -524,11 +524,11 @@ func (c *VultrControllerServer) ControllerExpandVolume(ctx context.Context, req 
 		return nil, status.Error(codes.InvalidArgument, "NodeExpandVolume volume id must be provided")
 	}
 
-	if _, _, err := c.Driver.client.BlockStorage.Get(ctx, volumeID); err != nil {
+	if _, _, err := c.Driver.client.BlockStorage.Get(ctx, volumeID); err != nil { //nolint:bodyclose
 		return nil, status.Errorf(codes.Internal, "ControllerExpandVolume could not retrieve existing volume: %v", err)
 	}
 
-	currentBlock, _, err := c.Driver.client.BlockStorage.Get(ctx, req.GetVolumeId())
+	currentBlock, _, err := c.Driver.client.BlockStorage.Get(ctx, req.GetVolumeId()) //nolint:bodyclose
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "%v", err)
 	}

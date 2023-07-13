@@ -89,7 +89,7 @@ func (f *fakeBS) Attach(ctx context.Context, blockID string, attach *govultr.Blo
 }
 
 func (f *fakeBS) Detach(ctx context.Context, blockID string, detach *govultr.BlockStorageDetach) error {
-	list, _, _, err := f.List(ctx, nil)
+	list, _, _, err := f.List(ctx, nil) //nolint:bodyclose
 	if err != nil {
 		return err
 	}
@@ -197,7 +197,7 @@ func (f *FakeInstance) GetNeighbors(_ context.Context, _ string) (*govultr.Neigh
 }
 
 // ListPrivateNetworks gets private networks
-func (f *FakeInstance) ListPrivateNetworks(_ context.Context, _ string, _ *govultr.ListOptions) ([]govultr.PrivateNetwork, *govultr.Meta, *http.Response, error) {
+func (f *FakeInstance) ListPrivateNetworks(_ context.Context, _ string, _ *govultr.ListOptions) ([]govultr.PrivateNetwork, *govultr.Meta, *http.Response, error) { //nolint:lll
 	panic("implement me")
 }
 
@@ -257,7 +257,7 @@ func (f *FakeInstance) CreateIPv4(_ context.Context, _ string, _ *bool) (*govult
 }
 
 // ListIPv4 gets IPv4 addresses associated with instance
-func (f *FakeInstance) ListIPv4(_ context.Context, _ string, _ *govultr.ListOptions) ([]govultr.IPv4, *govultr.Meta, *http.Response, error) {
+func (f *FakeInstance) ListIPv4(_ context.Context, _ string, _ *govultr.ListOptions) ([]govultr.IPv4, *govultr.Meta, *http.Response, error) { //nolint:lll
 	panic("implement me")
 }
 
@@ -267,7 +267,7 @@ func (f *FakeInstance) DeleteIPv4(ctx context.Context, instanceID, ip string) er
 }
 
 // ListIPv6 lists IPv6 addresses associated with instance
-func (f *FakeInstance) ListIPv6(_ context.Context, _ string, _ *govultr.ListOptions) ([]govultr.IPv6, *govultr.Meta, *http.Response, error) {
+func (f *FakeInstance) ListIPv6(_ context.Context, _ string, _ *govultr.ListOptions) ([]govultr.IPv6, *govultr.Meta, *http.Response, error) { //nolint:lll
 	panic("implement me")
 }
 
