@@ -21,7 +21,7 @@ import (
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/sirupsen/logrus"
-	"github.com/vultr/govultr/v2"
+	"github.com/vultr/govultr/v3"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

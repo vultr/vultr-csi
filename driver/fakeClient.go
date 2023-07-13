@@ -3,7 +3,7 @@ package driver
 import (
 	"context"
 
-	"github.com/vultr/govultr/v2"
+	"github.com/vultr/govultr/v3"
 )
 
 func newFakeClient() *govultr.Client {

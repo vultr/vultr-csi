@@ -10,7 +10,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/sirupsen/logrus"
-	"github.com/vultr/govultr/v2"
+	"github.com/vultr/govultr/v3"
 	"golang.org/x/sync/errgroup"
 )
 
