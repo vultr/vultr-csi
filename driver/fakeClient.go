@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/vultr/govultr/v3"
 )
@@ -34,12 +35,12 @@ type fakeBS struct {
 	client *govultr.Client
 }
 
-func (f *fakeBS) Create(ctx context.Context, blockReq *govultr.BlockStorageCreate) (*govultr.BlockStorage, error) {
-	return newFakeBS(), nil
+func (f *fakeBS) Create(ctx context.Context, blockReq *govultr.BlockStorageCreate) (*govultr.BlockStorage, *http.Response, error) {
+	return newFakeBS(), nil, nil
 }
 
-func (f *fakeBS) Get(ctx context.Context, blockID string) (*govultr.BlockStorage, error) {
-	return newFakeBS(), nil
+func (f *fakeBS) Get(ctx context.Context, blockID string) (*govultr.BlockStorage, *http.Response, error) {
+	return newFakeBS(), nil, nil
 }
 
 func (f *fakeBS) Update(ctx context.Context, blockID string, blockReq *govultr.BlockStorageUpdate) error {
@@ -50,7 +51,7 @@ func (f *fakeBS) Delete(ctx context.Context, blockID string) error {
 	return nil
 }
 
-func (f *fakeBS) List(ctx context.Context, options *govultr.ListOptions) ([]govultr.BlockStorage, *govultr.Meta, error) {
+func (f *fakeBS) List(ctx context.Context, options *govultr.ListOptions) ([]govultr.BlockStorage, *govultr.Meta, *http.Response, error) {
 	return []govultr.BlockStorage{
 			{
 				ID:                 "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
@@ -80,7 +81,7 @@ func (f *fakeBS) List(ctx context.Context, options *govultr.ListOptions) ([]govu
 				Next: "",
 				Prev: "",
 			},
-		}, nil
+		}, nil, nil
 }
 
 func (f *fakeBS) Attach(ctx context.Context, blockID string, attach *govultr.BlockStorageAttach) error {
@@ -88,7 +89,7 @@ func (f *fakeBS) Attach(ctx context.Context, blockID string, attach *govultr.Blo
 }
 
 func (f *fakeBS) Detach(ctx context.Context, blockID string, detach *govultr.BlockStorageDetach) error {
-	list, _, err := f.List(ctx, nil)
+	list, _, _, err := f.List(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -108,12 +109,12 @@ type FakeInstance struct {
 }
 
 // Create is not implemented
-func (f *FakeInstance) Create(ctx context.Context, instanceReq *govultr.InstanceCreateReq) (*govultr.Instance, error) {
+func (f *FakeInstance) Create(ctx context.Context, instanceReq *govultr.InstanceCreateReq) (*govultr.Instance, *http.Response, error) {
 	panic("implement me")
 }
 
 // Get returns an instance struct
-func (f *FakeInstance) Get(ctx context.Context, instanceID string) (*govultr.Instance, error) {
+func (f *FakeInstance) Get(ctx context.Context, instanceID string) (*govultr.Instance, *http.Response, error) {
 	return &govultr.Instance{
 		ID:           "94cf529e-796c-44c0-8a18-6e0be753f155",
 		MainIP:       "149.28.225.110",
@@ -127,11 +128,11 @@ func (f *FakeInstance) Get(ctx context.Context, instanceID string) (*govultr.Ins
 		Plan:         "vc2-4c-8gb",
 		Label:        "csi-test",
 		InternalIP:   "10.1.95.4",
-	}, nil
+	}, nil, nil
 }
 
-// Update is not implemented
-func (f *FakeInstance) Update(ctx context.Context, instanceID string, instanceReq *govultr.InstanceUpdateReq) (*govultr.Instance, error) {
+// Update updates and instance
+func (f *FakeInstance) Update(_ context.Context, _ string, _ *govultr.InstanceUpdateReq) (*govultr.Instance, *http.Response, error) {
 	panic("implement me")
 }
 
@@ -141,7 +142,7 @@ func (f *FakeInstance) Delete(ctx context.Context, instanceID string) error {
 }
 
 // List is not implemented
-func (f *FakeInstance) List(ctx context.Context, options *govultr.ListOptions) ([]govultr.Instance, *govultr.Meta, error) {
+func (f *FakeInstance) List(ctx context.Context, options *govultr.ListOptions) ([]govultr.Instance, *govultr.Meta, *http.Response, error) {
 	panic("implement me")
 }
 
@@ -160,8 +161,8 @@ func (f *FakeInstance) Reboot(ctx context.Context, instanceID string) error {
 	panic("implement me")
 }
 
-// Reinstall is not implemented
-func (f *FakeInstance) Reinstall(ctx context.Context, instanceID string, reinstallReq *govultr.ReinstallReq) (*govultr.Instance, error) {
+// Reinstall reinstalls an instance
+func (f *FakeInstance) Reinstall(_ context.Context, _ string, _ *govultr.ReinstallReq) (*govultr.Instance, *http.Response, error) {
 	panic("implement me")
 }
 
@@ -180,33 +181,38 @@ func (f *FakeInstance) MassReboot(ctx context.Context, instanceList []string) er
 	panic("implement me")
 }
 
-// Restore is not implemented
-func (f *FakeInstance) Restore(ctx context.Context, instanceID string, restoreReq *govultr.RestoreReq) error {
+// Restore restores an instance
+func (f *FakeInstance) Restore(_ context.Context, _ string, _ *govultr.RestoreReq) (*http.Response, error) {
 	panic("implement me")
 }
 
-// GetBandwidth is not implemented
-func (f *FakeInstance) GetBandwidth(ctx context.Context, instanceID string) (*govultr.Bandwidth, error) {
+// GetBandwidth gets bandwidth for an instance
+func (f *FakeInstance) GetBandwidth(_ context.Context, _ string) (*govultr.Bandwidth, *http.Response, error) {
 	panic("implement me")
 }
 
-// GetNeighbors is not implemented
-func (f *FakeInstance) GetNeighbors(ctx context.Context, instanceID string) (*govultr.Neighbors, error) {
+// GetNeighbors gets neighors for an instance
+func (f *FakeInstance) GetNeighbors(_ context.Context, _ string) (*govultr.Neighbors, *http.Response, error) {
 	panic("implement me")
 }
 
-// ListPrivateNetworks is not implemented
-func (f *FakeInstance) ListPrivateNetworks(ctx context.Context, instanceID string, options *govultr.ListOptions) ([]govultr.PrivateNetwork, *govultr.Meta, error) { //nolint:lll
+// ListPrivateNetworks gets private networks
+func (f *FakeInstance) ListPrivateNetworks(_ context.Context, _ string, _ *govultr.ListOptions) ([]govultr.PrivateNetwork, *govultr.Meta, *http.Response, error) {
+	panic("implement me")
+}
+
+// AttachPrivateNetwork attches private networks
+func (f *FakeInstance) AttachPrivateNetwork(_ context.Context, _, _ string) error {
+	panic("implement me")
+}
+
+// DetachPrivateNetwork detaches private network from instance
+func (f *FakeInstance) DetachPrivateNetwork(_ context.Context, _, _ string) error {
 	panic("implement me")
 }
 
 // ListVPCInfo is not implemented
-func (f *FakeInstance) ListVPCInfo(ctx context.Context, instanceID string, options *govultr.ListOptions) ([]govultr.VPCInfo, *govultr.Meta, error) { //nolint:lll
-	panic("implement me")
-}
-
-// AttachPrivateNetwork is not implemented
-func (f *FakeInstance) AttachPrivateNetwork(ctx context.Context, instanceID, networkID string) error {
+func (f *FakeInstance) ListVPCInfo(ctx context.Context, instanceID string, options *govultr.ListOptions) ([]govultr.VPCInfo, *govultr.Meta, *http.Response, error) { //nolint:lll
 	panic("implement me")
 }
 
@@ -215,48 +221,43 @@ func (f *FakeInstance) AttachVPC(ctx context.Context, instanceID, networkID stri
 	panic("implement me")
 }
 
-// DetachPrivateNetwork is not implemented
-func (f *FakeInstance) DetachPrivateNetwork(ctx context.Context, instanceID, networkID string) error {
-	panic("implement me")
-}
-
 // DetachVPC is not implemented
 func (f *FakeInstance) DetachVPC(ctx context.Context, instanceID, networkID string) error {
 	panic("implement me")
 }
 
-// ISOStatus is not implemented
-func (f *FakeInstance) ISOStatus(ctx context.Context, instanceID string) (*govultr.Iso, error) {
+// ISOStatus gets ISO status from instance
+func (f *FakeInstance) ISOStatus(_ context.Context, _ string) (*govultr.Iso, *http.Response, error) {
 	panic("implement me")
 }
 
-// AttachISO is not implemented
-func (f *FakeInstance) AttachISO(ctx context.Context, instanceID, isoID string) error {
+// AttachISO attaches ISO to instance
+func (f *FakeInstance) AttachISO(_ context.Context, _, _ string) (*http.Response, error) {
 	panic("implement me")
 }
 
-// DetachISO is not implemented
-func (f *FakeInstance) DetachISO(ctx context.Context, instanceID string) error {
+// DetachISO detaches ISO from instance
+func (f *FakeInstance) DetachISO(_ context.Context, _ string) (*http.Response, error) {
 	panic("implement me")
 }
 
-// GetBackupSchedule is not implemented
-func (f *FakeInstance) GetBackupSchedule(ctx context.Context, instanceID string) (*govultr.BackupSchedule, error) {
+// GetBackupSchedule gets instance backup stchedule
+func (f *FakeInstance) GetBackupSchedule(_ context.Context, _ string) (*govultr.BackupSchedule, *http.Response, error) {
 	panic("implement me")
 }
 
-// SetBackupSchedule is not implemented
-func (f *FakeInstance) SetBackupSchedule(ctx context.Context, instanceID string, backup *govultr.BackupScheduleReq) error {
+// SetBackupSchedule sets instance backup schedule
+func (f *FakeInstance) SetBackupSchedule(_ context.Context, _ string, _ *govultr.BackupScheduleReq) (*http.Response, error) {
 	panic("implement me")
 }
 
-// CreateIPv4 is not implemented
-func (f *FakeInstance) CreateIPv4(ctx context.Context, instanceID string, reboot *bool) (*govultr.IPv4, error) {
+// CreateIPv4 creates an IPv4 association to instance
+func (f *FakeInstance) CreateIPv4(_ context.Context, _ string, _ *bool) (*govultr.IPv4, *http.Response, error) {
 	panic("implement me")
 }
 
-// ListIPv4 is not implemented
-func (f *FakeInstance) ListIPv4(ctx context.Context, instanceID string, option *govultr.ListOptions) ([]govultr.IPv4, *govultr.Meta, error) { //nolint:lll
+// ListIPv4 gets IPv4 addresses associated with instance
+func (f *FakeInstance) ListIPv4(_ context.Context, _ string, _ *govultr.ListOptions) ([]govultr.IPv4, *govultr.Meta, *http.Response, error) {
 	panic("implement me")
 }
 
@@ -265,8 +266,8 @@ func (f *FakeInstance) DeleteIPv4(ctx context.Context, instanceID, ip string) er
 	panic("implement me")
 }
 
-// ListIPv6 is not implemented
-func (f *FakeInstance) ListIPv6(ctx context.Context, instanceID string, option *govultr.ListOptions) ([]govultr.IPv6, *govultr.Meta, error) { //nolint:lll
+// ListIPv6 lists IPv6 addresses associated with instance
+func (f *FakeInstance) ListIPv6(_ context.Context, _ string, _ *govultr.ListOptions) ([]govultr.IPv6, *govultr.Meta, *http.Response, error) {
 	panic("implement me")
 }
 
@@ -275,8 +276,8 @@ func (f *FakeInstance) CreateReverseIPv6(ctx context.Context, instanceID string,
 	panic("implement me")
 }
 
-// ListReverseIPv6 is not implemented
-func (f *FakeInstance) ListReverseIPv6(ctx context.Context, instanceID string) ([]govultr.ReverseIP, error) {
+// ListReverseIPv6 gets reverse IP for IPv6 on instance
+func (f *FakeInstance) ListReverseIPv6(_ context.Context, _ string) ([]govultr.ReverseIP, *http.Response, error) {
 	panic("implement me")
 }
 
@@ -295,12 +296,12 @@ func (f *FakeInstance) DefaultReverseIPv4(ctx context.Context, instanceID, ip st
 	panic("implement me")
 }
 
-// GetUserData is not implemented
-func (f *FakeInstance) GetUserData(ctx context.Context, instanceID string) (*govultr.UserData, error) {
+// GetUserData returns instance userdata
+func (f *FakeInstance) GetUserData(_ context.Context, _ string) (*govultr.UserData, *http.Response, error) {
 	panic("implement me")
 }
 
-// GetUpgrades is not implemented
-func (f *FakeInstance) GetUpgrades(ctx context.Context, instanceID string) (*govultr.Upgrades, error) {
+// GetUpgrades gets instance upgade
+func (f *FakeInstance) GetUpgrades(_ context.Context, _ string) (*govultr.Upgrades, *http.Response, error) {
 	panic("implement me")
 }
