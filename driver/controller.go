@@ -39,7 +39,7 @@ const (
 	// NVME defaults
 	blockTypeNvme                  = "high_perf"
 	nvmeVolumeSizeInBytes    int64 = 10 * giB
-	nvmeMinVolumeSizeInBytes int64 = 10 * giB
+	nvmeMinVolumeSizeInBytes int64 = 1 * giB
 	nvmeMaxVolumeSizeInBytes int64 = 10 * tiB
 
 	// HDD defaults
