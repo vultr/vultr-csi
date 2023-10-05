@@ -4,7 +4,7 @@ As of version `v0.6.0` there are two available Block Storage types that you can 
 
 ### NVME Block Type
 
-This Block type uses the storage class `vultr-block-storage`. It has a minimum deployment size of 10gb and a maximum of 100tb.
+This Block type uses the storage class `vultr-block-storage`. It has a minimum deployment size of 1gb and a maximum of 100tb.
 
 It is currently available in the following regions:
 
