@@ -1,9 +1,38 @@
 # Change Log
+## [v0.10.0](https://github.com/vultr/vultr-csi/compare/v0.9.0...v0.10.0) (2023-10-05)
+### Enhancements
+* Update NVMe mininum block size [PR 143](https://github.com/vultr/vultr-csi/pull/143)
+
+### Bug Fixes
+* Fix formatting error handling [PR 119](https://github.com/vultr/vultr-csi/pull/119)
+
+### Documentation
+* Fix typo in csi_plugin.id in csi-node.nomad.hcl example [PR 124](https://github.com/vultr/vultr-csi/pull/124)
+
+### Automation
+* Replace golint with golangci-lint in go-checks workflow [PR 123](https://github.com/vultr/vultr-csi/pull/123)
+
+### Dependencies
+* Bump google.golang.org/grpc from 1.52.3 to 1.56.1 [PR 125](https://github.com/vultr/vultr-csi/pull/125)
+* Update Go to v1.20 [PR 126](https://github.com/vultr/vultr-csi/pull/126)
+* Bump google.golang.org/grpc from 1.56.1 to 1.56.2 [PR 127](https://github.com/vultr/vultr-csi/pull/127)
+* Bump golang.org/x/oauth2 from 0.7.0 to 0.10.0 [PR 129](https://github.com/vultr/vultr-csi/pull/129)
+* Bump golang.org/x/sync from 0.0.0-20210220032951-036812b2e83c to 0.3.0 [PR 128](https://github.com/vultr/vultr-csi/pull/128)
+* Update govultr to v3.1.0 [PR 132](https://github.com/vultr/vultr-csi/pull/132)
+* Bump golang.org/x/oauth2 from 0.10.0 to 0.12.0 [PR 138](https://github.com/vultr/vultr-csi/pull/138)
+* Bump github.com/sirupsen/logrus from 1.9.0 to 1.9.3 [PR 131](https://github.com/vultr/vultr-csi/pull/131)
+* Update govultr to v3.3.1 [PR 144](https://github.com/vultr/vultr-csi/pull/144)
+* Bump github.com/container-storage-interface/spec from 1.7.0 to 1.8.0 [PR 130](https://github.com/vultr/vultr-csi/pull/130)
+* Bump google.golang.org/grpc from 1.56.2 to 1.58.2 [PR 141](https://github.com/vultr/vultr-csi/pull/141)
+
+### New Contributors
+* @const-tmp made their first contribution in [PR 124](https://github.com/vultr/vultr-csi/pull/124)
+* @mondragonfx made their first contribution in [PR 143](https://github.com/vultr/vultr-csi/pull/143)
+
 ## [v0.9.0](https://github.com/vultr/vultr-csi) (2023-03-06)
 ### Enhancements
 * Added volume expansion capability in https://github.com/vultr/vultr-csi/pull/116
 * Added volume statistics capability in https://github.com/vultr/vultr-csi/pull/115
-
 
 ## [v0.8.0](https://github.com/vultr/vultr-csi) (2023-01-30)
 ### Dependencies
@@ -11,7 +40,7 @@
 * Bump github.com/vultr/govultr/v2 v2.17.2
 * Bump google.golang.org/grpc v1.52.3
 * Bump github.com/container-storage-interface/spec v1.7.0
-  
+
 ## [v0.7.0](https://github.com/vultr/vultr-csi) (2022-05-13)
 ### Enhancements
 * Allow changing Vultr API url by @ddymko in https://github.com/vultr/vultr-csi/pull/75
