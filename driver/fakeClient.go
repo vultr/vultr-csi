@@ -221,8 +221,23 @@ func (f *FakeInstance) AttachVPC(ctx context.Context, instanceID, networkID stri
 	panic("implement me")
 }
 
+// ListVPC2Info is not implemented
+func (f *FakeInstance) ListVPC2Info(ctx context.Context, instanceID string, options *govultr.ListOptions) ([]govultr.VPC2Info, *govultr.Meta, *http.Response, error) { //nolint:lll
+	panic("implement me")
+}
+
 // DetachVPC is not implemented
 func (f *FakeInstance) DetachVPC(ctx context.Context, instanceID, networkID string) error {
+	panic("implement me")
+}
+
+// AttachVPC2 is not implemented
+func (f *FakeInstance) AttachVPC2(ctx context.Context, instanceID string, vpc2Req *govultr.AttachVPC2Req) error {
+	panic("implement me")
+}
+
+// DetachVPC2 is not implemented
+func (f *FakeInstance) DetachVPC2(ctx context.Context, instanceID, vpcID string) error {
 	panic("implement me")
 }
 
