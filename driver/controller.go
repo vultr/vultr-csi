@@ -39,7 +39,7 @@ const (
 	// NVME defaults
 	blockTypeNvme                  = "high_perf"
 	nvmeVolumeSizeInBytes    int64 = 10 * giB
-	nvmeMinVolumeSizeInBytes int64 = 10 * giB
+	nvmeMinVolumeSizeInBytes int64 = 1 * giB
 	nvmeMaxVolumeSizeInBytes int64 = 10 * tiB
 
 	// HDD defaults
@@ -584,7 +584,7 @@ func isValidCapability(caps []*csi.VolumeCapability) bool {
 
 // getStorageBytes returns storage size in bytes
 func getStorageBytes(capRange *csi.CapacityRange, blockType string) int64 {
-	// Default for HDD block is 40gb, NVME block is 10gb
+	// Default for HDD block is 40gb, NVME block is 1gb
 	if capRange == nil && blockType == blockTypeNvme {
 		return nvmeVolumeSizeInBytes
 	} else if capRange == nil && blockType == blockTypeHDD {
