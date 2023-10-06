@@ -268,9 +268,10 @@ func (m *mounter) GetStatistics(target string) (volumeStatistics, error) {
 	}
 
 	volStats := volumeStatistics{
-		availableBytes: int64(statfs.Bavail) * statfs.Bsize,
-		totalBytes:     int64(statfs.Blocks) * statfs.Bsize,
-		usedBytes:      (int64(statfs.Blocks) - int64(statfs.Bfree)) * statfs.Bsize,
+		// darwin arm64 on statfs.Bsize returns uint32 so we explicitly cast to int64
+		availableBytes: int64(statfs.Bavail) * int64(statfs.Bsize),                         //nolint: unconvert
+		totalBytes:     int64(statfs.Blocks) * int64(statfs.Bsize),                         //nolint: unconvert
+		usedBytes:      (int64(statfs.Blocks) - int64(statfs.Bfree)) * int64(statfs.Bsize), //nolint: unconvert
 
 		availableInodes: int64(statfs.Ffree),
 		totalInodes:     int64(statfs.Files),
