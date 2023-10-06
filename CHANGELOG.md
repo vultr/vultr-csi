@@ -1,4 +1,12 @@
 # Change Log
+## [v0.10.1](https://github.com/vultr/vultr-csi/compare/v0.10.0...v0.10.1) (2023-10-06)
+### Automation
+* Resolve build errors from statfs type inconsistencies in darwin arm64 [PR 148](https://github.com/vultr/vultr-csi/pull/148)
+
+### Dependencies
+* Bump golang.org/x/sys from 0.12.0 to 0.13.0 [PR 147](https://github.com/vultr/vultr-csi/pull/147)
+* Bump golang.org/x/sync from 0.3.0 to 0.4.0 [PR 146](https://github.com/vultr/vultr-csi/pull/146)
+
 ## [v0.10.0](https://github.com/vultr/vultr-csi/compare/v0.9.0...v0.10.0) (2023-10-05)
 ### Enhancements
 * Update NVMe mininum block size [PR 143](https://github.com/vultr/vultr-csi/pull/143)
