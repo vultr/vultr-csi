@@ -18,7 +18,7 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.4 // indirect
-	golang.org/x/net v0.15.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230711160842-782d3b101e98 // indirect
