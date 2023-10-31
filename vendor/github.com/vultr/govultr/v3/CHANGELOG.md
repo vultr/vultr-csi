@@ -1,6 +1,16 @@
 # Change Log
+## [v3.3.4](https://github.com/vultr/govultr/compare/v3.3.3...v3.3.4) (2023-10-30)
+### Enhancements
+* Database: Add support for FerretDB [PR 272](https://github.com/vultr/govultr/pull/272)
+* Kubernetes: Add HA control planes support [PR 273](https://github.com/vultr/govultr/pull/273)
 
-## GoVultr v1 changelog is located [here](https://github.com/vultr/govultr/blob/v1/CHANGELOG.md)
+## [v3.3.3](https://github.com/vultr/govultr/compare/v3.3.2...v3.3.3) (2023-10-24)
+* Database: Change VPCID to pointer for empty & nil values in updates [PR 270](https://github.com/vultr/govultr/pull/270)
+
+## [v3.3.2](https://github.com/vultr/govultr/compare/v3.3.1...v3.3.2) (2023-10-23)
+### Enhancements
+* General: Remove references to deprecated V1 API [PR 266](https://github.com/vultr/govultr/pull/266)
+* Database: Add support for public/private hostnames [PR 268](https://github.com/vultr/govultr/pull/268)
 
 ## [v3.3.1](https://github.com/vultr/govultr/compare/v3.3.0...v3.3.1) (2023-08-18)
 ### Enhancements
