@@ -1,3 +1,7 @@
+.PHONY: clean
+clean: 
+	rm -rf dist/ csi-vultr-plugin
+
 .PHONY: deploy
 deploy: build-linux docker-build docker-push
 
