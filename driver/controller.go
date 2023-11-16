@@ -393,6 +393,11 @@ func (c *VultrControllerServer) ControllerUnpublishVolume(ctx context.Context, r
 	return &csi.ControllerUnpublishVolumeResponse{}, nil
 }
 
+// ControllerModifyVolume is unimplemented
+func (c *VultrControllerServer) ControllerModifyVolume(ctx context.Context, req *csi.ControllerModifyVolumeRequest) (*csi.ControllerModifyVolumeResponse, error) { //nolint:lll
+	return nil, status.Errorf(codes.Unimplemented, "method ControllerModifyVolume not implemented")
+}
+
 // ValidateVolumeCapabilities checks if requested capabilities are supported
 func (c *VultrControllerServer) ValidateVolumeCapabilities(ctx context.Context, req *csi.ValidateVolumeCapabilitiesRequest) (*csi.ValidateVolumeCapabilitiesResponse, error) { //nolint:lll
 	if req.VolumeId == "" {
