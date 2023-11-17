@@ -1,4 +1,17 @@
 # Change Log
+## [v0.11.0](https://github.com/vultr/vultr-csi/compare/v0.10.1...v0.11.0) (2023-11-16)
+### Bug Fixes
+* Decrease node maximum mount limit [PR 162](https://github.com/vultr/vultr-csi/pull/162)
+
+### Documentation
+* Tidy up some changelog links [PR 150](https://github.com/vultr/vultr-csi/pull/150)
+
+### Dependencies
+* Bump google.golang.org/grpc from 1.58.2 to 1.59.0 [PR 154](https://github.com/vultr/vultr-csi/pull/154)
+* Bump github.com/vultr/govultr/v3 from 3.3.1 to 3.4.0 [PR 160](https://github.com/vultr/vultr-csi/pull/160)
+* Bump golang.org/x/oauth2 from 0.12.0 to 0.14.0 [PR 159](https://github.com/vultr/vultr-csi/pull/159)
+* Bump github.com/container-storage-interface/spec from 1.8.0 to 1.9.0 [PR 155](https://github.com/vultr/vultr-csi/pull/155)
+
 ## [v0.10.1](https://github.com/vultr/vultr-csi/compare/v0.10.0...v0.10.1) (2023-10-06)
 ### Automation
 * Resolve build errors from statfs type inconsistencies in darwin arm64 [PR 148](https://github.com/vultr/vultr-csi/pull/148)
