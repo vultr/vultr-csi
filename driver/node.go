@@ -15,7 +15,7 @@ const (
 	diskPath   = "/dev/disk/by-id"
 	diskPrefix = "virtio-"
 
-	maxVolumesPerNode = 16
+	maxVolumesPerNode = 11
 
 	volumeModeBlock      = "block"
 	volumeModeFilesystem = "filesystem"
