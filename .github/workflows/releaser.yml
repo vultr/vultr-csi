@@ -19,7 +19,7 @@ jobs:
         run: |
           pattern="^Release v[0-9]+.[0-9]+.[0-9]+ #(minor|major|patch)$"
           if [[ "${{ github.event.head_commit.message }}" =~ ${pattern} ]]; then
-              echo ::set-output name=match::true
+              echo "match=true" >> $GITHUB_OUTPUT
           fi
   create-tag:
     runs-on: ubuntu-latest
@@ -84,7 +84,7 @@ jobs:
     steps:
       - name: Get the version
         id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+        run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
       - run: |
           echo "{\"text\":\"Vultr-CSI : Release https://github.com/${{ github.repository }}/releases/tag/${{ needs.create-tag.outputs.new_tag }} \"}" > mattermost.json
       - uses: mattermost/action-mattermost-notify@master
