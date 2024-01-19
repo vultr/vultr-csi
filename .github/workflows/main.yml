@@ -24,14 +24,14 @@ jobs:
         go-version: "1.20"
     - name: Get the version
       id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
     - name: hub login
       run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
     - name: deploy
       run: REGISTRY=vultr VERSION=${{ steps.get_version.outputs.VERSION }} make deploy
     - name: Get the version for mm
       id: get_version_mm
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
     - run: |
         echo "{\"text\":\"Vultr CSI : Release https://github.com/vultr/vultr-csi/releases/tag/${{ steps.get_version.outputs.VERSION }} \"}" > mattermost.json
     - uses: mattermost/action-mattermost-notify@master
