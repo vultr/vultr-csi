@@ -2,8 +2,6 @@ module github.com/vultr/vultr-csi
 
 go 1.21
 
-toolchain go1.21.6
-
 require (
 	github.com/container-storage-interface/spec v1.9.0
 	github.com/golang/protobuf v1.5.3
