@@ -1,4 +1,20 @@
 # Change Log
+## [v0.12.0](https://github.com/vultr/vultr-csi/compare/v0.11.0...v0.12.0) (2024-01-23)
+### Bug Fix
+* Fix mount invalid argument [PR 180](https://github.com/vultr/vultr-csi/pull/180)
+
+### Dependencies
+* Bump golang.org/x/sys from 0.14.0 to 0.16.0 [PR 173](https://github.com/vultr/vultr-csi/pull/173)
+* Bump google.golang.org/grpc from 1.59.0 to 1.60.1 [PR 172](https://github.com/vultr/vultr-csi/pull/172)
+* Bump golang.org/x/oauth2 from 0.14.0 to 0.16.0 [PR 175](https://github.com/vultr/vultr-csi/pull/175)
+* Bump golang.org/x/sync from 0.4.0 to 0.6.0 [PR 174](https://github.com/vultr/vultr-csi/pull/174)
+
+### Automation
+* Use GITHUB_OUTPUT envvar instead of set-output command [PR 176](https://github.com/vultr/vultr-csi/pull/176)
+
+## New Contributors
+* @arunsathiya made their first contribution in [PR 176](https://github.com/vultr/vultr-csi/pull/176)
+
 ## [v0.11.0](https://github.com/vultr/vultr-csi/compare/v0.10.1...v0.11.0) (2023-11-16)
 ### Bug Fixes
 * Decrease node maximum mount limit [PR 162](https://github.com/vultr/vultr-csi/pull/162)
