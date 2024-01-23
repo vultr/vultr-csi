@@ -3,6 +3,7 @@ package driver
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
@@ -66,6 +67,11 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 	fsTpe := "ext4"
 	if mount.FsType != "" {
 		fsTpe = mount.FsType
+	}
+
+	err := os.MkdirAll(target, mkDirMode)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	if err := n.Driver.mounter.FormatAndMount(source, target, fsTpe, options); err != nil {
@@ -134,7 +140,12 @@ func (n *VultrNodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePu
 		fsType = mnt.FsType
 	}
 
-	err := n.Driver.mounter.Mount(req.StagingTargetPath, req.TargetPath, fsType, options)
+	err := os.MkdirAll(req.TargetPath, mkDirMode)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	err = n.Driver.mounter.Mount(req.StagingTargetPath, req.TargetPath, fsType, options)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
