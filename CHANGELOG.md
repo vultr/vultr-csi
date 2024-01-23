@@ -12,7 +12,7 @@
 ### Automation
 * Use GITHUB_OUTPUT envvar instead of set-output command [PR 176](https://github.com/vultr/vultr-csi/pull/176)
 
-## New Contributors
+### New Contributors
 * @arunsathiya made their first contribution in [PR 176](https://github.com/vultr/vultr-csi/pull/176)
 
 ## [v0.11.0](https://github.com/vultr/vultr-csi/compare/v0.10.1...v0.11.0) (2023-11-16)
