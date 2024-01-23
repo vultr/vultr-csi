@@ -3,6 +3,7 @@ package driver
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
@@ -68,31 +69,13 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 		fsTpe = mount.FsType
 	}
 
-	formatted, err := n.Driver.mounter.IsFormatted(source)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "cannot verify if formatted: %v", err.Error())
-	}
-
-	if !formatted {
-		if err = n.Driver.mounter.Format(source, fsTpe); err != nil {
-			n.Driver.log.WithFields(logrus.Fields{
-				"source": source,
-				"fs":     fsTpe,
-				"method": "node-stage-method",
-			}).Warn("node stage volume format")
-			return nil, status.Error(codes.Internal, err.Error())
-		}
-	}
-
-	mounted, err := n.Driver.mounter.IsMounted(target)
+	err := os.MkdirAll(target, mkDirMode)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	if !mounted {
-		if err := n.Driver.mounter.Mount(source, target, fsTpe, options...); err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
+	if err := n.Driver.mounter.FormatAndMount(source, target, fsTpe, options); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	n.Driver.log.Info("Node Stage Volume: volume staged")
@@ -114,16 +97,9 @@ func (n *VultrNodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUn
 		"staging-target-path": req.StagingTargetPath,
 	}).Info("Node Unstage Volume: called")
 
-	mounted, err := n.Driver.mounter.IsMounted(req.StagingTargetPath)
+	err := n.Driver.mounter.Unmount(req.StagingTargetPath)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "cannot verify mount status for %v, %v", req.StagingTargetPath, err.Error())
-	}
-
-	if mounted {
-		err := n.Driver.mounter.UnMount(req.StagingTargetPath)
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	n.Driver.log.Info("Node Unstage Volume: volume unstaged")
@@ -164,16 +140,14 @@ func (n *VultrNodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePu
 		fsType = mnt.FsType
 	}
 
-	mounted, err := n.Driver.mounter.IsMounted(req.TargetPath)
+	err := os.MkdirAll(req.TargetPath, mkDirMode)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "cannot verify mount status for %v, %v", req.StagingTargetPath, err.Error())
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	if !mounted {
-		err := n.Driver.mounter.Mount(req.StagingTargetPath, req.TargetPath, fsType, options...)
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
+	err = n.Driver.mounter.Mount(req.StagingTargetPath, req.TargetPath, fsType, options)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	n.Driver.log.Info("Node Publish Volume: published")
@@ -195,16 +169,9 @@ func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.Node
 		"target-path": req.TargetPath,
 	}).Info("Node Unpublish Volume: called")
 
-	mounted, err := n.Driver.mounter.IsMounted(req.TargetPath)
+	err := n.Driver.mounter.Unmount(req.TargetPath)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "cannot verify mount status for %v, %v", req.TargetPath, err.Error())
-	}
-
-	if mounted {
-		err := n.Driver.mounter.UnMount(req.TargetPath)
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	n.Driver.log.Info("Node Publish Volume: unpublished")
@@ -229,7 +196,7 @@ func (n *VultrNodeServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeG
 	})
 	log.Info("node get volume stats called")
 
-	mounted, err := n.Driver.mounter.IsMounted(volumePath)
+	mounted, err := n.Driver.vMounter.IsMounted(volumePath)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to check if volume path %q is mounted: %s", volumePath, err)
 	}
@@ -238,12 +205,12 @@ func (n *VultrNodeServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeG
 		return nil, status.Errorf(codes.NotFound, "volume path %q is not mounted", volumePath)
 	}
 
-	isBlock, err := n.Driver.mounter.IsBlockDevice(volumePath)
+	isBlock, err := n.Driver.vMounter.IsBlockDevice(volumePath)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to determine if %q is block device: %s", volumePath, err)
 	}
 
-	stats, err := n.Driver.mounter.GetStatistics(volumePath)
+	stats, err := n.Driver.vMounter.GetStatistics(volumePath)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to retrieve capacity statistics for volume path %q: %s", volumePath, err)
 	}

@@ -51,8 +51,8 @@ func TestDriverSuite(t *testing.T) {
 
 		waitTimeout: defaultTimeout,
 
-		log:     log,
-		mounter: NewFakeMounter(log),
+		log:      log,
+		vMounter: NewFakeMounter(log),
 	}
 
 	go d.Run()

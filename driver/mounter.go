@@ -163,6 +163,10 @@ func (m *mounter) Mount(source, target, fs string, opts ...string) error {
 		"mount arguments": mountArguments,
 	}).Info("mount command and arguments")
 
+	for i, m := range mountArguments {
+		mountArguments[i] = strings.Trim(m, "\n")
+	}
+
 	out, err := exec.Command(mountCommand, mountArguments...).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("mounting failed: %v cmd: '%s %s' output: %q",

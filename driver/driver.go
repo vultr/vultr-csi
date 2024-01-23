@@ -22,6 +22,8 @@ import (
 	"github.com/vultr/govultr/v3"
 	"github.com/vultr/metadata"
 	"golang.org/x/oauth2"
+	"k8s.io/mount-utils"
+	"k8s.io/utils/exec"
 )
 
 const (
@@ -43,8 +45,10 @@ type VultrDriver struct {
 	isController bool
 	waitTimeout  time.Duration
 
-	log     *logrus.Entry
-	mounter Mounter
+	log      *logrus.Entry
+	vMounter Mounter
+
+	mounter *mount.SafeFormatAndMount
 
 	version string
 }
@@ -95,8 +99,11 @@ func NewDriver(endpoint, token, driverName, version, userAgent, apiURL string) (
 		isController: token != "",
 		waitTimeout:  defaultTimeout,
 
-		log:     log,
-		mounter: NewMounter(log),
+		log: log,
+		mounter: &mount.SafeFormatAndMount{
+			Interface: mount.New(""),
+			Exec:      exec.New(),
+		},
 
 		version: version,
 	}, nil
