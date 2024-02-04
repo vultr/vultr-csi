@@ -3,6 +3,8 @@ package driver
 import (
 	"context"
 	"fmt"
+	"golang.org/x/sys/unix"
+	"k8s.io/mount-utils"
 	"os"
 	"path/filepath"
 
@@ -196,64 +198,41 @@ func (n *VultrNodeServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeG
 	})
 	log.Info("node get volume stats called")
 
-	mounted, err := n.Driver.vMounter.IsMounted(volumePath)
+	statfs := &unix.Statfs_t{}
+	err := unix.Statfs(volumePath, statfs)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to check if volume path %q is mounted: %s", volumePath, err)
+		return nil, err
 	}
 
-	if !mounted {
-		return nil, status.Errorf(codes.NotFound, "volume path %q is not mounted", volumePath)
-	}
-
-	isBlock, err := n.Driver.vMounter.IsBlockDevice(volumePath)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to determine if %q is block device: %s", volumePath, err)
-	}
-
-	stats, err := n.Driver.vMounter.GetStatistics(volumePath)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to retrieve capacity statistics for volume path %q: %s", volumePath, err)
-	}
-
-	// only can retrieve total capacity for a block device
-	if isBlock {
-		log.WithFields(logrus.Fields{
-			"volume_mode": volumeModeBlock,
-			"bytes_total": stats.totalBytes,
-		}).Info("node capacity statistics retrieved")
-
-		return &csi.NodeGetVolumeStatsResponse{
-			Usage: []*csi.VolumeUsage{
-				{
-					Unit:  csi.VolumeUsage_BYTES,
-					Total: stats.totalBytes,
-				},
-			},
-		}, nil
-	}
+	availableBytes := int64(statfs.Bavail) * int64(statfs.Bsize)
+	usedBytes := (int64(statfs.Blocks) - int64(statfs.Bfree)) * int64(statfs.Bsize)
+	totalBytes := int64(statfs.Blocks) * int64(statfs.Bsize)
+	totalInodes := int64(statfs.Files)
+	availableInodes := int64(statfs.Ffree)
+	usedInodes := totalInodes - availableInodes
 
 	log.WithFields(logrus.Fields{
 		"volume_mode":      volumeModeFilesystem,
-		"bytes_available":  stats.availableBytes,
-		"bytes_total":      stats.totalBytes,
-		"bytes_used":       stats.usedBytes,
-		"inodes_available": stats.availableInodes,
-		"inodes_total":     stats.totalInodes,
-		"inodes_used":      stats.usedInodes,
+		"bytes_available":  availableBytes,
+		"bytes_total":      totalBytes,
+		"bytes_used":       usedBytes,
+		"inodes_available": availableInodes,
+		"inodes_total":     totalInodes,
+		"inodes_used":      usedInodes,
 	}).Info("node capacity statistics retrieved")
 
 	return &csi.NodeGetVolumeStatsResponse{
 		Usage: []*csi.VolumeUsage{
 			{
-				Available: stats.availableBytes,
-				Total:     stats.totalBytes,
-				Used:      stats.usedBytes,
+				Available: availableBytes,
+				Total:     totalBytes,
+				Used:      usedBytes,
 				Unit:      csi.VolumeUsage_BYTES,
 			},
 			{
-				Available: stats.availableInodes,
-				Total:     stats.totalInodes,
-				Used:      stats.usedInodes,
+				Available: availableInodes,
+				Total:     totalInodes,
+				Used:      usedInodes,
 				Unit:      csi.VolumeUsage_INODES,
 			},
 		},
@@ -265,6 +244,15 @@ func (n *VultrNodeServer) NodeExpandVolume(ctx context.Context, req *csi.NodeExp
 	n.Driver.log.WithFields(logrus.Fields{
 		"required_bytes": req.CapacityRange.RequiredBytes,
 	}).Info("Node Expand Volume: called")
+
+	devicePath, _, err := mount.GetDeviceNameFromMount(mount.New(""), req.VolumePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to determine mount path for %s: %s", req.VolumePath, err)
+	}
+
+	if _, err := n.Driver.resizer.Resize(devicePath, req.VolumePath); err != nil {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to resize volume: %s", err))
+	}
 
 	return &csi.NodeExpandVolumeResponse{
 		CapacityBytes: req.CapacityRange.RequiredBytes,
