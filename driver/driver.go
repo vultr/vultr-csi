@@ -49,6 +49,7 @@ type VultrDriver struct {
 	vMounter Mounter
 
 	mounter *mount.SafeFormatAndMount
+	resizer *mount.ResizeFs
 
 	version string
 }
@@ -104,6 +105,11 @@ func NewDriver(endpoint, token, driverName, version, userAgent, apiURL string) (
 			Interface: mount.New(""),
 			Exec:      exec.New(),
 		},
+
+		resizer: mount.NewResizeFs(mount.SafeFormatAndMount{
+			Interface: mount.New(""),
+			Exec:      exec.New(),
+		}.Exec),
 
 		version: version,
 	}, nil
