@@ -71,10 +71,26 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 		fsTpe = mount.FsType
 	}
 
+	n.Driver.log.WithFields(logrus.Fields{
+		"volume":   req.VolumeId,
+		"target":   req.StagingTargetPath,
+		"capacity": req.VolumeCapability,
+	}).Infof("Node Stage Volume: creating directory target %s\n", target)
 	err := os.MkdirAll(target, mkDirMode)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+	n.Driver.log.WithFields(logrus.Fields{
+		"volume":   req.VolumeId,
+		"target":   req.StagingTargetPath,
+		"capacity": req.VolumeCapability,
+	}).Infof("Node Stage Volume: directory created for target %s\n", target)
+
+	n.Driver.log.WithFields(logrus.Fields{
+		"volume":   req.VolumeId,
+		"target":   req.StagingTargetPath,
+		"capacity": req.VolumeCapability,
+	}).Info("Node Stage Volume: attempting format and mount")
 
 	if err := n.Driver.mounter.FormatAndMount(source, target, fsTpe, options); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
