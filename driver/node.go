@@ -96,6 +96,24 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	if _, err := os.Stat(source); err == nil {
+		needResize, err := n.Driver.resizer.NeedResize(source, target)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "could not determine if volume %q needs to be resized: %v", req.VolumeId, err)
+		}
+
+		if needResize {
+			n.Driver.log.WithFields(logrus.Fields{
+				"volume":   req.VolumeId,
+				"target":   req.StagingTargetPath,
+				"capacity": req.VolumeCapability,
+			}).Info("Node Stage Volume: resizing volume %s", req.VolumeId)
+
+			if _, err := n.Driver.resizer.Resize(source, target); err != nil {
+				return nil, status.Errorf(codes.Internal, "could not resize volume %q:  %v", req.VolumeId, err)
+			}
+		}
+	}
 	n.Driver.log.Info("Node Stage Volume: volume staged")
 	return &csi.NodeStageVolumeResponse{}, nil
 }
