@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	csi "github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -257,16 +257,26 @@ func (n *VultrNodeServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeG
 
 // NodeExpandVolume provides the node volume expansion
 func (n *VultrNodeServer) NodeExpandVolume(ctx context.Context, req *csi.NodeExpandVolumeRequest) (*csi.NodeExpandVolumeResponse, error) {
+	log := n.Driver.log.WithFields(logrus.Fields{
+		"volume_id":   req.VolumeId,
+		"volume_path": req.VolumePath,
+		"method":      "NodeExpandVolume",
+	})
+
 	n.Driver.log.WithFields(logrus.Fields{
 		"required_bytes": req.CapacityRange.RequiredBytes,
 	}).Info("Node Expand Volume: called")
 
 	devicePath, _, err := mount.GetDeviceNameFromMount(mount.New(""), req.VolumePath)
 	if err != nil {
+		log.Infof("failed to determine mount path for %s: %s", req.VolumePath, err)
 		return nil, fmt.Errorf("failed to determine mount path for %s: %s", req.VolumePath, err)
 	}
 
+	log.Infof("attempting to resize devicepath: %s", devicePath)
+
 	if _, err := n.Driver.resizer.Resize(devicePath, req.VolumePath); err != nil {
+		log.Infof("failed to resize volume: %s", err)
 		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to resize volume: %s", err))
 	}
 

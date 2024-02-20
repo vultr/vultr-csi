@@ -553,7 +553,7 @@ func (c *VultrControllerServer) ControllerExpandVolume(ctx context.Context, req 
 		return nil, status.Errorf(codes.Internal, "cannot resize volume %s: %s", req.GetVolumeId(), err.Error())
 	}
 
-	return &csi.ControllerExpandVolumeResponse{CapacityBytes: expanded, NodeExpansionRequired: false}, nil
+	return &csi.ControllerExpandVolumeResponse{CapacityBytes: expanded, NodeExpansionRequired: true}, nil
 }
 
 // ControllerGetVolume This relates to being able to get health checks on a PV. We do not have this
