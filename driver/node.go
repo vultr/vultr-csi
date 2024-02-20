@@ -3,10 +3,11 @@ package driver
 import (
 	"context"
 	"fmt"
-	"golang.org/x/sys/unix"
-	"k8s.io/mount-utils"
 	"os"
 	"path/filepath"
+
+	"golang.org/x/sys/unix"
+	"k8s.io/mount-utils"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/sirupsen/logrus"
