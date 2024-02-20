@@ -63,12 +63,12 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 
 	source := getDeviceByPath(volumeID)
 	target := req.StagingTargetPath
-	mount := req.VolumeCapability.GetMount()
-	options := mount.MountFlags
+	mountBlk := req.VolumeCapability.GetMount()
+	options := mountBlk.MountFlags
 
 	fsTpe := "ext4"
-	if mount.FsType != "" {
-		fsTpe = mount.FsType
+	if mountBlk.FsType != "" {
+		fsTpe = mountBlk.FsType
 	}
 
 	n.Driver.log.WithFields(logrus.Fields{
@@ -107,7 +107,7 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 				"volume":   req.VolumeId,
 				"target":   req.StagingTargetPath,
 				"capacity": req.VolumeCapability,
-			}).Info("Node Stage Volume: resizing volume %s", req.VolumeId)
+			}).Info("Node Stage Volume: resizing volume")
 
 			if _, err := n.Driver.resizer.Resize(source, target); err != nil {
 				return nil, status.Errorf(codes.Internal, "could not resize volume %q:  %v", req.VolumeId, err)
@@ -238,9 +238,9 @@ func (n *VultrNodeServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeG
 		return nil, err
 	}
 
-	availableBytes := int64(statfs.Bavail) * int64(statfs.Bsize)
-	usedBytes := (int64(statfs.Blocks) - int64(statfs.Bfree)) * int64(statfs.Bsize)
-	totalBytes := int64(statfs.Blocks) * int64(statfs.Bsize)
+	availableBytes := int64(statfs.Bavail) * int64(statfs.Bsize)                    //nolint
+	usedBytes := (int64(statfs.Blocks) - int64(statfs.Bfree)) * int64(statfs.Bsize) //nolint
+	totalBytes := int64(statfs.Blocks) * int64(statfs.Bsize)                        //nolint
 	totalInodes := int64(statfs.Files)
 	availableInodes := int64(statfs.Ffree)
 	usedInodes := totalInodes - availableInodes
