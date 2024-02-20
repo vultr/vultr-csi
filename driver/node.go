@@ -3,12 +3,13 @@ package driver
 import (
 	"context"
 	"fmt"
-	"golang.org/x/sys/unix"
-	"k8s.io/mount-utils"
 	"os"
 	"path/filepath"
 
-	csi "github.com/container-storage-interface/spec/lib/go/csi"
+	"golang.org/x/sys/unix"
+	"k8s.io/mount-utils"
+
+	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -63,23 +64,57 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 
 	source := getDeviceByPath(volumeID)
 	target := req.StagingTargetPath
-	mount := req.VolumeCapability.GetMount()
-	options := mount.MountFlags
+	mountBlk := req.VolumeCapability.GetMount()
+	options := mountBlk.MountFlags
 
 	fsTpe := "ext4"
-	if mount.FsType != "" {
-		fsTpe = mount.FsType
+	if mountBlk.FsType != "" {
+		fsTpe = mountBlk.FsType
 	}
 
+	n.Driver.log.WithFields(logrus.Fields{
+		"volume":   req.VolumeId,
+		"target":   req.StagingTargetPath,
+		"capacity": req.VolumeCapability,
+	}).Infof("Node Stage Volume: creating directory target %s\n", target)
 	err := os.MkdirAll(target, mkDirMode)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+	n.Driver.log.WithFields(logrus.Fields{
+		"volume":   req.VolumeId,
+		"target":   req.StagingTargetPath,
+		"capacity": req.VolumeCapability,
+	}).Infof("Node Stage Volume: directory created for target %s\n", target)
+
+	n.Driver.log.WithFields(logrus.Fields{
+		"volume":   req.VolumeId,
+		"target":   req.StagingTargetPath,
+		"capacity": req.VolumeCapability,
+	}).Info("Node Stage Volume: attempting format and mount")
 
 	if err := n.Driver.mounter.FormatAndMount(source, target, fsTpe, options); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	if _, err := os.Stat(source); err == nil {
+		needResize, err := n.Driver.resizer.NeedResize(source, target)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "could not determine if volume %q needs to be resized: %v", req.VolumeId, err)
+		}
+
+		if needResize {
+			n.Driver.log.WithFields(logrus.Fields{
+				"volume":   req.VolumeId,
+				"target":   req.StagingTargetPath,
+				"capacity": req.VolumeCapability,
+			}).Info("Node Stage Volume: resizing volume")
+
+			if _, err := n.Driver.resizer.Resize(source, target); err != nil {
+				return nil, status.Errorf(codes.Internal, "could not resize volume %q:  %v", req.VolumeId, err)
+			}
+		}
+	}
 	n.Driver.log.Info("Node Stage Volume: volume staged")
 	return &csi.NodeStageVolumeResponse{}, nil
 }
@@ -204,9 +239,9 @@ func (n *VultrNodeServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeG
 		return nil, err
 	}
 
-	availableBytes := int64(statfs.Bavail) * int64(statfs.Bsize)
-	usedBytes := (int64(statfs.Blocks) - int64(statfs.Bfree)) * int64(statfs.Bsize)
-	totalBytes := int64(statfs.Blocks) * int64(statfs.Bsize)
+	availableBytes := int64(statfs.Bavail) * int64(statfs.Bsize)                    //nolint
+	usedBytes := (int64(statfs.Blocks) - int64(statfs.Bfree)) * int64(statfs.Bsize) //nolint
+	totalBytes := int64(statfs.Blocks) * int64(statfs.Bsize)                        //nolint
 	totalInodes := int64(statfs.Files)
 	availableInodes := int64(statfs.Ffree)
 	usedInodes := totalInodes - availableInodes
@@ -241,16 +276,26 @@ func (n *VultrNodeServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeG
 
 // NodeExpandVolume provides the node volume expansion
 func (n *VultrNodeServer) NodeExpandVolume(ctx context.Context, req *csi.NodeExpandVolumeRequest) (*csi.NodeExpandVolumeResponse, error) {
+	log := n.Driver.log.WithFields(logrus.Fields{
+		"volume_id":   req.VolumeId,
+		"volume_path": req.VolumePath,
+		"method":      "NodeExpandVolume",
+	})
+
 	n.Driver.log.WithFields(logrus.Fields{
 		"required_bytes": req.CapacityRange.RequiredBytes,
 	}).Info("Node Expand Volume: called")
 
 	devicePath, _, err := mount.GetDeviceNameFromMount(mount.New(""), req.VolumePath)
 	if err != nil {
+		log.Infof("failed to determine mount path for %s: %s", req.VolumePath, err)
 		return nil, fmt.Errorf("failed to determine mount path for %s: %s", req.VolumePath, err)
 	}
 
+	log.Infof("attempting to resize devicepath: %s", devicePath)
+
 	if _, err := n.Driver.resizer.Resize(devicePath, req.VolumePath); err != nil {
+		log.Infof("failed to resize volume: %s", err)
 		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to resize volume: %s", err))
 	}
 
