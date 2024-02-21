@@ -1,4 +1,19 @@
 # Change Log
+## [v0.12.2](https://github.com/vultr/vultr-csi/compare/v0.12.1...v0.12.2) (2024-02-21)
+### Bug Fix
+* Resolve CSI expansion issues [PR 189](https://github.com/vultr/vultr-csi/pull/189)
+* Fix some lint issues and update the linter configuration [PR 191](https://github.com/vultr/vultr-csi/pull/191)
+
+### Dependencies
+* Bump k8s.io/mount-utils from 0.29.1 to 0.29.2 [PR 188](https://github.com/vultr/vultr-csi/pull/188)
+* Bump google.golang.org/grpc from 1.60.1 to 1.61.1 [PR 187](https://github.com/vultr/vultr-csi/pull/187)
+* Bump golang.org/x/oauth2 from 0.16.0 to 0.17.0 [PR 186](https://github.com/vultr/vultr-csi/pull/186)
+* Bump github.com/vultr/govultr/v3 from 3.6.1 to 3.6.2 [PR 190](https://github.com/vultr/vultr-csi/pull/190)
+
+## [v0.12.1](https://github.com/vultr/vultr-csi/compare/v0.12.0...v0.12.1) (2024-02-04)
+### Enhancements
+* Add node volume resize [PR 184](https://github.com/vultr/vultr-csi/pull/184)
+
 ## [v0.12.0](https://github.com/vultr/vultr-csi/compare/v0.11.0...v0.12.0) (2024-01-23)
 ### Bug Fix
 * Fix mount invalid argument [PR 180](https://github.com/vultr/vultr-csi/pull/180)
