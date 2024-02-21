@@ -1,4 +1,8 @@
 # Change Log
+## [v0.12.3](https://github.com/vultr/vultr-csi/compare/v0.12.2...v0.12.3) (2024-02-21)
+### Bug Fix
+* Fix ARM builds with type conversion [PR 193](https://github.com/vultr/vultr-csi/pull/193)
+
 ## [v0.12.2](https://github.com/vultr/vultr-csi/compare/v0.12.1...v0.12.2) (2024-02-21)
 ### Bug Fix
 * Resolve CSI expansion issues [PR 189](https://github.com/vultr/vultr-csi/pull/189)
