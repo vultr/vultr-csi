@@ -174,7 +174,11 @@ func (m *mounter) Mount(source, target, fs string, opts ...string) error {
 	}
 
 	if _, err := os.Stat(target + "/lost+found"); err == nil {
-		os.Remove(target + "/lost+found")
+		if errRmv := os.Remove(target + "/lost+found"); errRmv != nil {
+			m.log.WithFields(logrus.Fields{
+				"error": errRmv,
+			}).Info("mount command - removal of lost+found error")
+		}
 	} else if os.IsNotExist(err) {
 		m.log.WithFields(logrus.Fields{
 			"error": err,
