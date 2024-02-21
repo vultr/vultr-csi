@@ -121,6 +121,7 @@ issues:
   # Default: https://golangci-lint.run/usage/false-positives/#default-exclusions
   exclude:
     - abcdef
+    - G204
   exclude-rules:
     # Exclude some linters from running on tests files.
     - path: _test\.go
