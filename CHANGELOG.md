@@ -10,7 +10,7 @@
 * Bump golang.org/x/oauth2 from 0.16.0 to 0.17.0 [PR 186](https://github.com/vultr/vultr-csi/pull/186)
 * Bump github.com/vultr/govultr/v3 from 3.6.1 to 3.6.2 [PR 190](https://github.com/vultr/vultr-csi/pull/190)
 
-## [v0.12.1](https://github.com/vultr/vultr-csi/compare/v0.12.0...v0.12.1) (2024-02-21)
+## [v0.12.1](https://github.com/vultr/vultr-csi/compare/v0.12.0...v0.12.1) (2024-02-04)
 ### Enhancements
 * Add node volume resize [PR 184](https://github.com/vultr/vultr-csi/pull/184)
 
