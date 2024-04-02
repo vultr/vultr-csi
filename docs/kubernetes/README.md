@@ -8,10 +8,11 @@ This Block type uses the storage class `vultr-block-storage`. It has a minimum d
 
 It is currently available in the following regions:
 
-- New Jersey
 - Amsterdam
+- Bangalore
 - Los Angeles
 - London
+- New Jersey
 - Singapore
 - Sydney
 - Tokyo
@@ -23,8 +24,6 @@ This Block type uses the storage class `vultr-block-storage-hdd`. It has a minim
 It is currently available in every region **except** for the following:
 
 - Sydney
-- Brazil
-- Mexico City
 
 ## Installation
 
