@@ -87,8 +87,8 @@ jobs:
         run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
       - run: |
           echo "{\"text\":\"Vultr-CSI : Release https://github.com/${{ github.repository }}/releases/tag/${{ needs.create-tag.outputs.new_tag }} \"}" > mattermost.json
-      - uses: mattermost/action-mattermost-notify@master
-        env:
+      - uses: mattermost/action-mattermost-notify@2.0.0
+        with:
           MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
           MATTERMOST_USERNAME: ${{ secrets.MATTERMOST_USERNAME}}
           MATTERMOST_ICON: ${{ secrets.MATTERMOST_ICON }}
