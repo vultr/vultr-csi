@@ -51,8 +51,7 @@ func TestDriverSuite(t *testing.T) {
 
 		waitTimeout: defaultTimeout,
 
-		log:      log,
-		vMounter: NewFakeMounter(log),
+		log: log,
 	}
 
 	go d.Run()
@@ -65,50 +64,4 @@ func TestDriverSuite(t *testing.T) {
 	if err := eg.Wait(); err != nil {
 		t.Errorf("driver run failed: %s", err)
 	}
-}
-
-type fakeMounter struct {
-	log     *logrus.Entry
-	mounted map[string]string
-}
-
-func NewFakeMounter(log *logrus.Entry) *fakeMounter {
-	return &fakeMounter{log: log}
-}
-
-func (f *fakeMounter) Format(source, fs string) error {
-	return nil
-}
-
-func (f *fakeMounter) IsFormatted(source string) (bool, error) {
-	return true, nil
-}
-
-func (f *fakeMounter) Mount(source, target, fs string, opts ...string) error {
-	return nil
-}
-
-func (f *fakeMounter) IsMounted(target string) (bool, error) {
-	return true, nil
-}
-
-func (f *fakeMounter) UnMount(target string) error {
-	delete(f.mounted, target)
-	return nil
-}
-
-func (f *fakeMounter) GetStatistics(volumePath string) (volumeStatistics, error) {
-	return volumeStatistics{
-		availableBytes: 3 * giB,
-		totalBytes:     10 * giB,
-		usedBytes:      7 * giB,
-
-		availableInodes: 3000,
-		totalInodes:     10000,
-		usedInodes:      7000,
-	}, nil
-}
-
-func (f *fakeMounter) IsBlockDevice(volumePath string) (bool, error) {
-	return false, nil
 }
