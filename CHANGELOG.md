@@ -1,4 +1,14 @@
 # Change Log
+## [v0.12.4](https://github.com/vultr/vultr-csi/compare/v0.12.3...v0.12.4) (2024-05-13)
+### Bug Fix
+* Set container image to resolve XFS mounting issues [PR 212](https://github.com/vultr/vultr-csi/pull/212)
+
+### Documentation
+* Update region availability in docs [PR 203](https://github.com/vultr/vultr-csi/pull/203)
+
+### Automation
+* Update mattermost notify action [PR 209](https://github.com/vultr/vultr-csi/pull/209)
+
 ## [v0.12.3](https://github.com/vultr/vultr-csi/compare/v0.12.2...v0.12.3) (2024-02-21)
 ### Bug Fix
 * Fix ARM builds with type conversion [PR 193](https://github.com/vultr/vultr-csi/pull/193)
