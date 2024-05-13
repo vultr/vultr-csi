@@ -67,7 +67,7 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 	source := getDeviceByPath(volumeID)
 	target := req.StagingTargetPath
 	mountBlk := req.VolumeCapability.GetMount()
-	// options := mountBlk.MountFlags
+	options := mountBlk.MountFlags
 
 	fsType := "ext4"
 	if mountBlk.FsType != "" {
@@ -97,7 +97,7 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 		"capacity": req.VolumeCapability,
 	}).Info("Node Stage Volume: attempting format and mount")
 
-	if err := n.Driver.mounter.FormatAndMount(source, target, fsType, nil); err != nil {
+	if err := n.Driver.mounter.FormatAndMount(source, target, fsType, options); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
