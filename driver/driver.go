@@ -46,8 +46,7 @@ type VultrDriver struct {
 	isController bool
 	waitTimeout  time.Duration
 
-	log      *logrus.Entry
-	vMounter Mounter
+	log *logrus.Entry
 
 	mounter *mount.SafeFormatAndMount
 	resizer *mount.ResizeFs
