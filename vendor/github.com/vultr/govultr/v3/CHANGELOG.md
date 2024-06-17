@@ -1,4 +1,45 @@
 # Change Log
+## [3.8.1](https://github.com/vultr/govultr/compare/v3.8.0...v3.8.1) (2023-06-06)
+### Automation
+* Update goreleaser github action from v2 to v6 [PR 317](https://github.com/vultr/govultr/pull/317)
+
+## [3.8.0](https://github.com/vultr/govultr/compare/v3.7.0...v3.8.0) (2023-06-06)
+### Enhancements
+* Inference: add support for serverless inference endpoints [PR 315](https://github.com/vultr/govultr/pull/315)
+
+### Dependencies
+* Bump github.com/hashicorp/go-retryablehttp from 0.7.6 to 0.7.7 [PR 312](https://github.com/vultr/govultr/pull/312)
+
+### Automation
+* Update golangci-lint and enable most go-vet checks [PR 314](https://github.com/vultr/govultr/pull/314)
+
+## [3.7.0](https://github.com/vultr/govultr/compare/v3.6.4...v3.7.0) (2024-05-28)
+### Enhancements
+* Bare Metal: Add MdiskMode to BareMetalCreate and BareMetalUpdate structs [PR 310](https://github.com/vultr/govultr/pull/310)
+
+### Dependencies
+* Bump github.com/hashicorp/go-retryablehttp from 0.7.5 to 0.7.6 [PR 308](https://github.com/vultr/govultr/pull/308)
+* Update Go from v1.20 to v1.21 [PR 309](https://github.com/vultr/govultr/pull/309)
+
+### Automation
+* Update and fix mattermost notifications [PR 305](https://github.com/vultr/govultr/pull/305)
+* Fix mattermost notifications [PR 307](https://github.com/vultr/govultr/pull/307)
+
+### New Contributors
+* @fjoenichols made their first contribution in [PR 310](https://github.com/vultr/govultr/pull/310)
+
+## [3.6.4](https://github.com/vultr/govultr/compare/v3.6.3...v3.6.4) (2024-03-07)
+### Enhancement
+* Kubernetes: add labels to the node pool update request struct [PR 302](https://github.com/vultr/govultr/pull/302)
+
+## [3.6.3](https://github.com/vultr/govultr/compare/v3.6.2...v3.6.3) (2024-02-29)
+### Bug Fixes
+* All: add a json struct tag for the meta links field [PR 298](https://github.com/vultr/govultr/pull/298)
+* Startup Scripts: allow empty values in create/update request struct [PR 299](https://github.com/vultr/govultr/pull/299)
+
+### Automation
+* Update codeql runner from v1 to v2 [PR 300](https://github.com/vultr/govultr/pull/300)
+
 ## [v3.6.2](https://github.com/vultr/govultr/compare/v3.6.1...v3.6.2) (2024-02-20)
 ### Enhancement
 * Kubernetes: add support for nodepool labels [PR 296](https://github.com/vultr/govultr/pull/296)
