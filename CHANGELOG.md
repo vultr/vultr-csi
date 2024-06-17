@@ -1,4 +1,13 @@
 # Change Log
+## [v0.13.0](https://github.com/vultr/vultr-csi/compare/v0.12.4...v0.13.0) (2024-06-17)
+### Dependencies
+* Bump golang.org/x/oauth2 from 0.17.0 to 0.20.0 [PR 210](https://github.com/vultr/vultr-csi/pull/210)
+* Bump github.com/vultr/govultr/v3 from 3.6.2 to 3.8.1 [PR 215](https://github.com/vultr/vultr-csi/pull/215)
+* Update golang/protobuf from 1.5.3 to 1.5.4 [PR 216](https://github.com/vultr/vultr-csi/pull/216)
+* Bump golang.org/x/net from 0.21.0 to 0.23.0 [PR 208](https://github.com/vultr/vultr-csi/pull/208)
+* Bump golang.org/x/sys from 0.20.0 to 0.21.0 [PR 217](https://github.com/vultr/vultr-csi/pull/217)
+* Bump google.golang.org/grpc from 1.61.1 to 1.64.0 [PR 214](https://github.com/vultr/vultr-csi/pull/214)
+
 ## [v0.12.4](https://github.com/vultr/vultr-csi/compare/v0.12.3...v0.12.4) (2024-05-13)
 ### Bug Fix
 * Set container image to resolve XFS mounting issues [PR 212](https://github.com/vultr/vultr-csi/pull/212)
