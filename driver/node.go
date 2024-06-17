@@ -19,6 +19,8 @@ const (
 	diskPath   = "/dev/disk/by-id"
 	diskPrefix = "virtio-"
 
+	mkDirMode = 0750
+
 	maxVolumesPerNode = 11
 
 	volumeModeBlock      = "block"
@@ -67,9 +69,9 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 	mountBlk := req.VolumeCapability.GetMount()
 	options := mountBlk.MountFlags
 
-	fsTpe := "ext4"
+	fsType := "ext4"
 	if mountBlk.FsType != "" {
-		fsTpe = mountBlk.FsType
+		fsType = mountBlk.FsType
 	}
 
 	n.Driver.log.WithFields(logrus.Fields{
@@ -77,10 +79,12 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 		"target":   req.StagingTargetPath,
 		"capacity": req.VolumeCapability,
 	}).Infof("Node Stage Volume: creating directory target %s\n", target)
+
 	err := os.MkdirAll(target, mkDirMode)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+
 	n.Driver.log.WithFields(logrus.Fields{
 		"volume":   req.VolumeId,
 		"target":   req.StagingTargetPath,
@@ -93,7 +97,7 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 		"capacity": req.VolumeCapability,
 	}).Info("Node Stage Volume: attempting format and mount")
 
-	if err := n.Driver.mounter.FormatAndMount(source, target, fsTpe, options); err != nil {
+	if err := n.Driver.mounter.FormatAndMount(source, target, fsType, options); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
