@@ -1,4 +1,8 @@
 # Change Log
+## [v0.13.1](https://github.com/vultr/vultr-csi/compare/v0.13.0...v0.13.1) (2024-06-17)
+### Automation
+* Update goreleaser workflow to use action v6 and go v1.22 [PR 219](https://github.com/vultr/vultr-csi/pull/219)
+
 ## [v0.13.0](https://github.com/vultr/vultr-csi/compare/v0.12.4...v0.13.0) (2024-06-17)
 ### Dependencies
 * Bump golang.org/x/oauth2 from 0.17.0 to 0.20.0 [PR 210](https://github.com/vultr/vultr-csi/pull/210)
