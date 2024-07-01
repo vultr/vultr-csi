@@ -26,7 +26,7 @@ github.com/moby/sys/mountinfo
 # github.com/sirupsen/logrus v1.9.3
 ## explicit; go 1.13
 github.com/sirupsen/logrus
-# github.com/vultr/govultr/v3 v3.8.1
+# github.com/vultr/govultr/v3 v3.9.0
 ## explicit; go 1.21
 github.com/vultr/govultr/v3
 # github.com/vultr/metadata v1.1.0
