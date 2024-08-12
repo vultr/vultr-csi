@@ -9,7 +9,7 @@ require (
 	github.com/vultr/govultr/v3 v3.8.1
 	github.com/vultr/metadata v1.1.0
 	golang.org/x/oauth2 v0.20.0
-	golang.org/x/sync v0.6.0
+	golang.org/x/sync v0.8.0
 	golang.org/x/sys v0.21.0
 	google.golang.org/grpc v1.64.0
 	k8s.io/mount-utils v0.29.2
