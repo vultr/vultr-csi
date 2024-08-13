@@ -12,7 +12,7 @@ require (
 	golang.org/x/sync v0.8.0
 	golang.org/x/sys v0.21.0
 	google.golang.org/grpc v1.65.0
-	k8s.io/mount-utils v0.29.2
+	k8s.io/mount-utils v0.29.7
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
 )
 
