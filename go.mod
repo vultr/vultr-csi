@@ -10,7 +10,7 @@ require (
 	github.com/vultr/metadata v1.1.0
 	golang.org/x/oauth2 v0.22.0
 	golang.org/x/sync v0.8.0
-	golang.org/x/sys v0.21.0
+	golang.org/x/sys v0.25.0
 	google.golang.org/grpc v1.65.0
 	k8s.io/mount-utils v0.29.2
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
