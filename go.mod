@@ -8,7 +8,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/vultr/govultr/v3 v3.8.1
 	github.com/vultr/metadata v1.1.0
-	golang.org/x/oauth2 v0.22.0
+	golang.org/x/oauth2 v0.23.0
 	golang.org/x/sync v0.8.0
 	golang.org/x/sys v0.21.0
 	google.golang.org/grpc v1.65.0
