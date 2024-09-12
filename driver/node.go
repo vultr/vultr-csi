@@ -31,6 +31,7 @@ var _ csi.NodeServer = &VultrNodeServer{}
 
 // VultrNodeServer type provides the VultrDriver
 type VultrNodeServer struct {
+	csi.UnimplementedNodeServer
 	Driver *VultrDriver
 }
 
