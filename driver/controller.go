@@ -62,6 +62,7 @@ var _ csi.ControllerServer = &VultrControllerServer{}
 
 // VultrControllerServer is the struct type for the VultrDriver
 type VultrControllerServer struct {
+	csi.UnimplementedControllerServer
 	Driver *VultrDriver
 }
 
