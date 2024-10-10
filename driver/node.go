@@ -139,7 +139,7 @@ func (n *VultrNodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUn
 		"staging-target-path": req.StagingTargetPath,
 	}).Info("Node Unstage Volume: called")
 
-	err := n.Driver.mounter.Unmount(req.StagingTargetPath)
+	err := mount.CleanupMountPoint(req.StagingTargetPath, n.Driver.mounter, true)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +211,7 @@ func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.Node
 		"target-path": req.TargetPath,
 	}).Info("Node Unpublish Volume: called")
 
-	err := n.Driver.mounter.Unmount(req.TargetPath)
+	err := mount.CleanupMountPoint(req.TargetPath, n.Driver.mounter, true)
 	if err != nil {
 		return nil, err
 	}
