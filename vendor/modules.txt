@@ -37,8 +37,8 @@ github.com/opencontainers/runtime-spec/specs-go
 # github.com/sirupsen/logrus v1.9.3
 ## explicit; go 1.13
 github.com/sirupsen/logrus
-# github.com/vultr/govultr/v3 v3.9.1
-## explicit; go 1.21
+# github.com/vultr/govultr/v3 v3.10.0
+## explicit; go 1.23
 github.com/vultr/govultr/v3
 # github.com/vultr/metadata v1.1.0
 ## explicit; go 1.17
