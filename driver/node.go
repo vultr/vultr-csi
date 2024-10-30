@@ -31,6 +31,7 @@ var _ csi.NodeServer = &VultrNodeServer{}
 
 // VultrNodeServer type provides the VultrDriver
 type VultrNodeServer struct {
+	csi.UnimplementedNodeServer
 	Driver *VultrDriver
 }
 
@@ -124,7 +125,7 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 }
 
 // NodeUnstageVolume provides the node volume unstage functionality
-func (n *VultrNodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstageVolumeRequest) (*csi.NodeUnstageVolumeResponse, error) { //nolint:dupl,lll
+func (n *VultrNodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstageVolumeRequest) (*csi.NodeUnstageVolumeResponse, error) {
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "VolumeID must be provided")
 	}
@@ -196,7 +197,7 @@ func (n *VultrNodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePu
 }
 
 // NodeUnpublishVolume allows the volume to be unpublished
-func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpublishVolumeRequest) (*csi.NodeUnpublishVolumeResponse, error) { //nolint:dupl,lll
+func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpublishVolumeRequest) (*csi.NodeUnpublishVolumeResponse, error) {
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "VolumeID must be provided")
 	}

@@ -62,6 +62,7 @@ var _ csi.ControllerServer = &VultrControllerServer{}
 
 // VultrControllerServer is the struct type for the VultrDriver
 type VultrControllerServer struct {
+	csi.UnimplementedControllerServer
 	Driver *VultrDriver
 }
 
@@ -77,7 +78,7 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 		return nil, status.Error(codes.InvalidArgument, "CreateVolume Name is missing")
 	}
 
-	if req.VolumeCapabilities == nil || len(req.VolumeCapabilities) == 0 {
+	if len(req.VolumeCapabilities) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "CreateVolume Volume Capabilities is missing")
 	}
 
