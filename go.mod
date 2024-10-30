@@ -1,8 +1,6 @@
 module github.com/vultr/vultr-csi
 
-go 1.22
-
-toolchain go1.22.7
+go 1.23
 
 require (
 	github.com/container-storage-interface/spec v1.10.0
