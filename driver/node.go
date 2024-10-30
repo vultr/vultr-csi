@@ -31,6 +31,7 @@ var _ csi.NodeServer = &VultrNodeServer{}
 
 // VultrNodeServer type provides the VultrDriver
 type VultrNodeServer struct {
+	csi.UnimplementedNodeServer
 	Driver *VultrDriver
 }
 
@@ -124,7 +125,7 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 }
 
 // NodeUnstageVolume provides the node volume unstage functionality
-func (n *VultrNodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstageVolumeRequest) (*csi.NodeUnstageVolumeResponse, error) { //nolint:dupl,lll
+func (n *VultrNodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstageVolumeRequest) (*csi.NodeUnstageVolumeResponse, error) {
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "VolumeID must be provided")
 	}
@@ -138,7 +139,7 @@ func (n *VultrNodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUn
 		"staging-target-path": req.StagingTargetPath,
 	}).Info("Node Unstage Volume: called")
 
-	err := n.Driver.mounter.Unmount(req.StagingTargetPath)
+	err := mount.CleanupMountPoint(req.StagingTargetPath, n.Driver.mounter, true)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +197,7 @@ func (n *VultrNodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePu
 }
 
 // NodeUnpublishVolume allows the volume to be unpublished
-func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpublishVolumeRequest) (*csi.NodeUnpublishVolumeResponse, error) { //nolint:dupl,lll
+func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpublishVolumeRequest) (*csi.NodeUnpublishVolumeResponse, error) {
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "VolumeID must be provided")
 	}
@@ -210,7 +211,7 @@ func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.Node
 		"target-path": req.TargetPath,
 	}).Info("Node Unpublish Volume: called")
 
-	err := n.Driver.mounter.Unmount(req.TargetPath)
+	err := mount.CleanupMountPoint(req.TargetPath, n.Driver.mounter, true)
 	if err != nil {
 		return nil, err
 	}

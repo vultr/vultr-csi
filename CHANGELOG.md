@@ -1,4 +1,13 @@
 # Change Log
+## [v0.13.2](https://github.com/vultr/vultr-csi/compare/v0.13.1...v0.13.2) (2024-08-12)
+### Automation
+* Fix releaser mattermost notification action [PR 221](https://github.com/vultr/vultr-csi/pull/221)
+
+### Dependencies
+* Bump golang.org/x/sync from 0.6.0 to 0.8.0 [PR 231](https://github.com/vultr/vultr-csi/pull/231)
+* Bump golang.org/x/oauth2 from 0.20.0 to 0.22.0 [PR 230](https://github.com/vultr/vultr-csi/pull/230)
+* Bump google.golang.org/grpc from 1.64.0 to 1.65.0 [PR 228](https://github.com/vultr/vultr-csi/pull/228)
+
 ## [v0.13.1](https://github.com/vultr/vultr-csi/compare/v0.13.0...v0.13.1) (2024-06-17)
 ### Automation
 * Update goreleaser workflow to use action v6 and go v1.22 [PR 219](https://github.com/vultr/vultr-csi/pull/219)

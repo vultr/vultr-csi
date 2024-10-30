@@ -196,21 +196,6 @@ func (f *FakeInstance) GetNeighbors(_ context.Context, _ string) (*govultr.Neigh
 	panic("implement me")
 }
 
-// ListPrivateNetworks gets private networks
-func (f *FakeInstance) ListPrivateNetworks(_ context.Context, _ string, _ *govultr.ListOptions) ([]govultr.PrivateNetwork, *govultr.Meta, *http.Response, error) { //nolint:lll
-	panic("implement me")
-}
-
-// AttachPrivateNetwork attches private networks
-func (f *FakeInstance) AttachPrivateNetwork(_ context.Context, _, _ string) error {
-	panic("implement me")
-}
-
-// DetachPrivateNetwork detaches private network from instance
-func (f *FakeInstance) DetachPrivateNetwork(_ context.Context, _, _ string) error {
-	panic("implement me")
-}
-
 // ListVPCInfo is not implemented
 func (f *FakeInstance) ListVPCInfo(ctx context.Context, instanceID string, options *govultr.ListOptions) ([]govultr.VPCInfo, *govultr.Meta, *http.Response, error) { //nolint:lll
 	panic("implement me")

@@ -24,12 +24,13 @@ var _ csi.IdentityServer = &VultrIdentityServer{}
 
 // VultrIdentityServer provides the Driver
 type VultrIdentityServer struct {
+	csi.UnimplementedIdentityServer
 	Driver *VultrDriver
 }
 
 // NewVultrIdentityServer initializes the VultrIdentityServer
 func NewVultrIdentityServer(driver *VultrDriver) *VultrIdentityServer {
-	return &VultrIdentityServer{driver}
+	return &VultrIdentityServer{Driver: driver}
 }
 
 // GetPluginInfo returns basic plugin data
