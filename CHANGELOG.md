@@ -1,4 +1,20 @@
 # Change Log
+## [v0.13.3](https://github.com/vultr/vultr-csi/compare/v0.13.2...v0.13.3) (2024-10-31)
+### Enhancements
+* Fix volume unpublish errors when missing directory [PR 226](https://github.com/vultr/vultr-csi/pull/226)
+
+### Dependencies
+* Update govultr from v3.11.1 to v3.11.2 [PR 254](https://github.com/vultr/vultr-csi/pull/254)
+* Bump google.golang.org/grpc from 1.66.1 to 1.67.1 [PR 245](https://github.com/vultr/vultr-csi/pull/245)
+* Bump golang.org/x/sys from 0.25.0 to 0.26.0 [PR 246](https://github.com/vultr/vultr-csi/pull/246)
+* Bump k8s.io/mount-utils from 0.31.0 to 0.31.2 [PR 249](https://github.com/vultr/vultr-csi/pull/249)
+* Update govultr from v3.9.1 to v3.11.1 [PR 252](https://github.com/vultr/vultr-csi/pull/252)
+* Update go from v1.22 to v1.23 [PR 251](https://github.com/vultr/vultr-csi/pull/251)
+* Upgrade to Go 1.22 and Update Vendor Dependencies [PR 242](https://github.com/vultr/vultr-csi/pull/242)
+
+### New Contributors
+* @beornf made their first contribution in [PR 226](https://github.com/vultr/vultr-csi/pull/226)
+
 ## [v0.13.2](https://github.com/vultr/vultr-csi/compare/v0.13.1...v0.13.2) (2024-08-12)
 ### Automation
 * Fix releaser mattermost notification action [PR 221](https://github.com/vultr/vultr-csi/pull/221)
