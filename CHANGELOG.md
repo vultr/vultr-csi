@@ -1,6 +1,6 @@
 # Change Log
-## [v0.13.3](https://github.com/vultr/vultr-csi/compare/v0.13.2...v0.13.3) (2024-10-31)
-### Enhancements
+## [v0.13.3](https://github.com/vultr/vultr-csi/compare/v0.13.2...v0.13.3) (2024-11-01)
+### Bug Fixes
 * Fix volume unpublish errors when missing directory [PR 226](https://github.com/vultr/vultr-csi/pull/226)
 
 ### Dependencies
