@@ -62,6 +62,9 @@ jobs:
         run: |
           echo "${DOCKER_PASSWORD}" | docker login --username "${DOCKER_USERNAME}" --password-stdin
       -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      -
         name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
