@@ -11,7 +11,7 @@ require (
 	golang.org/x/oauth2 v0.23.0
 	golang.org/x/sync v0.8.0
 	golang.org/x/sys v0.26.0
-	google.golang.org/grpc v1.67.1
+	google.golang.org/grpc v1.68.1
 	k8s.io/mount-utils v0.31.2
 	k8s.io/utils v0.0.0-20240902221715-702e33fdd3c3
 )
