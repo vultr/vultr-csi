@@ -63,7 +63,14 @@ docker_manifests:
     image_templates:
       - "vultr/vultr-csi:{{ .Tag }}-amd64"
       - "vultr/vultr-csi:{{ .Tag }}-arm64"
-      
+  - name_template: "sjc.vultrcr.com/vultrpublic/vultr-csi:{{ .Tag }}"
+    image_templates:
+      - "sjc.vultrcr.com/vultrpublic/vultr-csi:{{ .Tag }}-amd64"
+      - "sjc.vultrcr.com/vultrpublic/vultr-csi:{{ .Tag }}-arm64"
+  - name_template: "sjc.vultrcr.com/vultrpublic/vultr-csi:latest"
+    image_templates:
+      - "sjc.vultrcr.com/vultrpublic/vultr-csi:{{ .Tag }}-amd64"
+      - "sjc.vultrcr.com/vultrpublic/vultr-csi:{{ .Tag }}-arm64"
 release:
   github:
     owner: Vultr
