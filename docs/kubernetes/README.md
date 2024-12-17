@@ -39,7 +39,7 @@ To obtain a API key, please visit
 [API settings](https://my.vultr.com/settings/#settingsapi).
 
 The `secret.yml` definition is as follows. You can also find a copy of this yaml
-[here](docs/releases/secret.yml.tmp).
+[here](../releases/secret.yml.tmp).
 
 ```yaml
 apiVersion: v1
