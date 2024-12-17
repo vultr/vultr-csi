@@ -7,9 +7,9 @@ jobs:
     runs-on: ubuntu-latest
     name: Pull Request Notification
     steps:
-      - uses: mattermost/action-mattermost-notify@master
+      - uses: mattermost/action-mattermost-notify@2.0.0
         with:
           MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-          MATTERMOST_USERNAME: ${{ secrets.MATTERMOST_USERNAME }}
+          MATTERMOST_USERNAME: ${{ secrets.MATTERMOST_USERNAME}}
           MATTERMOST_ICON_URL: ${{ secrets.MATTERMOST_ICON_URL }}
           TEXT: "${{ github.repository }} : PR https://github.com/${{ github.repository }}/pull/${{ github.event.number }}"
