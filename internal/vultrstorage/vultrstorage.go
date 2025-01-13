@@ -1,4 +1,4 @@
-// vultrstorage package is primarily focused on translating CSI storage
+// Package vultrstorage is primarily focused on translating CSI storage
 // requests into govultr requests for more than one type of storage
 // configuration. Currently either block storage or virtual file system storage
 package vultrstorage
@@ -26,9 +26,6 @@ const (
 	// VFS defaults
 	vfsNVMEDefaultSize int64 = 10 * gibiByte
 	vfsAccessMode            = csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER
-
-	volumeStatusCheckRetries  = 15
-	volumeStatusCheckInterval = 1
 )
 
 // StorageTypes are the available storage types supported by the CSI. Currently
@@ -91,7 +88,7 @@ type VultrStorageHandler struct {
 	}
 }
 
-// NewVultrStorageHander instantiates a new VultrStorageHandler type and sets
+// NewVultrStorageHandler instantiates a new VultrStorageHandler type and sets
 // the Operations interface based on the storageType.
 //
 // Possible storageTypes are 'block' & 'vfs' for block storage and virtual file
@@ -201,12 +198,11 @@ func ListAllStorages(ctx context.Context, client *govultr.Client) ([]VultrStorag
 	}
 
 	return allStorages, nil
-
 }
 
 // Block Storage ==============================================================
 
-// VultrBlockStorageHander implements the Operations interface on the
+// VultrBlockStorageHandler implements the Operations interface on the
 // VultrStorageHandler and performs those operations for block storages.
 type VultrBlockStorageHandler struct {
 	client *govultr.Client
@@ -335,7 +331,7 @@ func (v *VultrBlockStorageHandler) Detach(ctx context.Context, storageID, instan
 
 // VFS Storage ================================================================
 
-// VultrVFSStorageHander implements the Operations interface on the
+// VultrVFSStorageHandler implements the Operations interface on the
 // VultrStorageHandler and performs those operations for VFS storages.
 type VultrVFSStorageHandler struct {
 	client *govultr.Client
@@ -481,13 +477,11 @@ func convertFromVFS(vfs *govultr.VirtualFileSystemStorage, attached []govultr.Vi
 	// Not relevant to vfs
 	vs.BlockType = ""
 
-	if attached != nil {
-		for i := range attached {
-			vs.AttachedInstances = append(vs.AttachedInstances, VultrStorageAttachment{
-				NodeID:    attached[i].TargetID,
-				MountName: strconv.Itoa(attached[i].MountTag),
-			})
-		}
+	for i := range attached {
+		vs.AttachedInstances = append(vs.AttachedInstances, VultrStorageAttachment{
+			NodeID:    attached[i].TargetID,
+			MountName: strconv.Itoa(attached[i].MountTag),
+		})
 	}
 
 	return vs, nil
