@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	DefaultDriverName = "block.csi.vultr.com"
+	DefaultDriverName = "storage.csi.vultr.com"
 	defaultTimeout    = 1 * time.Minute
 )
 
@@ -41,7 +41,6 @@ type VultrDriver struct {
 	client   *govultr.Client
 
 	publishVolumeID string
-	mountID         string
 
 	isController bool
 	waitTimeout  time.Duration

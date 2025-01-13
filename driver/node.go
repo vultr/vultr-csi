@@ -23,7 +23,6 @@ const (
 
 	maxVolumesPerNode = 11
 
-	volumeModeBlock      = "block"
 	volumeModeFilesystem = "filesystem"
 )
 
@@ -40,87 +39,113 @@ func NewVultrNodeDriver(driver *VultrDriver) *VultrNodeServer {
 	return &VultrNodeServer{Driver: driver}
 }
 
-// NodeStageVolume provides stages the node volume
+// NodeStageVolume perpares the node for the new volume to be mounted. This is
+// executed after the ControllerPublishVolume and before the NodePublishVolume.
 func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVolumeRequest) (*csi.NodeStageVolumeResponse, error) {
 	if req.VolumeId == "" {
-		return nil, status.Error(codes.InvalidArgument, "NodeStageVolume Volume ID must be provided")
+		return nil, status.Error(codes.InvalidArgument, "NodeStageVolume: Volume ID must be provided")
 	}
 
 	if req.StagingTargetPath == "" {
-		return nil, status.Error(codes.InvalidArgument, "NodeStageVolume Staging Target Path must be provided")
+		return nil, status.Error(codes.InvalidArgument, "NodeStageVolume: Staging Target Path must be provided")
 	}
 
 	if req.VolumeCapability == nil {
-		return nil, status.Error(codes.InvalidArgument, "NodeStageVolume Volume Capability must be provided")
+		return nil, status.Error(codes.InvalidArgument, "NodeStageVolume: Volume Capability must be provided")
 	}
 
 	n.Driver.log.WithFields(logrus.Fields{
 		"volume":   req.VolumeId,
 		"target":   req.StagingTargetPath,
 		"capacity": req.VolumeCapability,
-	}).Info("Node Stage Volume: called")
+	}).Info("NodeStageVolume: called")
 
-	volumeID, ok := req.GetPublishContext()[n.Driver.mountID]
-	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "Could not find the volume id")
-	}
+	publishContext := req.GetPublishContext()
+	mountVolName := publishContext["mount_vol_name"]
+	storageType := publishContext["storage_type"]
 
-	source := getDeviceByPath(volumeID)
+	source := ""
 	target := req.StagingTargetPath
 	mountBlk := req.VolumeCapability.GetMount()
 	options := mountBlk.MountFlags
 
-	fsType := "ext4"
-	if mountBlk.FsType != "" {
-		fsType = mountBlk.FsType
+	n.Driver.log.WithFields(logrus.Fields{
+		"volume":   req.VolumeId,
+		"target":   req.StagingTargetPath,
+		"capacity": req.VolumeCapability,
+	}).Infof("NodeStageVolume: creating directory target %s", target)
+
+	if err := os.MkdirAll(target, mkDirMode); err != nil {
+		return nil, status.Errorf(codes.Internal, "NodeStageVolume: cannot create directory target: %v", err.Error())
 	}
 
 	n.Driver.log.WithFields(logrus.Fields{
 		"volume":   req.VolumeId,
 		"target":   req.StagingTargetPath,
 		"capacity": req.VolumeCapability,
-	}).Infof("Node Stage Volume: creating directory target %s\n", target)
+	}).Infof("NodeStageVolume: directory created for target %s", target)
 
-	err := os.MkdirAll(target, mkDirMode)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
+	if storageType == "block" {
+		source = filepath.Join(diskPath, fmt.Sprintf("%s%s", diskPrefix, mountVolName))
 
-	n.Driver.log.WithFields(logrus.Fields{
-		"volume":   req.VolumeId,
-		"target":   req.StagingTargetPath,
-		"capacity": req.VolumeCapability,
-	}).Infof("Node Stage Volume: directory created for target %s\n", target)
-
-	n.Driver.log.WithFields(logrus.Fields{
-		"volume":   req.VolumeId,
-		"target":   req.StagingTargetPath,
-		"capacity": req.VolumeCapability,
-	}).Info("Node Stage Volume: attempting format and mount")
-
-	if err := n.Driver.mounter.FormatAndMount(source, target, fsType, options); err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	if _, err := os.Stat(source); err == nil {
-		needResize, err := n.Driver.resizer.NeedResize(source, target)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "could not determine if volume %q needs to be resized: %v", req.VolumeId, err)
+		fsType := "ext4"
+		if mountBlk.FsType != "" {
+			fsType = mountBlk.FsType
 		}
 
-		if needResize {
-			n.Driver.log.WithFields(logrus.Fields{
-				"volume":   req.VolumeId,
-				"target":   req.StagingTargetPath,
-				"capacity": req.VolumeCapability,
-			}).Info("Node Stage Volume: resizing volume")
+		n.Driver.log.WithFields(logrus.Fields{
+			"volume":   req.VolumeId,
+			"target":   req.StagingTargetPath,
+			"capacity": req.VolumeCapability,
+		}).Info("NodeStageVolume: attempting block format and mount")
 
-			if _, err := n.Driver.resizer.Resize(source, target); err != nil {
-				return nil, status.Errorf(codes.Internal, "could not resize volume %q:  %v", req.VolumeId, err)
+		if err := n.Driver.mounter.FormatAndMount(source, target, fsType, options); err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		if _, err := os.Stat(source); err == nil {
+			needResize, err := n.Driver.resizer.NeedResize(source, target)
+			if err != nil {
+				return nil, status.Errorf(
+					codes.Internal,
+					"NodeStageVolume: could not determine if block volume %q needs to be resized: %v",
+					req.VolumeId,
+					err,
+				)
+			}
+
+			if needResize {
+				n.Driver.log.WithFields(logrus.Fields{
+					"volume":   req.VolumeId,
+					"target":   req.StagingTargetPath,
+					"capacity": req.VolumeCapability,
+				}).Info("NodeStageVolume: resizing block volume")
+
+				if _, err := n.Driver.resizer.Resize(source, target); err != nil {
+					return nil, status.Errorf(codes.Internal, "NodeStageVolume: could not resize block volume %q:  %v", req.VolumeId, err)
+				}
 			}
 		}
+	} else if storageType == "vfs" {
+		source = mountVolName
+
+		n.Driver.log.WithFields(logrus.Fields{
+			"volume": req.VolumeId,
+			"target": req.StagingTargetPath,
+		}).Info("Node Stage Volume: attempting vfs mount")
+
+		if err := n.Driver.mounter.Mount(source, target, "virtiofs", nil); err != nil {
+			return nil, status.Errorf(codes.Internal, "NodeStageVolume: could not mount vfs volume %q: %v", req.VolumeId, err)
+		}
+	} else {
+		return nil, status.Errorf(
+			codes.InvalidArgument,
+			"NodeStageVolume: invalid storage type context from controller: %v",
+			storageType,
+		)
 	}
-	n.Driver.log.Info("Node Stage Volume: volume staged")
+
+	n.Driver.log.Info("NodeStageVolume: volume staged")
 	return &csi.NodeStageVolumeResponse{}, nil
 }
 
@@ -137,14 +162,14 @@ func (n *VultrNodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUn
 	n.Driver.log.WithFields(logrus.Fields{
 		"volume-id":           req.VolumeId,
 		"staging-target-path": req.StagingTargetPath,
-	}).Info("Node Unstage Volume: called")
+	}).Info("NodeUnstageVolume: called")
 
 	err := mount.CleanupMountPoint(req.StagingTargetPath, n.Driver.mounter, true)
 	if err != nil {
 		return nil, err
 	}
 
-	n.Driver.log.Info("Node Unstage Volume: volume unstaged")
+	n.Driver.log.Info("NodeUnstageVolume: volume unstaged")
 	return &csi.NodeUnstageVolumeResponse{}, nil
 }
 
@@ -167,7 +192,7 @@ func (n *VultrNodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePu
 		"staging_target_path": req.StagingTargetPath,
 		"target_path":         req.TargetPath,
 	})
-	log.Info("Node Publish Volume: called")
+	log.Info("NodePublishVolume: called")
 
 	options := []string{"bind"}
 	if req.Readonly {
@@ -192,43 +217,43 @@ func (n *VultrNodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePu
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	n.Driver.log.Info("Node Publish Volume: published")
+	n.Driver.log.Info("NodePublishVolume: published")
 	return &csi.NodePublishVolumeResponse{}, nil
 }
 
 // NodeUnpublishVolume allows the volume to be unpublished
 func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpublishVolumeRequest) (*csi.NodeUnpublishVolumeResponse, error) {
 	if req.VolumeId == "" {
-		return nil, status.Error(codes.InvalidArgument, "VolumeID must be provided")
+		return nil, status.Error(codes.InvalidArgument, "NodeUnpublishVolume: volume ID must be provided")
 	}
 
 	if req.TargetPath == "" {
-		return nil, status.Error(codes.InvalidArgument, "Target Path must be provided")
+		return nil, status.Error(codes.InvalidArgument, "NodeUnpublishVolume: target path must be provided")
 	}
 
 	n.Driver.log.WithFields(logrus.Fields{
 		"volume-id":   req.VolumeId,
 		"target-path": req.TargetPath,
-	}).Info("Node Unpublish Volume: called")
+	}).Info("NodeUnpublishVolume: called")
 
 	err := mount.CleanupMountPoint(req.TargetPath, n.Driver.mounter, true)
 	if err != nil {
 		return nil, err
 	}
 
-	n.Driver.log.Info("Node Publish Volume: unpublished")
+	n.Driver.log.Info("NodePublishVolume: unpublished")
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
 
 // NodeGetVolumeStats provides the volume stats
 func (n *VultrNodeServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeGetVolumeStatsRequest) (*csi.NodeGetVolumeStatsResponse, error) { //nolint:lll
 	if req.VolumeId == "" {
-		return nil, status.Error(codes.InvalidArgument, "NodeGetVolumeStats Volume ID must be provided")
+		return nil, status.Error(codes.InvalidArgument, "NodeGetVolumeStats: volume ID must be provided")
 	}
 
 	volumePath := req.VolumePath
 	if volumePath == "" {
-		return nil, status.Error(codes.InvalidArgument, "NodeGetVolumeStats Volume Path must be provided")
+		return nil, status.Error(codes.InvalidArgument, "NodeGetVolumeStats: volume path must be provided")
 	}
 
 	log := n.Driver.log.WithFields(logrus.Fields{
@@ -236,7 +261,7 @@ func (n *VultrNodeServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeG
 		"volume_path": req.VolumePath,
 		"method":      "node_get_volume_stats",
 	})
-	log.Info("node get volume stats called")
+	log.Info("NodeGetVolumeStats: called")
 
 	statfs := &unix.Statfs_t{}
 	err := unix.Statfs(volumePath, statfs)
@@ -259,7 +284,7 @@ func (n *VultrNodeServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeG
 		"inodes_available": availableInodes,
 		"inodes_total":     totalInodes,
 		"inodes_used":      usedInodes,
-	}).Info("node capacity statistics retrieved")
+	}).Info("NodeGetVolumeStats: node capacity statistics retrieved")
 
 	return &csi.NodeGetVolumeStatsResponse{
 		Usage: []*csi.VolumeUsage{
@@ -281,27 +306,33 @@ func (n *VultrNodeServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeG
 
 // NodeExpandVolume provides the node volume expansion
 func (n *VultrNodeServer) NodeExpandVolume(ctx context.Context, req *csi.NodeExpandVolumeRequest) (*csi.NodeExpandVolumeResponse, error) {
-	log := n.Driver.log.WithFields(logrus.Fields{
-		"volume_id":   req.VolumeId,
-		"volume_path": req.VolumePath,
-		"method":      "NodeExpandVolume",
-	})
+	if req.VolumeId == "" {
+		return nil, status.Error(codes.InvalidArgument, "NodeExpandVolume: volume ID must be provided")
+	}
 
-	n.Driver.log.WithFields(logrus.Fields{
+	if req.VolumePath == "" {
+		return nil, status.Error(codes.InvalidArgument, "NodeExpandVolume: volume path must be provided")
+	}
+
+	n.Driver.log.Logger.WithFields(logrus.Fields{
+		"volume_id":      req.VolumeId,
+		"volume_path":    req.VolumePath,
 		"required_bytes": req.CapacityRange.RequiredBytes,
-	}).Info("Node Expand Volume: called")
+	}).Info("NodeExpandVolume: called")
 
 	devicePath, _, err := mount.GetDeviceNameFromMount(mount.New(""), req.VolumePath)
 	if err != nil {
-		log.Infof("failed to determine mount path for %s: %s", req.VolumePath, err)
-		return nil, fmt.Errorf("failed to determine mount path for %s: %s", req.VolumePath, err)
+		return nil, fmt.Errorf("NodeExpandVolume: failed to determine mount path for %s: %s", req.VolumePath, err)
 	}
 
-	log.Infof("attempting to resize devicepath: %s", devicePath)
+	n.Driver.log.Logger.WithFields(logrus.Fields{
+		"volume_id":      req.VolumeId,
+		"volume_path":    req.VolumePath,
+		"required_bytes": req.CapacityRange.RequiredBytes,
+	}).Infof("NodeExpandVolume: attempting to resize devicepath: %s", devicePath)
 
 	if _, err := n.Driver.resizer.Resize(devicePath, req.VolumePath); err != nil {
-		log.Infof("failed to resize volume: %s", err)
-		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to resize volume: %s", err))
+		return nil, status.Error(codes.Internal, fmt.Sprintf("NodeExpandVolume: failed to resize volume: %s", err))
 	}
 
 	return &csi.NodeExpandVolumeResponse{
@@ -337,7 +368,7 @@ func (n *VultrNodeServer) NodeGetCapabilities(context.Context, *csi.NodeGetCapab
 
 	n.Driver.log.WithFields(logrus.Fields{
 		"capabilities": nodeCapabilities,
-	}).Info("Node Get Capabilities: called")
+	}).Info("NodeGetCapabilities: called")
 
 	return &csi.NodeGetCapabilitiesResponse{
 		Capabilities: nodeCapabilities,
@@ -346,7 +377,7 @@ func (n *VultrNodeServer) NodeGetCapabilities(context.Context, *csi.NodeGetCapab
 
 // NodeGetInfo provides the node info
 func (n *VultrNodeServer) NodeGetInfo(ctx context.Context, req *csi.NodeGetInfoRequest) (*csi.NodeGetInfoResponse, error) {
-	n.Driver.log.WithFields(logrus.Fields{}).Info("Node Get Info: called")
+	n.Driver.log.WithFields(logrus.Fields{}).Info("NodeGetInfo: called")
 
 	return &csi.NodeGetInfoResponse{
 		NodeId:            n.Driver.nodeID,
@@ -357,8 +388,4 @@ func (n *VultrNodeServer) NodeGetInfo(ctx context.Context, req *csi.NodeGetInfoR
 			},
 		},
 	}, nil
-}
-
-func getDeviceByPath(volumeID string) string {
-	return filepath.Join(diskPath, fmt.Sprintf("%s%s", diskPrefix, volumeID))
 }
