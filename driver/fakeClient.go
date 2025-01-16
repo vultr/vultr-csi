@@ -10,24 +10,26 @@ import (
 func newFakeClient() *govultr.Client {
 	fakeInstance := FakeInstance{client: nil}
 	fakeBlockStorage := fakeBS{client: nil}
+	fakeVirtualFileSystemStorage := fakeVFS{client: nil}
 
 	return &govultr.Client{
-		Instance:     &fakeInstance,
-		BlockStorage: &fakeBlockStorage,
+		Instance:                 &fakeInstance,
+		BlockStorage:             &fakeBlockStorage,
+		VirtualFileSystemStorage: &fakeVirtualFileSystemStorage,
 	}
 }
 
 func newFakeBS() *govultr.BlockStorage {
 	return &govultr.BlockStorage{
-		ID:                 "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
+		ID:                 "a35badcb-a4db-4171-9b9a-11910dfdb8f3",
 		DateCreated:        "",
-		Cost:               10,
+		Cost:               4,
 		Status:             "active",
-		SizeGB:             10,
+		SizeGB:             40,
 		Region:             "ewr",
 		AttachedToInstance: "245bb2fe-b55c-44a0-9a1e-ab80e4b5f088",
 		Label:              "test-bs",
-		MountID:            "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
+		MountID:            "test-mount-3",
 	}
 }
 
@@ -56,24 +58,24 @@ func (f *fakeBS) List(ctx context.Context, options *govultr.ListOptions) ([]govu
 			{
 				ID:                 "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
 				DateCreated:        "",
-				Cost:               10,
+				Cost:               1,
 				Status:             "active",
 				SizeGB:             10,
 				Region:             "ewr",
 				AttachedToInstance: "245bb2fe-b55c-44a0-9a1e-ab80e4b5f088",
-				Label:              "test-bs",
-				MountID:            "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
+				Label:              "test-bs-perf",
+				MountID:            "test-mount-1",
 			},
 			{
 				ID:                 "bda4f333-bfd7-477b-84c2-e4df0ec9e5bf",
 				DateCreated:        "",
-				Cost:               20,
+				Cost:               2,
 				Status:             "active",
-				SizeGB:             20,
+				SizeGB:             80,
 				Region:             "ewr",
 				AttachedToInstance: "b9d23eb3-1880-4746-acc7-f1ef56565320",
-				Label:              "test-bs2",
-				MountID:            "b9d23eb3-1880-4746-acc7-f1ef56565320",
+				Label:              "test-bs-hdd",
+				MountID:            "test-mount-2",
 			},
 		}, &govultr.Meta{
 			Total: 0,
@@ -102,6 +104,123 @@ func (f *fakeBS) Detach(ctx context.Context, blockID string, detach *govultr.Blo
 
 	return nil
 }
+
+// VFS ============================================
+
+func newFakeVFS() *govultr.VirtualFileSystemStorage {
+	return &govultr.VirtualFileSystemStorage{
+		ID:          "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
+		Region:      "ewr",
+		DateCreated: "",
+		Status:      "active",
+		Label:       "test-vfs",
+		Tags:        nil,
+		DiskType:    "nvme",
+		StorageSize: govultr.VirtualFileSystemStorageSize{
+			SizeBytes: 26843545600,
+			SizeGB:    25,
+		},
+		StorageUsed: govultr.VirtualFileSystemStorageSize{
+			SizeBytes: 0,
+			SizeGB:    0,
+		},
+		Billing: govultr.VirtualFileSystemStorageBilling{
+			Charges: 0.1,
+			Monthly: 5.0,
+		},
+	}
+}
+
+type fakeVFS struct {
+	client *govultr.Client
+}
+
+func (f *fakeVFS) Create(ctx context.Context, vfsReq *govultr.VirtualFileSystemStorageReq) (*govultr.VirtualFileSystemStorage, *http.Response, error) {
+	return newFakeVFS(), nil, nil
+}
+
+func (f *fakeVFS) Get(ctx context.Context, vfsID string) (*govultr.VirtualFileSystemStorage, *http.Response, error) {
+	return newFakeVFS(), nil, nil
+}
+
+func (f *fakeVFS) Update(ctx context.Context, vfsID string, vfsReq *govultr.VirtualFileSystemStorageUpdateReq) (*govultr.VirtualFileSystemStorage, *http.Response, error) {
+	panic("implement me")
+}
+
+func (f *fakeVFS) Delete(ctx context.Context, vfsID string) error {
+	return nil
+}
+
+func (f *fakeVFS) List(ctx context.Context, options *govultr.ListOptions) ([]govultr.VirtualFileSystemStorage, *govultr.Meta, *http.Response, error) {
+	return []govultr.VirtualFileSystemStorage{
+			{
+				ID:          "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
+				Region:      "ewr",
+				DateCreated: "2025-01-06 16:31:03",
+				Status:      "active",
+				Label:       "test-vfs",
+				Tags:        nil,
+				DiskType:    "nvme",
+				StorageSize: govultr.VirtualFileSystemStorageSize{
+					SizeBytes: 26843545600,
+					SizeGB:    25,
+				},
+				StorageUsed: govultr.VirtualFileSystemStorageSize{
+					SizeBytes: 0,
+					SizeGB:    0,
+				},
+				Billing: govultr.VirtualFileSystemStorageBilling{
+					Charges: 0.1,
+					Monthly: 5.0,
+				},
+			},
+			{
+				ID:          "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
+				Region:      "ord",
+				DateCreated: "2024-12-11 14:30:49",
+				Status:      "active",
+				Label:       "test-vfs-1",
+				Tags:        nil,
+				DiskType:    "nvme",
+				StorageSize: govultr.VirtualFileSystemStorageSize{
+					SizeBytes: 32212254720,
+					SizeGB:    30,
+				},
+				StorageUsed: govultr.VirtualFileSystemStorageSize{
+					SizeBytes: 0,
+					SizeGB:    0,
+				},
+				Billing: govultr.VirtualFileSystemStorageBilling{
+					Charges: 0.36,
+					Monthly: 1.0,
+				},
+			},
+		}, &govultr.Meta{
+			Total: 2,
+			Links: &govultr.Links{
+				Next: "",
+				Prev: "",
+			},
+		}, nil, nil
+}
+
+func (f *fakeVFS) AttachmentList(ctx context.Context, vfsID string) ([]govultr.VirtualFileSystemStorageAttachment, *http.Response, error) {
+	panic("implement me")
+}
+
+func (f *fakeVFS) AttachmentGet(ctx context.Context, vfsID, targetID string) (*govultr.VirtualFileSystemStorageAttachment, *http.Response, error) {
+	panic("implement me")
+}
+
+func (f *fakeVFS) Attach(ctx context.Context, vfsID, targetID string) (*govultr.VirtualFileSystemStorageAttachment, *http.Response, error) {
+	panic("implement me")
+}
+
+func (f *fakeVFS) Detach(ctx context.Context, vfsID, targetID string) error {
+	panic("implement me")
+}
+
+// INSTANCE ===================================================
 
 // FakeInstance returns the client
 type FakeInstance struct {
