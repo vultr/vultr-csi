@@ -577,36 +577,43 @@ func (c *VultrControllerServer) ControllerGetVolume(ctx context.Context, request
 	return nil, status.Error(codes.Unimplemented, "")
 }
 
-// Compare the requested capabilities with the supported capabilities and
-// returning false if not supported. Currently, only the AccessMode capability
-// is relevant and checked.
-func isValidCapability(reqCaps, storageCaps []*csi.VolumeCapability) bool {
+// validateCapabilities compares the requested capabilities with the supported
+// capabilities and returning false if not supported. Currently, only the
+// AccessMode capability is relevant and checked.
+func validateCapabilities(reqCaps, storageCaps []*csi.VolumeCapability) error {
 	for i := range reqCaps {
 		if reqCaps[i] == nil {
-			return false
+			return fmt.Errorf("requested capability missing")
 		}
 
 		accessMode := reqCaps[i].GetAccessMode()
 		if accessMode == nil {
-			return false
+			return fmt.Errorf("requested capability access mode is missing")
 		}
 
+		var modeMatch bool
 		for j := range storageCaps {
-			if accessMode.GetMode() != storageCaps[j].AccessMode.GetMode() {
-				return false
+			if accessMode.GetMode() == storageCaps[j].AccessMode.GetMode() {
+				modeMatch = true
 			}
 		}
 
+		if !modeMatch {
+			return fmt.Errorf("requested capability access mode is not supported")
+		}
+
 		accessType := reqCaps[i].GetAccessType()
-		switch accessType.(type) {
-		case *csi.VolumeCapability_Block:
-		case *csi.VolumeCapability_Mount:
-		default:
-			return false
+		if accessType != nil {
+			switch accessType.(type) {
+			case *csi.VolumeCapability_Block:
+			case *csi.VolumeCapability_Mount:
+			default:
+				return fmt.Errorf("requested capability is not supported: %v", accessType)
+			}
 		}
 	}
 
-	return true
+	return nil
 }
 
 func getStorageBytes(capRange *csi.CapacityRange, sh *vultrstorage.VultrStorageHandler) (int64, error) {
