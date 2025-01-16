@@ -316,7 +316,7 @@ func (f *FakeInstance) GetNeighbors(_ context.Context, _ string) (*govultr.Neigh
 }
 
 // ListVPCInfo is not implemented
-func (f *FakeInstance) ListVPCInfo(ctx context.Context, instanceID string, options *govultr.ListOptions) ([]govultr.VPCInfo, *govultr.Meta, *http.Response, error) { //nolint:lll
+func (f *FakeInstance) ListVPCInfo(ctx context.Context, instanceID string, options *govultr.ListOptions) ([]govultr.VPCInfo, *govultr.Meta, *http.Response, error) {
 	panic("implement me")
 }
 
@@ -331,7 +331,7 @@ func (f *FakeInstance) DetachVPC(ctx context.Context, instanceID, networkID stri
 }
 
 // ListVPC2Info is not implemented
-func (f *FakeInstance) ListVPC2Info(ctx context.Context, instanceID string, options *govultr.ListOptions) ([]govultr.VPC2Info, *govultr.Meta, *http.Response, error) { //nolint:lll
+func (f *FakeInstance) ListVPC2Info(ctx context.Context, instanceID string, options *govultr.ListOptions) ([]govultr.VPC2Info, *govultr.Meta, *http.Response, error) {
 	panic("implement me")
 }
 
@@ -376,7 +376,7 @@ func (f *FakeInstance) CreateIPv4(_ context.Context, _ string, _ *bool) (*govult
 }
 
 // ListIPv4 gets IPv4 addresses associated with instance
-func (f *FakeInstance) ListIPv4(_ context.Context, _ string, _ *govultr.ListOptions) ([]govultr.IPv4, *govultr.Meta, *http.Response, error) { //nolint:lll
+func (f *FakeInstance) ListIPv4(_ context.Context, _ string, _ *govultr.ListOptions) ([]govultr.IPv4, *govultr.Meta, *http.Response, error) {
 	panic("implement me")
 }
 
@@ -386,7 +386,7 @@ func (f *FakeInstance) DeleteIPv4(ctx context.Context, instanceID, ip string) er
 }
 
 // ListIPv6 lists IPv6 addresses associated with instance
-func (f *FakeInstance) ListIPv6(_ context.Context, _ string, _ *govultr.ListOptions) ([]govultr.IPv6, *govultr.Meta, *http.Response, error) { //nolint:lll
+func (f *FakeInstance) ListIPv6(_ context.Context, _ string, _ *govultr.ListOptions) ([]govultr.IPv6, *govultr.Meta, *http.Response, error) {
 	panic("implement me")
 }
 
