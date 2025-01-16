@@ -56,21 +56,35 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 		return nil, status.Error(codes.InvalidArgument, "CreateVolume: capabilities is missing")
 	}
 
-	if req.Parameters["disk_type"] == "" {
+	diskType := req.Parameters["disk_type"]
+	storageType := req.Parameters["storage_type"]
+	blockType := req.Parameters["block_type"]
+
+	if diskType == "" {
 		return nil, status.Error(codes.InvalidArgument, "CreateVolume: parameter `disk_type` is missing")
 	}
 
-	if req.Parameters["storage_type"] == "" {
+	if storageType == "" {
 		return nil, status.Error(codes.InvalidArgument, "CreateVolume: parameter `storage_type` is missing")
 	}
 
-	sh, err := vultrstorage.NewVultrStorageHandler(c.Driver.client, req.Parameters["storage_type"], req.Parameters["disk_type"])
+	// handle legacy param
+	if blockType != "" {
+		diskType = "block"
+		if blockType == "high_perf" {
+			storageType = "nvme"
+		} else if blockType == "storage_opt" {
+			storageType = "hdd"
+		}
+	}
+
+	sh, err := vultrstorage.NewVultrStorageHandler(c.Driver.client, storageType, diskType)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "CreateVolume: cannot initialize vultr storage handler: %v", err.Error())
 	}
 
-	if !isValidCapability(req.VolumeCapabilities, sh.Capabilities) {
-		return nil, status.Errorf(codes.InvalidArgument, "CreateVolume: requested capability is not compatible: %v", req)
+	if err := validateCapabilities(req.VolumeCapabilities, sh.Capabilities); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "CreateVolume: requested capability is not compatible: %v", err)
 	}
 
 	c.Driver.log.WithFields(logrus.Fields{
@@ -112,7 +126,7 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 		Region:   c.Driver.region,
 		SizeGB:   int(size / gibiByte),
 		Label:    req.Name,
-		DiskType: req.Parameters["disk_type"],
+		DiskType: diskType,
 	}
 
 	volume, err := sh.Operations.Create(ctx, *storageReq)
@@ -401,7 +415,21 @@ func (c *VultrControllerServer) ValidateVolumeCapabilities(ctx context.Context, 
 		return nil, status.Error(codes.InvalidArgument, "ValidateVolumeCapabilities: volume Capabilities is missing")
 	}
 
-	sh, err := vultrstorage.NewVultrStorageHandler(c.Driver.client, req.Parameters["storage_type"], req.Parameters["disk_type"])
+	diskType := req.Parameters["disk_type"]
+	storageType := req.Parameters["storage_type"]
+	blockType := req.Parameters["block_type"]
+
+	// handle legacy param
+	if blockType != "" {
+		diskType = "block"
+		if blockType == "high_perf" {
+			storageType = "nvme"
+		} else if blockType == "storage_opt" {
+			storageType = "hdd"
+		}
+	}
+
+	sh, err := vultrstorage.NewVultrStorageHandler(c.Driver.client, storageType, diskType)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "ValidateVolumeCapabilities: cannot initialize vultr storage handler. %v", err.Error())
 	}
