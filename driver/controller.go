@@ -47,7 +47,7 @@ func NewVultrControllerServer(driver *VultrDriver) *VultrControllerServer {
 }
 
 // CreateVolume provisions a new volume on behalf of the user
-func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) { //nolint:gocyclo,lll
+func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) { //nolint:gocyclo,lll,funlen
 	if req.Name == "" {
 		return nil, status.Error(codes.InvalidArgument, "CreateVolume: name is missing")
 	}

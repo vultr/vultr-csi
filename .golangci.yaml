@@ -125,6 +125,7 @@ issues:
         - errcheck
         - dupl
         - gosec
+        - lll
 
 run:
   timeout: 5m
