@@ -60,22 +60,22 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 	storageType := req.Parameters["storage_type"]
 	blockType := req.Parameters["block_type"]
 
+	// handle legacy param
+	if blockType != "" {
+		storageType = "block"
+		if blockType == "high_perf" {
+			diskType = "nvme"
+		} else if blockType == "storage_opt" {
+			diskType = "hdd"
+		}
+	}
+
 	if diskType == "" {
 		return nil, status.Error(codes.InvalidArgument, "CreateVolume: parameter `disk_type` is missing")
 	}
 
 	if storageType == "" {
 		return nil, status.Error(codes.InvalidArgument, "CreateVolume: parameter `storage_type` is missing")
-	}
-
-	// handle legacy param
-	if blockType != "" {
-		diskType = "block"
-		if blockType == "high_perf" {
-			storageType = "nvme"
-		} else if blockType == "storage_opt" {
-			storageType = "hdd"
-		}
 	}
 
 	sh, err := vultrstorage.NewVultrStorageHandler(c.Driver.client, storageType, diskType)
@@ -421,13 +421,19 @@ func (c *VultrControllerServer) ValidateVolumeCapabilities(ctx context.Context, 
 
 	// handle legacy param
 	if blockType != "" {
-		diskType = "block"
+		storageType = "block"
 		if blockType == "high_perf" {
-			storageType = "nvme"
+			diskType = "nvme"
 		} else if blockType == "storage_opt" {
-			storageType = "hdd"
+			diskType = "hdd"
 		}
 	}
+
+	c.Driver.log.WithFields(logrus.Fields{
+		"volume-id":    req.VolumeId,
+		"capabilities": req.VolumeCapabilities,
+		"parameters":   req.Parameters,
+	}).Info("ValidateVolumeCapabilites: called")
 
 	sh, err := vultrstorage.NewVultrStorageHandler(c.Driver.client, storageType, diskType)
 	if err != nil {
