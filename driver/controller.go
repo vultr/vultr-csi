@@ -78,7 +78,7 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 		return nil, status.Error(codes.InvalidArgument, "CreateVolume: parameter `storage_type` is missing")
 	}
 
-	sh, err := vultrstorage.NewVultrStorageHandler(c.Driver.client, storageType, diskType)
+	sh, err := vultrstorage.NewVultrStorageHandler(c.Driver.client, storageType, diskType, false)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "CreateVolume: cannot initialize vultr storage handler: %v", err.Error())
 	}
@@ -209,7 +209,7 @@ func (c *VultrControllerServer) DeleteVolume(ctx context.Context, req *csi.Delet
 		return &csi.DeleteVolumeResponse{}, nil
 	}
 
-	sh, err := vultrstorage.NewVultrStorageHandler(c.Driver.client, deleteStorage.StorageType, "")
+	sh, err := vultrstorage.NewVultrStorageHandler(c.Driver.client, deleteStorage.StorageType, "", false)
 	if err != nil {
 		return nil, fmt.Errorf("DeleteVolume: cannot initialize vultr storage handler. %v", err)
 	}
@@ -435,7 +435,7 @@ func (c *VultrControllerServer) ValidateVolumeCapabilities(ctx context.Context, 
 		"parameters":   req.Parameters,
 	}).Info("ValidateVolumeCapabilites: called")
 
-	sh, err := vultrstorage.NewVultrStorageHandler(c.Driver.client, storageType, diskType)
+	sh, err := vultrstorage.NewVultrStorageHandler(c.Driver.client, storageType, diskType, false)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "ValidateVolumeCapabilities: cannot initialize vultr storage handler. %v", err.Error())
 	}

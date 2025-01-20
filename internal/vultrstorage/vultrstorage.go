@@ -93,7 +93,7 @@ type VultrStorageHandler struct {
 //
 // Possible storageTypes are 'block' & 'vfs' for block storage and virtual file
 // system storage respectively.
-func NewVultrStorageHandler(client *govultr.Client, storageType, diskType string) (*VultrStorageHandler, error) {
+func NewVultrStorageHandler(client *govultr.Client, storageType, diskType string, readOnly bool) (*VultrStorageHandler, error) {
 	sh := new(VultrStorageHandler)
 	sh.client = client
 	sh.StorageType = storageType
@@ -107,10 +107,12 @@ func NewVultrStorageHandler(client *govultr.Client, storageType, diskType string
 		} else if diskType == "hdd" {
 			sh.DefaultSize = blockHDDDefaultSize
 		} else {
-			return nil, fmt.Errorf(
-				"unable to instantiate a new storage handler : invalid block storage disk type: %s",
-				diskType,
-			)
+			if !readOnly {
+				return nil, fmt.Errorf(
+					"unable to instantiate a new storage handler : invalid block storage disk type: %s",
+					diskType,
+				)
+			}
 		}
 
 		sh.Operations = &VultrBlockStorageHandler{client}
@@ -125,10 +127,12 @@ func NewVultrStorageHandler(client *govultr.Client, storageType, diskType string
 		if diskType == "nvme" {
 			sh.DefaultSize = vfsNVMEDefaultSize
 		} else {
-			return nil, fmt.Errorf(
-				"unable to instantiate a new storage handler : invalid vfs storage disk type: %s",
-				diskType,
-			)
+			if !readOnly {
+				return nil, fmt.Errorf(
+					"unable to instantiate a new storage handler : invalid vfs storage disk type: %s",
+					diskType,
+				)
+			}
 		}
 
 		sh.Operations = &VultrVFSStorageHandler{client}
@@ -155,7 +159,7 @@ func FindVultrStorageHandlerByID(ctx context.Context, client *govultr.Client, st
 	}
 
 	for _, storageType := range StorageTypes {
-		sh, err := NewVultrStorageHandler(client, storageType, "")
+		sh, err := NewVultrStorageHandler(client, storageType, "", true)
 		if err != nil {
 			return nil, fmt.Errorf("FindVultrStorageHandlerByID cannot initialize vultr storage handler. %v", err)
 		}
@@ -184,7 +188,7 @@ func FindVultrStorageHandlerByID(ctx context.Context, client *govultr.Client, st
 func ListAllStorages(ctx context.Context, client *govultr.Client) ([]VultrStorage, error) {
 	var allStorages []VultrStorage
 	for _, storageType := range StorageTypes {
-		sh, err := NewVultrStorageHandler(client, storageType, "")
+		sh, err := NewVultrStorageHandler(client, storageType, "", true)
 		if err != nil {
 			return nil, fmt.Errorf("ListAllStorages cannot initialize vultr storage handler. %v", err)
 		}
