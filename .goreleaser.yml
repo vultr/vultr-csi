@@ -53,7 +53,20 @@ dockers:
       - "--pull"
       - "--platform=linux/arm64"
     goarch: arm64
-
+  - image_templates:
+      - "sjc.vultrcr.com/vultrpublic/vultr-csi:{{ .Tag }}-amd64"
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/amd64"
+  - image_templates:
+      - "sjc.vultrcr.com/vultrpublic/vultr-csi:{{ .Tag }}-arm64"
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/arm64"
+    goarch: arm64
+    
 docker_manifests:
   - name_template: "vultr/vultr-csi:{{ .Tag }}"
     image_templates:
