@@ -209,7 +209,7 @@ func (c *VultrControllerServer) DeleteVolume(ctx context.Context, req *csi.Delet
 		return &csi.DeleteVolumeResponse{}, nil
 	}
 
-	sh, err := vultrstorage.NewVultrStorageHandler(c.Driver.client, deleteStorage.StorageType, "", false)
+	sh, err := vultrstorage.NewVultrStorageHandler(c.Driver.client, deleteStorage.StorageType, "", true)
 	if err != nil {
 		return nil, fmt.Errorf("DeleteVolume: cannot initialize vultr storage handler. %v", err)
 	}

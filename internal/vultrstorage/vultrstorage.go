@@ -93,7 +93,7 @@ type VultrStorageHandler struct {
 //
 // Possible storageTypes are 'block' & 'vfs' for block storage and virtual file
 // system storage respectively.
-func NewVultrStorageHandler(client *govultr.Client, storageType, diskType string, readOnly bool) (*VultrStorageHandler, error) {
+func NewVultrStorageHandler(client *govultr.Client, storageType, diskType string, ignoreDiskType bool) (*VultrStorageHandler, error) {
 	sh := new(VultrStorageHandler)
 	sh.client = client
 	sh.StorageType = storageType
@@ -107,7 +107,7 @@ func NewVultrStorageHandler(client *govultr.Client, storageType, diskType string
 		} else if diskType == "hdd" {
 			sh.DefaultSize = blockHDDDefaultSize
 		} else {
-			if !readOnly {
+			if !ignoreDiskType {
 				return nil, fmt.Errorf(
 					"unable to instantiate a new storage handler : invalid block storage disk type: %s",
 					diskType,
@@ -127,7 +127,7 @@ func NewVultrStorageHandler(client *govultr.Client, storageType, diskType string
 		if diskType == "nvme" {
 			sh.DefaultSize = vfsNVMEDefaultSize
 		} else {
-			if !readOnly {
+			if !ignoreDiskType {
 				return nil, fmt.Errorf(
 					"unable to instantiate a new storage handler : invalid vfs storage disk type: %s",
 					diskType,
