@@ -56,9 +56,9 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 		return nil, status.Error(codes.InvalidArgument, "CreateVolume: capabilities is missing")
 	}
 
-	diskType := req.Parameters["disk_type"]
-	storageType := req.Parameters["storage_type"]
-	blockType := req.Parameters["block_type"]
+	diskType := strings.ToLower(req.Parameters["disk_type"])
+	storageType := strings.ToLower(req.Parameters["storage_type"])
+	blockType := strings.ToLower(req.Parameters["block_type"])
 
 	// handle legacy param
 	if blockType != "" {
@@ -415,9 +415,9 @@ func (c *VultrControllerServer) ValidateVolumeCapabilities(ctx context.Context, 
 		return nil, status.Error(codes.InvalidArgument, "ValidateVolumeCapabilities: volume Capabilities is missing")
 	}
 
-	diskType := req.Parameters["disk_type"]
-	storageType := req.Parameters["storage_type"]
-	blockType := req.Parameters["block_type"]
+	diskType := strings.ToLower(req.Parameters["disk_type"])
+	storageType := strings.ToLower(req.Parameters["storage_type"])
+	blockType := strings.ToLower(req.Parameters["block_type"])
 
 	// handle legacy param
 	if blockType != "" {
