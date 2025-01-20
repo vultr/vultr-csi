@@ -1,4 +1,29 @@
 # Change Log
+## [v0.14.0](https://github.com/vultr/vultr-csi/compare/v0.13.4...v0.14.0) (2025-01-20)
+### Enhancements
+* Breaking change: Add support for virtual file system alongside block storage [PR 275](https://github.com/vultr/vultr-csi/pull/275)
+
+### Documentation
+* Fix broken link in README.md [PR 267](https://github.com/vultr/vultr-csi/pull/267)
+
+### Automation
+* Add builds to public container registry repo [PR 268](https://github.com/vultr/vultr-csi/pull/268)
+
+### Dependencies
+* Update govultr from v3.11.2 to v3.13.0 [PR 269](https://github.com/vultr/vultr-csi/pull/269)
+* Bump golang.org/x/oauth2 from 0.23.0 to 0.24.0 [PR 257](https://github.com/vultr/vultr-csi/pull/257)
+* Bump google.golang.org/grpc from 1.67.1 to 1.69.2 [PR 270](https://github.com/vultr/vultr-csi/pull/270)
+* Bump k8s.io/mount-utils from 0.31.2 to 0.32.0 [PR 265](https://github.com/vultr/vultr-csi/pull/265)
+* Bump google.golang.org/grpc from 1.69.2 to 1.69.4 [PR 276](https://github.com/vultr/vultr-csi/pull/276)
+* Bump golang.org/x/sys from 0.26.0 to 0.29.0 [PR 273](https://github.com/vultr/vultr-csi/pull/273)
+* Bump golang.org/x/oauth2 from 0.24.0 to 0.25.0 [PR 272](https://github.com/vultr/vultr-csi/pull/272)
+* Bump golang.org/x/sync from 0.8.0 to 0.10.0 [PR 261](https://github.com/vultr/vultr-csi/pull/261)
+* Bump github.com/container-storage-interface/spec from 1.10.0 to 1.11.0 [PR 271](https://github.com/vultr/vultr-csi/pull/271)
+* Update golang.org/x/net from v0.30.0 to v.33.0 [PR 279](https://github.com/vultr/vultr-csi/pull/279)
+
+### New Contributors
+* @JoeyC-Dev made their first contribution in [PR 267](https://github.com/vultr/vultr-csi/pull/267)
+
 ## [v0.13.3](https://github.com/vultr/vultr-csi/compare/v0.13.2...v0.13.3) (2024-11-01)
 ### Bug Fixes
 * Fix volume unpublish errors when missing directory [PR 226](https://github.com/vultr/vultr-csi/pull/226)
