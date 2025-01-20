@@ -19,6 +19,7 @@
 * Bump golang.org/x/oauth2 from 0.24.0 to 0.25.0 [PR 272](https://github.com/vultr/vultr-csi/pull/272)
 * Bump golang.org/x/sync from 0.8.0 to 0.10.0 [PR 261](https://github.com/vultr/vultr-csi/pull/261)
 * Bump github.com/container-storage-interface/spec from 1.10.0 to 1.11.0 [PR 271](https://github.com/vultr/vultr-csi/pull/271)
+* Update golang.org/x/net from v0.30.0 to v.33.0 [PR 279](https://github.com/vultr/vultr-csi/pull/279)
 
 ### New Contributors
 * @JoeyC-Dev made their first contribution in https://github.com/vultr/vultr-csi/pull/267
