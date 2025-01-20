@@ -125,6 +125,13 @@ issues:
         - errcheck
         - dupl
         - gosec
+        - lll
+    - path: fakeClient\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - lll
 
 run:
   timeout: 5m

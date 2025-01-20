@@ -25,22 +25,26 @@ func NewFakeVultrControllerServer(testName string) *VultrControllerServer {
 
 	return NewVultrControllerServer(d)
 }
-func TestCreateVolume(t *testing.T) {
-	controller := NewFakeVultrControllerServer("create volume")
+
+func TestControllerCreateBlockVolume(t *testing.T) {
+	controller := NewFakeVultrControllerServer("create block volume")
 
 	res, err := controller.CreateVolume(context.TODO(), &csi.CreateVolumeRequest{
-		Name:       "volume-test-name",
-		Parameters: map[string]string{"block_type": "high_perf"},
+		Name: "volume-test-name",
+		Parameters: map[string]string{
+			"storage_type": "block",
+			"disk_type":    "hdd",
+		},
 		VolumeCapabilities: []*csi.VolumeCapability{
 			{
-				AccessType: &csi.VolumeCapability_Mount{
-					Mount: &csi.VolumeCapability_MountVolume{},
-				},
 				AccessMode: &csi.VolumeCapability_AccessMode{
 					Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
 				},
 			},
 		},
+		// CapacityRange: &csi.CapacityRange{
+		// 	RequiredBytes: 42949672960,
+		// },
 	})
 
 	if err != nil {
@@ -49,8 +53,8 @@ func TestCreateVolume(t *testing.T) {
 
 	expected := &csi.CreateVolumeResponse{
 		Volume: &csi.Volume{
-			VolumeId:      "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
-			CapacityBytes: 10737418240,
+			VolumeId:      "a35badcb-a4db-4171-9b9a-11910dfdb8f3",
+			CapacityBytes: 42949672960,
 			AccessibleTopology: []*csi.Topology{
 				{
 					Segments: map[string]string{
@@ -62,12 +66,12 @@ func TestCreateVolume(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(res, expected) {
-		t.Errorf("expected %+v got %+v", res, expected)
+		t.Errorf("expected %+v got %+v", expected, res)
 	}
 }
 
-func TestDeleteVolume(t *testing.T) {
-	controller := NewFakeVultrControllerServer("delete volume")
+func TestControllerDeleteBlockVolume(t *testing.T) {
+	controller := NewFakeVultrControllerServer("delete block volume")
 
 	volumeID := "c56c7b6e-15c2-445e-9a5d-1063ab5828ec" //nolint:goconst
 	res, err := controller.DeleteVolume(context.Background(), &csi.DeleteVolumeRequest{
@@ -85,8 +89,8 @@ func TestDeleteVolume(t *testing.T) {
 	}
 }
 
-func TestPublishVolume(t *testing.T) {
-	controller := NewFakeVultrControllerServer("delete volume")
+func TestControllerPublishBlockVolume(t *testing.T) {
+	controller := NewFakeVultrControllerServer("publish block volume")
 
 	nodeID := "245bb2fe-b55c-44a0-9a1e-ab80e4b5f088" //nolint:goconst
 	volumeID := "c56c7b6e-15c2-445e-9a5d-1063ab5828ec"
@@ -110,7 +114,8 @@ func TestPublishVolume(t *testing.T) {
 
 	expected := &csi.ControllerPublishVolumeResponse{
 		PublishContext: map[string]string{
-			controller.Driver.publishVolumeID: volumeID,
+			"mount_vol_name": "test-mount-3",
+			"storage_type":   "block",
 		},
 	}
 
@@ -119,8 +124,8 @@ func TestPublishVolume(t *testing.T) {
 	}
 }
 
-func TestUnPublishVolume(t *testing.T) {
-	controller := NewFakeVultrControllerServer("delete volume")
+func TestControllerUnpublishBlockVolume(t *testing.T) {
+	controller := NewFakeVultrControllerServer("unpublish block volume")
 
 	nodeID := "c56c7b6e-15c2-445e-9a5d-1063ab5828ec"
 	volumeID := "245bb2fe-b55c-44a0-9a1e-ab80e4b5f088"
