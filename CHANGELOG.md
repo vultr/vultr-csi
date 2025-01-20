@@ -22,7 +22,7 @@
 * Update golang.org/x/net from v0.30.0 to v.33.0 [PR 279](https://github.com/vultr/vultr-csi/pull/279)
 
 ### New Contributors
-* @JoeyC-Dev made their first contribution in https://github.com/vultr/vultr-csi/pull/267
+* @JoeyC-Dev made their first contribution in [PR 267](https://github.com/vultr/vultr-csi/pull/267)
 
 ## [v0.13.3](https://github.com/vultr/vultr-csi/compare/v0.13.2...v0.13.3) (2024-11-01)
 ### Bug Fixes
