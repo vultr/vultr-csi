@@ -107,7 +107,10 @@ func NewVultrStorageHandler(client *govultr.Client, storageType, diskType string
 		} else if diskType == "hdd" {
 			sh.DefaultSize = blockHDDDefaultSize
 		} else {
-			sh.DefaultSize = 0
+			return nil, fmt.Errorf(
+				"unable to instantiate a new storage handler : invalid block storage disk type: %s",
+				diskType,
+			)
 		}
 
 		sh.Operations = &VultrBlockStorageHandler{client}
@@ -122,7 +125,10 @@ func NewVultrStorageHandler(client *govultr.Client, storageType, diskType string
 		if diskType == "nvme" {
 			sh.DefaultSize = vfsNVMEDefaultSize
 		} else {
-			sh.DefaultSize = 0
+			return nil, fmt.Errorf(
+				"unable to instantiate a new storage handler : invalid vfs storage disk type: %s",
+				diskType,
+			)
 		}
 
 		sh.Operations = &VultrVFSStorageHandler{client}
@@ -134,7 +140,11 @@ func NewVultrStorageHandler(client *govultr.Client, storageType, diskType string
 		return sh, nil
 	}
 
-	return nil, fmt.Errorf("unable to instantiate a new storage handler : invalid storage type")
+	return nil, fmt.Errorf(
+		"unable to instantiate a new storage handler : invalid storage type : %s with disk %s",
+		storageType,
+		diskType,
+	)
 }
 
 // FindVultrStorageHandlerByID performs a lookup of available storage types and
