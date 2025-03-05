@@ -1,14 +1,13 @@
 module github.com/vultr/vultr-csi
 
 go 1.23.0
-
-toolchain go1.23.1
+toolchain go1.24.1
 
 require (
 	github.com/container-storage-interface/spec v1.11.0
 	github.com/golang/protobuf v1.5.4
 	github.com/sirupsen/logrus v1.9.3
-	github.com/vultr/govultr/v3 v3.13.0
+	github.com/vultr/govultr/v3 v3.15.0
 	github.com/vultr/metadata v1.1.0
 	golang.org/x/oauth2 v0.25.0
 	golang.org/x/sync v0.10.0

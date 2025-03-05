@@ -25,8 +25,8 @@ github.com/moby/sys/userns
 # github.com/sirupsen/logrus v1.9.3
 ## explicit; go 1.13
 github.com/sirupsen/logrus
-# github.com/vultr/govultr/v3 v3.13.0
-## explicit; go 1.23
+# github.com/vultr/govultr/v3 v3.15.0
+## explicit; go 1.24
 github.com/vultr/govultr/v3
 # github.com/vultr/metadata v1.1.0
 ## explicit; go 1.17
