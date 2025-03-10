@@ -1,4 +1,41 @@
 # Change Log
+## [3.16.0](https://github.com/vultr/govultr/compare/v3.15.0...v3.16.0) (2025-03-10)
+### Enhancements
+* Object Storage: Add tiers [PR 365](https://github.com/vultr/govultr/pull/365)
+
+### Documentation
+* Bare Metal: Add notice for deprecation of VPC2 [PR 364](https://github.com/vultr/govultr/pull/364)
+* Instance: Add notice for deprecation of VPC2 [PR 364](https://github.com/vultr/govultr/pull/364)
+* VPC2: Add notice for deprecation of VPC2[PR 364](https://github.com/vultr/govultr/pull/364)
+
+### Dependencies
+* Reset min go.mod go version to v1.23 [PR 367](https://github.com/vultr/govultr/pull/367)
+
+## [3.15.0](https://github.com/vultr/govultr/compare/v3.14.1...v3.15.0) (2025-03-04)
+### Enhancements
+* Add functions for account bandwidth [PR 356](https://github.com/vultr/govultr/pull/356)
+* Add functions for billing pending charges [PR 357](https://github.com/vultr/govultr/pull/357)
+
+### Dependencies
+* Update Go from v1.23 to v1.24 [PR 360](https://github.com/vultr/govultr/pull/360)
+
+### Clean Up
+* Fix whitespace [PR 359](https://github.com/vultr/govultr/pull/359)
+
+### New Contributors
+* @DazWilkin made their first contribution in [PR 356](https://github.com/vultr/govultr/pull/356)
+
+## [3.14.1](https://github.com/vultr/govultr/compare/v3.14.0...v3.14.1) (2025-01-17)
+### Bug Fixes
+* Load Balancers: Add missing SSL fields and AutoSSL struct [PR 352](https://github.com/vultr/govultr/pull/352)
+
+## [3.14.0](https://github.com/vultr/govultr/compare/v3.13.0...v3.14.0) (2025-01-15)
+### Enhancements
+* Load Balancers: Add support for AutoSSL and GlobalRegions [PR 350](https://github.com/vultr/govultr/pull/350)
+
+### Clean Up
+* Database: Remove deprecated Redis references [PR 349](https://github.com/vultr/govultr/pull/349)
+
 ## [3.13.0](https://github.com/vultr/govultr/compare/v3.12.0...v3.13.0) (2024-12-17)
 ### Enhancements
 * VFS Storage: Add support for virtual file system storages [PR 347](https://github.com/vultr/govultr/pull/347)
