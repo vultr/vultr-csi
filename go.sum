@@ -42,8 +42,8 @@ github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
-github.com/vultr/govultr/v3 v3.13.0 h1:Tq26syAju/cTlgorJJX391ZTbhILbe4WzIatyeStXCM=
-github.com/vultr/govultr/v3 v3.13.0/go.mod h1:q34Wd76upKmf+vxFMgaNMH3A8BbsPBmSYZUGC8oZa5w=
+github.com/vultr/govultr/v3 v3.16.1 h1:fADa6GDVg+kphNjog05gCxKz6CmMZ7zSourX0e2ezyw=
+github.com/vultr/govultr/v3 v3.16.1/go.mod h1:q34Wd76upKmf+vxFMgaNMH3A8BbsPBmSYZUGC8oZa5w=
 github.com/vultr/metadata v1.1.0 h1:RUjCnH5Mdlz7uuyfb1jOZNkU72zl/HwK76jLzVFdiOo=
 github.com/vultr/metadata v1.1.0/go.mod h1:4yocaI6h2EFJzwN0m1KnnC/vDCx2axIqnyxmtF/LWoQ=
 go.opentelemetry.io/otel v1.31.0 h1:NsJcKPIW0D0H3NgzPDHmo0WW6SptzPdqg/L1zsIm2hY=
