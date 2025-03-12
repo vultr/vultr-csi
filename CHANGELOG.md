@@ -1,4 +1,19 @@
 # Change Log
+## [v0.15.0](https://github.com/vultr/vultr-csi/compare/v0.14.0...v0.15.0) (2025-03-12)
+### Enhancements
+* Add example VFS PVC manifest 
+
+### Automation
+* Update workflows to use golangci-lint-action [PR 294](https://github.com/vultr/vultr-csi/pull/294)
+
+### Dependencies
+* Update Go version from v1.23 to v1.24 [PR 294](https://github.com/vultr/vultr-csi/pull/294)
+* Update govultr from v3.13.0 to v3.16.1 [PR 293](https://github.com/vultr/vultr-csi/pull/293)
+* Bump golang.org/x/sync from 0.10.0 to 0.12.0 [PR 291](https://github.com/vultr/vultr-csi/pull/291)
+* Bump golang.org/x/oauth2 from 0.25.0 to 0.28.0 [PR 290](https://github.com/vultr/vultr-csi/pull/290)
+* Bump google.golang.org/grpc from 1.69.4 to 1.71.0 [PR 289](https://github.com/vultr/vultr-csi/pull/289)
+* Bump k8s.io/mount-utils from 0.32.0 to 0.32.2 [PR 284](https://github.com/vultr/vultr-csi/pull/284)
+
 ## [v0.14.0](https://github.com/vultr/vultr-csi/compare/v0.13.4...v0.14.0) (2025-01-20)
 ### Enhancements
 * Breaking change: Add support for virtual file system alongside block storage [PR 275](https://github.com/vultr/vultr-csi/pull/275)
