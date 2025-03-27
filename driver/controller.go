@@ -297,7 +297,7 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 			return nil, status.Errorf(codes.Aborted, "cannot attach volume to node: %v", err.Error())
 		}
 
-		return nil, status.Errorf(codes.Internal, "ControllPublishVolume: cannot attach volume to node: %v", err.Error())
+		return nil, status.Errorf(codes.Internal, "ControllerPublishVolume: cannot attach volume to node: %v", err.Error())
 	}
 
 	attachReady := false
