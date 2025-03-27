@@ -249,7 +249,7 @@ func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.Node
 		return nil, err
 	}
 
-	n.Driver.log.Info("NodePublishVolume: unpublished")
+	n.Driver.log.Info("NodeUnpublishVolume: unpublished")
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
 
