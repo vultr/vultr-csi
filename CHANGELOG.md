@@ -1,4 +1,12 @@
 # Change Log
+## [v0.15.1]( https://github.com/vultr/vultr-csi/compare/v0.15.0...v0.15.1) (2025-03-28)
+### Bug Fixes
+* Set default block storage type during NodeStageVolume [PR 300](https://github.com/vultr/vultr-csi/pull/300)
+
+### Dependencies
+* Bump golang.org/x/net from 0.34.0 to 0.36.0 [PR 298](https://github.com/vultr/vultr-csi/pull/298)
+* Update govultr from v3.16.1 to v3.18.0 [PR 301](https://github.com/vultr/vultr-csi/pull/301)
+
 ## [v0.15.0](https://github.com/vultr/vultr-csi/compare/v0.14.0...v0.15.0) (2025-03-12)
 ### Enhancements
 * Add example VFS PVC manifest 
