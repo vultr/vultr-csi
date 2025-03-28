@@ -64,6 +64,14 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 	mountVolName := publishContext["mount_vol_name"]
 	storageType := publishContext["storage_type"]
 
+	// A workaround default storage type of 'block'
+	// Attach only gets new publish context when the volume is not already
+	// attached to the node. That should only happen to existing block storage
+	// volumes
+	if storageType == "" {
+		storageType = "block"
+	}
+
 	source := ""
 	target := req.StagingTargetPath
 	mountBlk := req.VolumeCapability.GetMount()
@@ -241,7 +249,7 @@ func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.Node
 		return nil, err
 	}
 
-	n.Driver.log.Info("NodePublishVolume: unpublished")
+	n.Driver.log.Info("NodeUnpublishVolume: unpublished")
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
 
