@@ -112,7 +112,7 @@ issues:
   # it can be disabled by `exclude-use-default: false`.
   # To list all excluded by default patterns execute `golangci-lint run --help`
   #
-  # Default: https://golangci-lint.run/usage/false-positives/#default-exclusions
+  # Default: https://golangci.github.io/legacy-v1-doc/usage/false-positives/#default-exclusions
   exclude:
     - abcdef
     - G204
