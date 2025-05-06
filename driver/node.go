@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"golang.org/x/sys/unix"
-	"k8s.io/mount-utils"
+	mountutils "k8s.io/mount-utils"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/sirupsen/logrus"
@@ -96,9 +96,44 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 	if storageType == "block" {
 		source = filepath.Join(diskPath, fmt.Sprintf("%s%s", diskPrefix, mountVolName))
 
-		fsType := "ext4"
-		if mountBlk.FsType != "" {
-			fsType = mountBlk.FsType
+		// check for existing mount/staging before attempting format and mount.
+		// if already staged, the plugin must reply ok
+		blockMountExists, err := n.Driver.mounter.IsMountPoint(req.StagingTargetPath)
+		if err != nil {
+			n.Driver.log.WithFields(logrus.Fields{
+				"volume": req.VolumeId,
+				"target": req.StagingTargetPath,
+			}).Warnf("NodeStageVolume: error checking block device staging target path: %s", err.Error())
+		}
+
+		if blockMountExists {
+			n.Driver.log.WithFields(logrus.Fields{
+				"volume": req.VolumeId,
+				"target": req.StagingTargetPath,
+			}).Infof("NodeStageVolume: block device target path already exists and is mounted")
+
+			deviceName, deviceRef, err := mountutils.GetDeviceNameFromMount(n.Driver.mounter.Interface, req.StagingTargetPath)
+			if err != nil {
+				n.Driver.log.WithFields(logrus.Fields{
+					"volume": req.VolumeId,
+					"target": req.StagingTargetPath,
+				}).Warnf("NodeStageVolume: error checking existing block device mount: %s", err.Error())
+			}
+
+			n.Driver.log.WithFields(logrus.Fields{
+				"volume":            req.VolumeId,
+				"target":            req.StagingTargetPath,
+				"device-name":       deviceName,
+				"device-references": deviceRef,
+			}).Infof("NodeStageVolume: block device existing mount details")
+
+			if deviceName == source {
+				n.Driver.log.WithFields(logrus.Fields{
+					"volume": req.VolumeId,
+					"target": req.StagingTargetPath,
+				}).Info("NodeStageVolume: block device is already staged")
+				return &csi.NodeStageVolumeResponse{}, nil
+			}
 		}
 
 		n.Driver.log.WithFields(logrus.Fields{
@@ -106,6 +141,11 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 			"target":   req.StagingTargetPath,
 			"capacity": req.VolumeCapability,
 		}).Info("NodeStageVolume: attempting block format and mount")
+
+		fsType := "ext4"
+		if mountBlk.FsType != "" {
+			fsType = mountBlk.FsType
+		}
 
 		if err := n.Driver.mounter.FormatAndMount(source, target, fsType, options); err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
@@ -140,7 +180,47 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 		n.Driver.log.WithFields(logrus.Fields{
 			"volume": req.VolumeId,
 			"target": req.StagingTargetPath,
-		}).Info("Node Stage Volume: attempting vfs mount")
+		}).Info("NodeStageVolume: attempting vfs mount")
+
+		// check for existing mount/staging before attempting vfs mount.
+		// if already staged, the plugin must reply ok
+		vfsMountExists, err := n.Driver.mounter.IsMountPoint(req.StagingTargetPath)
+		if err != nil {
+			n.Driver.log.WithFields(logrus.Fields{
+				"volume": req.VolumeId,
+				"target": req.StagingTargetPath,
+			}).Warnf("NodeStageVolume: error checking vfs device staging target path: %s", err.Error())
+		}
+
+		if vfsMountExists {
+			n.Driver.log.WithFields(logrus.Fields{
+				"volume": req.VolumeId,
+				"target": req.StagingTargetPath,
+			}).Infof("NodeStageVolume: vfs device target path already exists and is mounted")
+
+			deviceName, deviceRef, err := mountutils.GetDeviceNameFromMount(n.Driver.mounter.Interface, req.StagingTargetPath)
+			if err != nil {
+				n.Driver.log.WithFields(logrus.Fields{
+					"volume": req.VolumeId,
+					"target": req.StagingTargetPath,
+				}).Warnf("NodeStageVolume: error checking existing vfs device mount: %s", err.Error())
+			}
+
+			n.Driver.log.WithFields(logrus.Fields{
+				"volume":            req.VolumeId,
+				"target":            req.StagingTargetPath,
+				"device-name":       deviceName,
+				"device-references": deviceRef,
+			}).Infof("NodeStageVolume: vfs existing device mount details")
+
+			if deviceName == source {
+				n.Driver.log.WithFields(logrus.Fields{
+					"volume": req.VolumeId,
+					"target": req.StagingTargetPath,
+				}).Info("NodeStageVolume: vfs device is already staged")
+				return &csi.NodeStageVolumeResponse{}, nil
+			}
+		}
 
 		if err := n.Driver.mounter.Mount(source, target, "virtiofs", nil); err != nil {
 			return nil, status.Errorf(codes.Internal, "NodeStageVolume: could not mount vfs volume %q: %v", req.VolumeId, err)
@@ -172,7 +252,7 @@ func (n *VultrNodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUn
 		"staging-target-path": req.StagingTargetPath,
 	}).Info("NodeUnstageVolume: called")
 
-	err := mount.CleanupMountPoint(req.StagingTargetPath, n.Driver.mounter, true)
+	err := mountutils.CleanupMountPoint(req.StagingTargetPath, n.Driver.mounter, true)
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +324,7 @@ func (n *VultrNodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.Node
 		"target-path": req.TargetPath,
 	}).Info("NodeUnpublishVolume: called")
 
-	err := mount.CleanupMountPoint(req.TargetPath, n.Driver.mounter, true)
+	err := mountutils.CleanupMountPoint(req.TargetPath, n.Driver.mounter, true)
 	if err != nil {
 		return nil, err
 	}
@@ -328,7 +408,7 @@ func (n *VultrNodeServer) NodeExpandVolume(ctx context.Context, req *csi.NodeExp
 		"required_bytes": req.CapacityRange.RequiredBytes,
 	}).Info("NodeExpandVolume: called")
 
-	devicePath, _, err := mount.GetDeviceNameFromMount(mount.New(""), req.VolumePath)
+	devicePath, _, err := mountutils.GetDeviceNameFromMount(mountutils.New(""), req.VolumePath)
 	if err != nil {
 		return nil, fmt.Errorf("NodeExpandVolume: failed to determine mount path for %s: %s", req.VolumePath, err)
 	}
