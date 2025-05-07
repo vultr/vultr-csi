@@ -41,7 +41,7 @@ func NewVultrNodeDriver(driver *VultrDriver) *VultrNodeServer {
 
 // NodeStageVolume perpares the node for the new volume to be mounted. This is
 // executed after the ControllerPublishVolume and before the NodePublishVolume.
-func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVolumeRequest) (*csi.NodeStageVolumeResponse, error) {
+func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVolumeRequest) (*csi.NodeStageVolumeResponse, error) { //nolint:gocyclo,lll
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "NodeStageVolume: Volume ID must be provided")
 	}
