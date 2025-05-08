@@ -1,5 +1,21 @@
 # Change Log
-## [v0.15.1]( https://github.com/vultr/vultr-csi/compare/v0.15.0...v0.15.1) (2025-03-28)
+## [v0.16.0](https://github.com/vultr/vultr-csi/compare/v0.15.1...v0.16.0) (2025-05-08)
+### Bug Fixes
+* Check mount and device during node staging/attach [PR 317](https://github.com/vultr/vultr-csi/pull/317)
+
+### Dependencies
+* Update github-tag-actions from v1.36.0 to v1.71.0 [PR 307](https://github.com/vultr/vultr-csi/pull/307)
+* Bump google.golang.org/grpc from 1.71.0 to 1.72.0 [PR 310](https://github.com/vultr/vultr-csi/pull/310)
+* Bump golang.org/x/net from 0.36.0 to 0.38.0 [PR 309](https://github.com/vultr/vultr-csi/pull/309)
+* Bump k8s.io/mount-utils from 0.32.2 to 0.32.3 [PR 297](https://github.com/vultr/vultr-csi/pull/297)
+* Bump golang.org/x/oauth2 from 0.28.0 to 0.29.0 [PR 306](https://github.com/vultr/vultr-csi/pull/306)
+* Bump github.com/vultr/govultr/v3 from 3.18.0 to 3.19.1 [PR 312](https://github.com/vultr/vultr-csi/pull/312)
+* Bump golang.org/x/oauth2 from 0.29.0 to 0.30.0 [PR 315](https://github.com/vultr/vultr-csi/pull/315)
+* Bump github.com/vultr/govultr/v3 from 3.19.1 to 3.20.0 [PR 316](https://github.com/vultr/vultr-csi/pull/316)
+* Bump golang.org/x/sys from 0.31.0 to 0.33.0 [PR 314](https://github.com/vultr/vultr-csi/pull/314)
+* Bump golang.org/x/sync from 0.12.0 to 0.14.0 [PR 313](https://github.com/vultr/vultr-csi/pull/313)
+
+## [v0.15.1](https://github.com/vultr/vultr-csi/compare/v0.15.0...v0.15.1) (2025-03-28)
 ### Bug Fixes
 * Set default block storage type during NodeStageVolume [PR 300](https://github.com/vultr/vultr-csi/pull/300)
 
