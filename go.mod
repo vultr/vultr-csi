@@ -1,6 +1,7 @@
 module github.com/vultr/vultr-csi
 
-go 1.24
+go 1.24.0
+
 toolchain go1.24.1
 
 require (
@@ -12,7 +13,7 @@ require (
 	golang.org/x/oauth2 v0.30.0
 	golang.org/x/sync v0.14.0
 	golang.org/x/sys v0.33.0
-	google.golang.org/grpc v1.72.0
+	google.golang.org/grpc v1.72.1
 	k8s.io/mount-utils v0.33.0
 	k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738
 )
