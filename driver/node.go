@@ -11,6 +11,7 @@ import (
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/sirupsen/logrus"
+	"github.com/vultr/vultr-csi/internal/vultrdevice"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -94,6 +95,17 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 	}).Infof("NodeStageVolume: directory created for target %s", target)
 
 	if storageType == "block" {
+		// check and create link for block device if it does not exist
+		if err := vultrdevice.LinkBySerial(mountVolName); err != nil {
+			return nil, status.Errorf(
+				codes.Internal,
+				"NodeStageVolume: device for block volume %q is not accesible with serial %q: %v",
+				req.VolumeId,
+				mountVolName,
+				err,
+			)
+		}
+
 		source = filepath.Join(diskPath, fmt.Sprintf("%s%s", diskPrefix, mountVolName))
 
 		// check for existing mount/staging before attempting format and mount.
