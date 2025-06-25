@@ -10,6 +10,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/vultr/vultr-csi/internal/vultruserdata"
 )
 
 const (
@@ -28,8 +30,9 @@ type device struct {
 // what is provided, checks for a symlink to the device. it then creates a
 // symlink if it does not already exist
 func LinkBySerial(serial string) error {
-	if runtime.GOOS != "linux" {
-		return fmt.Errorf("cannot link on operating system %v", runtime.GOOS)
+	if runtime.GOOS != "linux" || !vultruserdata.IsVKE() {
+		// the serial check is not relevant to this node
+		return nil
 	}
 
 	devices, err := listSysDevices()
