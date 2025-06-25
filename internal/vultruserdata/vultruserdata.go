@@ -18,7 +18,7 @@ const (
 
 func IsVKE() bool {
 	ud := NewUserData()
-	if err := ud.queryUserData(); err != nil {
+	if err := ud.get(); err != nil {
 		return false
 	}
 
@@ -63,7 +63,7 @@ func NewUserData() *UserData {
 	return &UserData{}
 }
 
-func (u *UserData) queryUserData() error {
+func (u *UserData) get() error {
 	req, err := http.NewRequest("GET", vultrUserDataURL, nil)
 	if err != nil {
 		return fmt.Errorf("error creating http request : %v", err)
