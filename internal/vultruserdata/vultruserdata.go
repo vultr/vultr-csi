@@ -31,31 +31,9 @@ func IsVKE() bool {
 
 type UserData struct {
 	Data struct {
-		CertificateAuthority string `json:"certificate_authority"`
-		KubeProxyCerts       struct {
-			Private string `json:"private_pem"`
-			Public  string `json:"pem"`
-		} `json:"kube_proxy"`
-		ControlPlaneID string `json:"control_plane"`
-		VKE            struct {
-			NodePoolID        string `json:"nodepool_id"`
-			NodePoolLabel     string `json:"nodepool_label"`
-			NodeID            string `json:"node_id"`
-			NodeType          string `json:"node_type"`
-			KubernetesVersion string `json:"kubernetes_version"`
-			GPU               bool   `json:"gpu"`
-			GPUBrand          string `json:"gpu_brand"`
-			GPUAccessMode     string `json:"gpu_access_mode"`
-			StorageAppliances struct {
-				Type   string `json:"type"`
-				Domain string `json:"domain"`
-				IP     string `json:"ip"`
-			} `json:"storage_appliances"`
+		VKE struct {
+			NodeID string `json:"node_id"`
 		} `json:"vke"`
-		SSHKeys struct {
-			PublicKey string `json:"public_key"`
-		} `json:"ssh"`
-		APIKey string `json:"api_key"`
 	} `json:"data"`
 }
 
