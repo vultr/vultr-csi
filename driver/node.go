@@ -76,7 +76,7 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 	source := ""
 	target := req.StagingTargetPath
 	mountBlk := req.VolumeCapability.GetMount()
-	options := mountBlk.MountFlags
+	options := mountBlk.GetMountFlags()
 
 	n.Driver.log.WithFields(logrus.Fields{
 		"volume":   req.VolumeId,
@@ -154,9 +154,9 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 			"capacity": req.VolumeCapability,
 		}).Info("NodeStageVolume: attempting block format and mount")
 
-		fsType := "ext4"
-		if mountBlk.FsType != "" {
-			fsType = mountBlk.FsType
+		fsType := mountBlk.GetFsType()
+		if fsType == "" {
+			fsType = "ext4"
 		}
 
 		if err := n.Driver.mounter.FormatAndMount(source, target, fsType, options); err != nil {
@@ -300,11 +300,11 @@ func (n *VultrNodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePu
 	}
 
 	mnt := req.VolumeCapability.GetMount()
-	options = append(options, mnt.MountFlags...)
+	options = append(options, mnt.GetMountFlags()...)
 
-	fsType := "ext4"
-	if mnt.FsType != "" {
-		fsType = mnt.FsType
+	fsType := mnt.GetFsType()
+	if fsType == "" {
+		fsType = "ext4"
 	}
 
 	err := os.MkdirAll(req.TargetPath, mkDirMode)
