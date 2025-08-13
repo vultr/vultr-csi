@@ -300,7 +300,11 @@ func (n *VultrNodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePu
 	}
 
 	mnt := req.VolumeCapability.GetMount()
-	options = append(options, mnt.GetMountFlags()...)
+
+	mountFlags := mnt.GetMountFlags()
+	if len(mountFlags) != 0 {
+		options = append(options, mountFlags...)
+	}
 
 	fsType := mnt.GetFsType()
 	if fsType == "" {
