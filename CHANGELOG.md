@@ -1,4 +1,21 @@
 # Change Log
+## [v0.17.0](https://github.com/vultr/vultr-csi/compare/v0.16.0...v0.17.0) (2025-07-17)
+### Bug Fixes
+* Add logic to verify/add block device symlink on nodes [PR 328](https://github.com/vultr/vultr-csi/pull/328)
+
+### Dependencies
+* Bump google.golang.org/grpc from 1.72.0 to 1.72.2 [PR 321](https://github.com/vultr/vultr-csi/pull/321)
+* Bump k8s.io/mount-utils from 0.33.0 to 0.33.1 [PR 320](https://github.com/vultr/vultr-csi/pull/320)
+* Bump github.com/vultr/govultr/v3 from 3.20.0 to 3.21.0 [PR 327](https://github.com/vultr/vultr-csi/pull/327)
+* Bump k8s.io/mount-utils from 0.33.1 to 0.33.2 [PR 326](https://github.com/vultr/vultr-csi/pull/326)
+* Bump google.golang.org/grpc from 1.72.2 to 1.73.0 [PR 323](https://github.com/vultr/vultr-csi/pull/323)
+* Bump golang.org/x/sync from 0.14.0 to 0.15.0 [PR 322](https://github.com/vultr/vultr-csi/pull/322)
+* Bump golang.org/x/sync from 0.15.0 to 0.16.0 [PR 330](https://github.com/vultr/vultr-csi/pull/330)
+* Bump golang.org/x/sys from 0.33.0 to 0.34.0 [PR 329](https://github.com/vultr/vultr-csi/pull/329)
+* Bump github.com/vultr/govultr/v3 from 3.21.0 to 3.21.1 [PR 333](https://github.com/vultr/vultr-csi/pull/333)
+* Bump google.golang.org/grpc from 1.73.0 to 1.74.0 [PR 332](https://github.com/vultr/vultr-csi/pull/332)
+* Bump k8s.io/mount-utils from 0.33.2 to 0.33.3 [PR 331](https://github.com/vultr/vultr-csi/pull/331)
+
 ## [v0.16.0](https://github.com/vultr/vultr-csi/compare/v0.15.1...v0.16.0) (2025-05-08)
 ### Bug Fixes
 * Check mount and device during node staging/attach [PR 317](https://github.com/vultr/vultr-csi/pull/317)
