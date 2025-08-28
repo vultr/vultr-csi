@@ -113,7 +113,6 @@ spec:
             - "--volume-name-prefix=pvc"
             - "--volume-name-uuid-length=16"
             - "--csi-address=$(ADDRESS)"
-            - "--timeout=90s"            
             - "--v=5"
             - "--default-fstype=ext4"
           env:
@@ -150,7 +149,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: csi-vultr-plugin
-          image: vultr/vultr-csi:v0.17.1
+          image: vultr/vultr-csi:v0.17.0
           args:
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--token=$(VULTR_API_KEY)"
@@ -308,7 +307,7 @@ spec:
             - name: registration-dir
               mountPath: /registration/
         - name: csi-vultr-plugin
-          image: vultr/vultr-csi:v0.17.1
+          image: vultr/vultr-csi:v0.17.0
           args:
             - "--endpoint=$(CSI_ENDPOINT)"
           env:

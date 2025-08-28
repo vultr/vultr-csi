@@ -1,4 +1,14 @@
 # Change Log
+## [v0.17.1](https://github.com/vultr/vultr-csi/compare/v0.17.0...v0.17.1) (2025-08-28)
+### Bug Fixes
+* Use get methods for node mount command flags [PR 337](https://github.com/vultr/vultr-csi/pull/337)
+
+### Automation
+* Update timeout for provisioner [PR 336](https://github.com/vultr/vultr-csi/pull/336)
+
+### Dependencies
+* Bump google.golang.org/grpc from 1.74.0 to 1.74.2 [PR 335](https://github.com/vultr/vultr-csi/pull/335)
+
 ## [v0.17.0](https://github.com/vultr/vultr-csi/compare/v0.16.0...v0.17.0) (2025-07-17)
 ### Bug Fixes
 * Add logic to verify/add block device symlink on nodes [PR 328](https://github.com/vultr/vultr-csi/pull/328)
