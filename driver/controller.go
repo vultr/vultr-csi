@@ -217,7 +217,7 @@ func (c *VultrControllerServer) DeleteVolume(ctx context.Context, req *csi.Delet
 	// detach all instances
 	for i := range deleteStorage.AttachedInstances {
 		if err := sh.Operations.Detach(ctx, deleteStorage.ID, deleteStorage.AttachedInstances[i].NodeID); err != nil {
-			if !strings.Contains(err.Error(), "volume is not currently attached") ||
+			if !strings.Contains(err.Error(), "volume is not currently attached") &&
 				!strings.Contains(err.Error(), "Attachment Not Found") {
 				return nil, status.Errorf(codes.Internal, "DeleteVolume: cannot detach volume in delete, %v", err.Error())
 			}
@@ -363,6 +363,10 @@ func (c *VultrControllerServer) ControllerUnpublishVolume(ctx context.Context, r
 
 	sh, err := vultrstorage.FindVultrStorageHandlerByID(ctx, c.Driver.client, req.VolumeId)
 	if err != nil {
+		// Volume doesn't exist, consider it already unpublished
+		if strings.Contains(err.Error(), "storage not found") {
+			return &csi.ControllerUnpublishVolumeResponse{}, nil
+		}
 		return nil, status.Errorf(codes.Internal, "ControllerUnpublishVolume: could not find storage handler for storage. %v", err.Error())
 	}
 

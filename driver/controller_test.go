@@ -145,3 +145,27 @@ func TestControllerUnpublishBlockVolume(t *testing.T) {
 		t.Errorf("expected %+v got %+v", res, expected)
 	}
 }
+
+func TestControllerUnpublishBlockVolumeNotFound(t *testing.T) {
+	controller := NewFakeVultrControllerServer("unpublish block volume not found")
+
+	nodeID := "c56c7b6e-15c2-445e-9a5d-1063ab5828ec"
+	// Use a volume ID that doesn't exist in any storage type
+	volumeID := "nonexistent-volume-id-12345"
+
+	res, err := controller.ControllerUnpublishVolume(context.Background(), &csi.ControllerUnpublishVolumeRequest{
+		NodeId:   nodeID,
+		VolumeId: volumeID,
+	})
+
+	// Should succeed even though volume doesn't exist (idempotency)
+	if err != nil {
+		t.Errorf("Expected no error when unpublishing non-existent volume, got error : %v", err)
+	}
+
+	expected := &csi.ControllerUnpublishVolumeResponse{}
+
+	if !reflect.DeepEqual(res, expected) {
+		t.Errorf("expected %+v got %+v", res, expected)
+	}
+}
