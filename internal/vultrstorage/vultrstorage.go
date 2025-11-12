@@ -166,7 +166,7 @@ func FindVultrStorageHandlerByID(ctx context.Context, client *govultr.Client, st
 
 		storage, err := sh.Operations.Get(ctx, storageID)
 		if err != nil {
-			if strings.Contains(err.Error(), "Invalid block storage ID") ||
+			if strings.Contains(err.Error(), "Block storage subscription not found.") ||
 				strings.Contains(err.Error(), "Subscription ID Not Found") {
 				continue
 			}
