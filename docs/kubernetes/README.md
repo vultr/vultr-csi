@@ -8,11 +8,14 @@ This Block type uses the storage class `vultr-block-storage`. It has a minimum d
 
 It is currently available in the following regions:
 
+- Atlanta
 - Amsterdam
 - Bangalore
+- Chicago
 - Los Angeles
 - London
 - New Jersey
+- Seattle
 - Singapore
 - Sydney
 - Tokyo
