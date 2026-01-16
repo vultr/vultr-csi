@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/vultr/govultr/v3"
@@ -9,11 +10,13 @@ import (
 
 func newFakeClient() *govultr.Client {
 	fakeInstance := FakeInstance{client: nil}
+	fakeBareMetal := fakeBareMetalServer{client: nil}
 	fakeBlockStorage := fakeBS{client: nil}
 	fakeVirtualFileSystemStorage := fakeVFS{client: nil}
 
 	return &govultr.Client{
 		Instance:                 &fakeInstance,
+		BareMetalServer:          &fakeBareMetal,
 		BlockStorage:             &fakeBlockStorage,
 		VirtualFileSystemStorage: &fakeVirtualFileSystemStorage,
 	}
@@ -423,4 +426,104 @@ func (f *FakeInstance) GetUserData(_ context.Context, _ string) (*govultr.UserDa
 // GetUpgrades gets instance upgade
 func (f *FakeInstance) GetUpgrades(_ context.Context, _ string) (*govultr.Upgrades, *http.Response, error) {
 	panic("implement me")
+}
+
+type fakeBareMetalServer struct {
+	client *govultr.Client
+}
+
+func (f *fakeBareMetalServer) Create(ctx context.Context, bmCreate *govultr.BareMetalCreate) (*govultr.BareMetalServer, *http.Response, error) {
+	return nil, nil, fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) Get(ctx context.Context, serverID string) (*govultr.BareMetalServer, *http.Response, error) {
+	return nil, nil, fmt.Errorf("not found")
+}
+
+func (f *fakeBareMetalServer) Update(ctx context.Context, serverID string, bmReq *govultr.BareMetalUpdate) (*govultr.BareMetalServer, *http.Response, error) {
+	return nil, nil, fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) Delete(ctx context.Context, serverID string) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) List(ctx context.Context, options *govultr.ListOptions) ([]govultr.BareMetalServer, *govultr.Meta, *http.Response, error) {
+	return nil, nil, nil, fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) GetBandwidth(ctx context.Context, serverID string) (*govultr.Bandwidth, *http.Response, error) {
+	return nil, nil, fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) GetUserData(ctx context.Context, serverID string) (*govultr.UserData, *http.Response, error) {
+	return nil, nil, fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) GetVNCUrl(ctx context.Context, serverID string) (*govultr.VNCUrl, *http.Response, error) {
+	return nil, nil, fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) ListIPv4s(ctx context.Context, serverID string, options *govultr.ListOptions) ([]govultr.IPv4, *govultr.Meta, *http.Response, error) {
+	return nil, nil, nil, fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) ListIPv6s(ctx context.Context, serverID string, options *govultr.ListOptions) ([]govultr.IPv6, *govultr.Meta, *http.Response, error) {
+	return nil, nil, nil, fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) Halt(ctx context.Context, serverID string) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) Reboot(ctx context.Context, serverID string) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) Start(ctx context.Context, serverID string) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) Reinstall(ctx context.Context, serverID string) (*govultr.BareMetalServer, *http.Response, error) {
+	return nil, nil, fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) MassStart(ctx context.Context, serverList []string) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) MassHalt(ctx context.Context, serverList []string) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) MassReboot(ctx context.Context, serverList []string) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) GetUpgrades(ctx context.Context, serverID string) (*govultr.Upgrades, *http.Response, error) {
+	return nil, nil, fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) ListVPCInfo(ctx context.Context, serverID string) ([]govultr.VPCInfo, *http.Response, error) {
+	return nil, nil, fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) AttachVPC(ctx context.Context, serverID, vpcID string) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) DetachVPC(ctx context.Context, serverID, vpcID string) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) ListVPC2Info(ctx context.Context, serverID string) ([]govultr.VPC2Info, *http.Response, error) {
+	return nil, nil, fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) AttachVPC2(ctx context.Context, serverID string, vpc2Req *govultr.AttachVPC2Req) error {
+	return fmt.Errorf("not implemented")
+}
+
+func (f *fakeBareMetalServer) DetachVPC2(ctx context.Context, serverID, vpcID string) error {
+	return fmt.Errorf("not implemented")
 }

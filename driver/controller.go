@@ -264,6 +264,10 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 		return nil, status.Errorf(codes.NotFound, "ControllerPublishVolume: could not retrieve existing storage volume: %v", err.Error())
 	}
 
+	if _, _, bmErr := c.Driver.client.BareMetalServer.Get(ctx, req.NodeId); bmErr == nil && storageExisting.StorageType == "block" {
+		return nil, status.Errorf(codes.InvalidArgument, "ControllerPublishVolume: node ID %s block storage is not supported on bm servers.", req.NodeId)
+	}
+
 	if _, _, err = c.Driver.client.Instance.Get(ctx, req.NodeId); err != nil { //nolint:bodyclose
 		return nil, status.Errorf(codes.NotFound, "ControllerPublishVolume: could not retrieve node: %v", err.Error())
 	}
