@@ -265,7 +265,7 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 	}
 
 	if _, _, err = c.Driver.client.BareMetalServer.Get(ctx, req.NodeId); err == nil && storageExisting.StorageType == "block" {
-		return nil, status.Errorf(codes.InvalidArgument, "ControllerPublishVolume: node ID %s is a bare metal server, not a virtual machine", req.NodeId)
+		return nil, status.Errorf(codes.InvalidArgument, "ControllerPublishVolume: node ID %s is a bare metal server, not a virtual machine. Block storage is not supported on bare metal servers.", req.NodeId)
 	}
 
 	if _, _, err = c.Driver.client.Instance.Get(ctx, req.NodeId); err != nil { //nolint:bodyclose
