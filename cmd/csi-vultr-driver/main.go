@@ -23,7 +23,6 @@ import (
 var version string
 
 func main() {
-
 	var (
 		endpoint   = flag.String("endpoint", "unix:///var/lib/kubelet/plugins/"+driver.DefaultDriverName+"/csi.sock", "CSI endpoint")
 		token      = flag.String("token", "", "Vultr API Token")

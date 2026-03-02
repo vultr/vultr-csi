@@ -63,9 +63,10 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 	// handle legacy param
 	if blockType != "" {
 		storageType = "block"
-		if blockType == "high_perf" {
+		switch blockType {
+		case "high_perf":
 			diskType = "nvme"
-		} else if blockType == "storage_opt" {
+		case "storage_opt":
 			diskType = "hdd"
 		}
 	}
@@ -426,9 +427,10 @@ func (c *VultrControllerServer) ValidateVolumeCapabilities(ctx context.Context, 
 	// handle legacy param
 	if blockType != "" {
 		storageType = "block"
-		if blockType == "high_perf" {
+		switch blockType {
+		case "high_perf":
 			diskType = "nvme"
-		} else if blockType == "storage_opt" {
+		case "storage_opt":
 			diskType = "hdd"
 		}
 	}
@@ -574,10 +576,7 @@ func (c *VultrControllerServer) ControllerExpandVolume(ctx context.Context, req 
 		return nil, status.Errorf(codes.Internal, "ControllerExpandVolume: unable to update storage: %v", err.Error())
 	}
 
-	nodeExpansion := false
-	if sh.StorageType == "block" {
-		nodeExpansion = true
-	}
+	nodeExpansion := sh.StorageType == "block"
 
 	return &csi.ControllerExpandVolumeResponse{CapacityBytes: newSizeBytes, NodeExpansionRequired: nodeExpansion}, nil
 }

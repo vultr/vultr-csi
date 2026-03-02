@@ -51,7 +51,6 @@ func LinkBySerial(serial string) error {
 					}
 
 					return nil
-
 				} else {
 					// some other error, abort
 					return fmt.Errorf("unable to read symlink : %s", err)
@@ -78,7 +77,6 @@ func listSysDevices() ([]device, error) {
 
 		// found a serial file, check it...
 		if !dirInfo.IsDir() && dirInfo.Name() == sysSerialName {
-
 			// this assumes that the serial file parent directory is the device
 			// name and formats it under that assumption
 			devName := fmt.Sprintf("%s%s", devRoot, filepath.Base(filepath.Dir(path)))
