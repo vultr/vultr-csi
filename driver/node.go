@@ -94,7 +94,8 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 		"capacity": req.VolumeCapability,
 	}).Infof("NodeStageVolume: directory created for target %s", target)
 
-	if storageType == "block" {
+	switch storageType {
+	case "block":
 		// check and create link for block device if it does not exist
 		if err := vultrdevice.LinkBySerial(mountVolName); err != nil {
 			return nil, status.Errorf(
@@ -186,7 +187,7 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 				}
 			}
 		}
-	} else if storageType == "vfs" {
+	case "vfs":
 		source = mountVolName
 
 		n.Driver.log.WithFields(logrus.Fields{
@@ -237,7 +238,7 @@ func (n *VultrNodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStag
 		if err := n.Driver.mounter.Mount(source, target, "virtiofs", nil); err != nil {
 			return nil, status.Errorf(codes.Internal, "NodeStageVolume: could not mount vfs volume %q: %v", req.VolumeId, err)
 		}
-	} else {
+	default:
 		return nil, status.Errorf(
 			codes.InvalidArgument,
 			"NodeStageVolume: invalid storage type context from controller: %v",

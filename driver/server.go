@@ -78,19 +78,21 @@ func (n *nonBlockingGRPCServer) serve(endpoint string, ids csi.IdentityServer, c
 	}
 
 	var addr string
-	if serveURL.Scheme == "unix" {
+	switch serveURL.Scheme {
+	case "unix":
 		addr = serveURL.Path
 		if errRemove := os.Remove(addr); err != nil && !os.IsNotExist(err) {
 			log.Fatalf("Failed to remove %s, error: %s", addr, errRemove.Error())
 		}
-	} else if serveURL.Scheme == "tcp" {
+	case "tcp":
 		addr = serveURL.Host
-	} else {
+	default:
 		log.Fatalf("%v endpoint scheme not supported", serveURL.Scheme)
 	}
 
 	log.Infof("Start listening with scheme %v, addr %v", serveURL.Scheme, addr)
-	listener, err := net.Listen(serveURL.Scheme, addr)
+	lcfg := net.ListenConfig{}
+	listener, err := lcfg.Listen(context.Background(), serveURL.Scheme, addr)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}

@@ -102,11 +102,12 @@ func NewVultrStorageHandler(client *govultr.Client, storageType, diskType string
 
 	switch storageType {
 	case "block":
-		if diskType == "nvme" {
+		switch diskType {
+		case "nvme":
 			sh.DefaultSize = blockNVMEDefaultSize
-		} else if diskType == "hdd" {
+		case "hdd":
 			sh.DefaultSize = blockHDDDefaultSize
-		} else {
+		default:
 			if !ignoreDiskType {
 				return nil, fmt.Errorf(
 					"unable to instantiate a new storage handler : invalid block storage disk type: %s",
@@ -514,11 +515,12 @@ func convertFromBlock(bs *govultr.BlockStorage) (*VultrStorage, error) {
 	vs.BlockType = bs.BlockType
 	vs.StorageType = "block"
 
-	if bs.BlockType == "high_perf" {
+	switch bs.BlockType {
+	case "high_perf":
 		vs.DiskType = "nvme"
-	} else if bs.BlockType == "storage_opt" {
+	case "storage_opt":
 		vs.DiskType = "hdd"
-	} else {
+	default:
 		vs.DiskType = ""
 	}
 	vs.Status = bs.Status

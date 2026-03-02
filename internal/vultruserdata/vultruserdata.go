@@ -4,6 +4,7 @@
 package vultruserdata
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -42,13 +43,12 @@ func NewUserData() *UserData {
 }
 
 func (u *UserData) get() error {
-	req, err := http.NewRequest("GET", vultrUserDataURL, nil)
+	req, err := http.NewRequestWithContext(context.Background(), "GET", vultrUserDataURL, nil)
 	if err != nil {
 		return fmt.Errorf("error creating http request : %v", err)
 	}
 
 	client := &http.Client{Timeout: requestTimeout}
-
 	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("error in http client request : %v", err)
