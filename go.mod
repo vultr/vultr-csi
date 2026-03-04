@@ -6,7 +6,7 @@ require (
 	github.com/container-storage-interface/spec v1.12.0
 	github.com/golang/protobuf v1.5.4
 	github.com/sirupsen/logrus v1.9.3
-	github.com/vultr/govultr/v3 v3.24.0
+	github.com/vultr/govultr/v3 v3.28.1
 	github.com/vultr/metadata v1.1.0
 	golang.org/x/oauth2 v0.33.0
 	golang.org/x/sync v0.19.0
@@ -18,7 +18,7 @@ require (
 
 require (
 	github.com/go-logr/logr v1.4.3 // indirect
-	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.8 // indirect
 	github.com/moby/sys/mountinfo v0.7.2 // indirect
