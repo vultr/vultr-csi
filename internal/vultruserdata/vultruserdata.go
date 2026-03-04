@@ -55,7 +55,7 @@ func (u *UserData) get() error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("request status %q not ok : %v", resp.StatusCode, err)
+		return fmt.Errorf("request status %d not ok : %v", resp.StatusCode, err)
 	}
 
 	body, err := io.ReadAll(resp.Body)
