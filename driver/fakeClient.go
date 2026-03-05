@@ -334,12 +334,12 @@ func (f *FakeInstance) DetachVPC(ctx context.Context, instanceID, networkID stri
 }
 
 // ListVPC2Info is not implemented
-func (f *FakeInstance) ListVPC2Info(ctx context.Context, instanceID string, options *govultr.ListOptions) ([]govultr.VPC2Info, *govultr.Meta, *http.Response, error) {
+func (f *FakeInstance) ListVPC2Info(ctx context.Context, instanceID string, options *govultr.ListOptions) ([]govultr.VPC2Info, *govultr.Meta, *http.Response, error) { //nolint:staticcheck
 	panic("implement me")
 }
 
 // AttachVPC2 is not implemented
-func (f *FakeInstance) AttachVPC2(ctx context.Context, instanceID string, vpc2Req *govultr.AttachVPC2Req) error {
+func (f *FakeInstance) AttachVPC2(ctx context.Context, instanceID string, vpc2Req *govultr.AttachVPC2Req) error { //nolint:staticcheck
 	panic("implement me")
 }
 
