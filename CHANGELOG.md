@@ -1,4 +1,33 @@
 # Change Log
+## [v0.18.0](https://github.com/vultr/vultr-csi/compare/v0.17.1...v0.18.0) (2026-03-06)
+### Enhancements
+* Add check for bare metal nodes to prevent block storage usage [PR 364](https://github.com/vultr/vultr-csi/pull/364)
+
+### Bug Fixes
+* Use get methods for node mount command flags [PR 337](https://github.com/vultr/vultr-csi/pull/337)
+
+### Automation
+* Replace deprecated goreleaser template [PR 377](https://github.com/vultr/vultr-csi/pull/377)
+* Update github workflow actions [PR 368](https://github.com/vultr/vultr-csi/pull/368)
+* Migrate golangci-lint configuration to v2 [PR 366](https://github.com/vultr/vultr-csi/pull/366)
+
+### Dependencies
+* Update Go version from v1.24 to v1.26 [PR 365](https://github.com/vultr/vultr-csi/pull/365)
+* Bump golang.org/x/sync from 0.17.0 to 0.19.0 [PR 359](https://github.com/vultr/vultr-csi/pull/359)
+* Bump google.golang.org/grpc from 1.75.1 to 1.79.1 [PR 371](https://github.com/vultr/vultr-csi/pull/371)
+* Bump golang.org/x/sys from 0.38.0 to 0.41.0 [PR 372](https://github.com/vultr/vultr-csi/pull/372)
+* Bump golang.org/x/oauth2 from 0.33.0 to 0.35.0 [PR 375](https://github.com/vultr/vultr-csi/pull/375)
+* Bump k8s.io/mount-utils from 0.34.1 to 0.35.2 [PR 73](https://github.com/vultr/vultr-csi/pull/373)
+* Bump github.com/sirupsen/logrus from 1.9.3 to 1.9.4 [PR 374](https://github.com/vultr/vultr-csi/pull/374)
+* Bump github.com/container-storage-interface/spec from 1.11.0 to 1.12.0 [PR 356](https://github.com/vultr/vultr-csi/pull/356)
+
+### Documentation
+* Update README with NVMe available regions [PR 362](https://github.com/vultr/vultr-csi/pull/362)
+* Update github CODEOWNERS file [PR 378](https://github.com/vultr/vultr-csi/pull/378)
+
+### Clean up
+* Remove vendored code [PR 369](https://github.com/vultr/vultr-csi/pull/369)
+
 ## [v0.17.1](https://github.com/vultr/vultr-csi/compare/v0.17.0...v0.17.1) (2025-08-28)
 ### Bug Fixes
 * Use get methods for node mount command flags [PR 337](https://github.com/vultr/vultr-csi/pull/337)
