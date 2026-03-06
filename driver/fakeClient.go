@@ -516,11 +516,11 @@ func (f *fakeBareMetalServer) DetachVPC(ctx context.Context, serverID, vpcID str
 	return fmt.Errorf("not implemented")
 }
 
-func (f *fakeBareMetalServer) ListVPC2Info(ctx context.Context, serverID string) ([]govultr.VPC2Info, *http.Response, error) {
+func (f *fakeBareMetalServer) ListVPC2Info(ctx context.Context, serverID string) ([]govultr.VPC2Info, *http.Response, error) { //nolint:staticcheck
 	return nil, nil, fmt.Errorf("not implemented")
 }
 
-func (f *fakeBareMetalServer) AttachVPC2(ctx context.Context, serverID string, vpc2Req *govultr.AttachVPC2Req) error {
+func (f *fakeBareMetalServer) AttachVPC2(ctx context.Context, serverID string, vpc2Req *govultr.AttachVPC2Req) error { //nolint:staticcheck
 	return fmt.Errorf("not implemented")
 }
 
