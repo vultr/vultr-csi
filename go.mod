@@ -6,7 +6,7 @@ require (
 	github.com/container-storage-interface/spec v1.12.0
 	github.com/golang/protobuf v1.5.4
 	github.com/sirupsen/logrus v1.9.4
-	github.com/vultr/govultr/v3 v3.28.1
+	github.com/vultr/govultr/v3 v3.32.0
 	github.com/vultr/metadata v1.1.0
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sync v0.22.0
