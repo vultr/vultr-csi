@@ -55,12 +55,13 @@ type VultrStorageAttachment struct {
 
 // VultrStorageReq represents the general request data used for creating a Vultr storage.
 type VultrStorageReq struct {
-	Region    string
-	SizeGB    int
-	Label     string
-	BlockType string
-	DiskType  string
-	Tags      []string // vfs only
+	Region     string
+	SizeGB     int
+	Label      string
+	BlockType  string
+	DiskType   string
+	SnapshotID string
+	Tags       []string // vfs only
 }
 
 // VultrStorageUpdateReq represents the general request data used for updating a Vultr storage.
@@ -266,6 +267,7 @@ func (v *VultrBlockStorageHandler) Create(ctx context.Context, req VultrStorageR
 	bsReq.Region = req.Region
 	bsReq.Label = req.Label
 	bsReq.SizeGB = req.SizeGB
+	bsReq.SnapshotID = req.SnapshotID
 
 	switch req.DiskType {
 	case "hdd":

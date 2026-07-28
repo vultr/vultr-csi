@@ -21,10 +21,12 @@ import (
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/sirupsen/logrus"
+	"github.com/vultr/govultr/v3"
 	"github.com/vultr/vultr-csi/internal/vultrstorage"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const (
@@ -130,6 +132,34 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 		DiskType: diskType,
 	}
 
+	var contentSource *csi.VolumeContentSource
+	if source := req.GetVolumeContentSource(); source != nil {
+		if sh.StorageType != "block" {
+			return nil, status.Error(codes.InvalidArgument, "CreateVolume: snapshot volume content sources are only supported for block storage")
+		}
+
+		snapshotSource := source.GetSnapshot()
+		if snapshotSource == nil || snapshotSource.GetSnapshotId() == "" {
+			return nil, status.Error(codes.InvalidArgument, "CreateVolume: only snapshot volume content sources are supported")
+		}
+
+		snapshot, _, err := c.Driver.client.BlockStorage.GetSnapshot(ctx, snapshotSource.GetSnapshotId())
+		if err != nil {
+			return nil, status.Errorf(codes.NotFound, "CreateVolume: could not retrieve source snapshot: %v", err.Error())
+		}
+
+		if snapshot.BlockID == "" {
+			return nil, status.Error(codes.InvalidArgument, "CreateVolume: source snapshot is missing a source volume")
+		}
+
+		if snapshot.Size > 0 && int64(snapshot.Size) > size {
+			return nil, status.Error(codes.OutOfRange, "CreateVolume: requested volume capacity is smaller than the source snapshot")
+		}
+
+		storageReq.SnapshotID = snapshot.ID
+		contentSource = source
+	}
+
 	volume, err := sh.Operations.Create(ctx, *storageReq)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "CreateVolume: could not create a new volume: %v", err.Error())
@@ -160,6 +190,7 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 		Volume: &csi.Volume{
 			VolumeId:      volume.ID,
 			CapacityBytes: size,
+			ContentSource: contentSource,
 			AccessibleTopology: []*csi.Topology{
 				{
 					Segments: map[string]string{
@@ -506,6 +537,8 @@ func (c *VultrControllerServer) ControllerGetCapabilities(context.Context, *csi.
 		csi.ControllerServiceCapability_RPC_PUBLISH_UNPUBLISH_VOLUME,
 		csi.ControllerServiceCapability_RPC_LIST_VOLUMES,
 		csi.ControllerServiceCapability_RPC_EXPAND_VOLUME,
+		csi.ControllerServiceCapability_RPC_CREATE_DELETE_SNAPSHOT,
+		csi.ControllerServiceCapability_RPC_LIST_SNAPSHOTS,
 	} {
 		capabilities = append(capabilities, capability(caps))
 	}
@@ -523,18 +556,133 @@ func (c *VultrControllerServer) ControllerGetCapabilities(context.Context, *csi.
 }
 
 // CreateSnapshot provides snapshot creation
-func (c *VultrControllerServer) CreateSnapshot(context.Context, *csi.CreateSnapshotRequest) (*csi.CreateSnapshotResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "")
+func (c *VultrControllerServer) CreateSnapshot(ctx context.Context, req *csi.CreateSnapshotRequest) (*csi.CreateSnapshotResponse, error) {
+	if req.Name == "" {
+		return nil, status.Error(codes.InvalidArgument, "CreateSnapshot: name is missing")
+	}
+
+	if req.SourceVolumeId == "" {
+		return nil, status.Error(codes.InvalidArgument, "CreateSnapshot: source volume ID is missing")
+	}
+
+	sh, err := vultrstorage.FindVultrStorageHandlerByID(ctx, c.Driver.client, req.SourceVolumeId)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "CreateSnapshot: could not find source volume: %v", err.Error())
+	}
+
+	if sh.StorageType != "block" {
+		return nil, status.Error(codes.InvalidArgument, "CreateSnapshot: snapshots are only supported for block storage volumes")
+	}
+
+	existingSnapshots, err := listAllBlockStorageSnapshots(ctx, c.Driver.client)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "CreateSnapshot: could not retrieve snapshots: %v", err.Error())
+	}
+
+	for i := range existingSnapshots {
+		if existingSnapshots[i].Description != req.Name {
+			continue
+		}
+
+		if existingSnapshots[i].BlockID != req.SourceVolumeId {
+			return nil, status.Error(codes.AlreadyExists, "CreateSnapshot: snapshot name already exists for a different source volume")
+		}
+
+		return &csi.CreateSnapshotResponse{Snapshot: convertBlockStorageSnapshot(&existingSnapshots[i])}, nil
+	}
+
+	snapshot, _, err := c.Driver.client.BlockStorage.CreateSnapshot(ctx, &govultr.BlockStorageSnapshotReq{
+		BlockID:     req.SourceVolumeId,
+		Description: req.Name,
+	})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "CreateSnapshot: could not create snapshot: %v", err.Error())
+	}
+
+	c.Driver.log.WithFields(logrus.Fields{
+		"snapshot-id":      snapshot.ID,
+		"snapshot-name":    snapshot.Description,
+		"source-volume-id": snapshot.BlockID,
+	}).Info("CreateSnapshot: created snapshot")
+
+	return &csi.CreateSnapshotResponse{Snapshot: convertBlockStorageSnapshot(snapshot)}, nil
 }
 
 // DeleteSnapshot provides snapshot deletion
-func (c *VultrControllerServer) DeleteSnapshot(context.Context, *csi.DeleteSnapshotRequest) (*csi.DeleteSnapshotResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "")
+func (c *VultrControllerServer) DeleteSnapshot(ctx context.Context, req *csi.DeleteSnapshotRequest) (*csi.DeleteSnapshotResponse, error) {
+	if req.SnapshotId == "" {
+		return nil, status.Error(codes.InvalidArgument, "DeleteSnapshot: snapshot ID is missing")
+	}
+
+	if _, _, err := c.Driver.client.BlockStorage.GetSnapshot(ctx, req.SnapshotId); err != nil {
+		if isNotFoundError(err) {
+			return &csi.DeleteSnapshotResponse{}, nil
+		}
+
+		return nil, status.Errorf(codes.Internal, "DeleteSnapshot: could not retrieve snapshot: %v", err.Error())
+	}
+
+	if err := c.Driver.client.BlockStorage.DeleteSnapshot(ctx, req.SnapshotId); err != nil {
+		if isNotFoundError(err) {
+			return &csi.DeleteSnapshotResponse{}, nil
+		}
+
+		return nil, status.Errorf(codes.Internal, "DeleteSnapshot: could not delete snapshot: %v", err.Error())
+	}
+
+	c.Driver.log.WithFields(logrus.Fields{
+		"snapshot-id": req.SnapshotId,
+	}).Info("DeleteSnapshot: deleted snapshot")
+
+	return &csi.DeleteSnapshotResponse{}, nil
 }
 
 // ListSnapshots provides the list snapshot
-func (c *VultrControllerServer) ListSnapshots(context.Context, *csi.ListSnapshotsRequest) (*csi.ListSnapshotsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "")
+func (c *VultrControllerServer) ListSnapshots(ctx context.Context, req *csi.ListSnapshotsRequest) (*csi.ListSnapshotsResponse, error) {
+	if req.SnapshotId != "" {
+		snapshot, _, err := c.Driver.client.BlockStorage.GetSnapshot(ctx, req.SnapshotId)
+		if err != nil {
+			if isNotFoundError(err) {
+				return &csi.ListSnapshotsResponse{}, nil
+			}
+
+			return nil, status.Errorf(codes.Internal, "ListSnapshots: could not retrieve snapshot: %v", err.Error())
+		}
+
+		if req.SourceVolumeId != "" && snapshot.BlockID != req.SourceVolumeId {
+			return &csi.ListSnapshotsResponse{}, nil
+		}
+
+		return &csi.ListSnapshotsResponse{
+			Entries: []*csi.ListSnapshotsResponse_Entry{{Snapshot: convertBlockStorageSnapshot(snapshot)}},
+		}, nil
+	}
+
+	listOptions := &govultr.ListOptions{Cursor: req.StartingToken}
+	if req.MaxEntries > 0 {
+		listOptions.PerPage = int(req.MaxEntries)
+	}
+
+	snapshots, meta, _, err := c.Driver.client.BlockStorage.ListSnapshots(ctx, listOptions)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "ListSnapshots: could not retrieve snapshots: %v", err.Error())
+	}
+
+	entries := make([]*csi.ListSnapshotsResponse_Entry, 0, len(snapshots))
+	for i := range snapshots {
+		if req.SourceVolumeId != "" && snapshots[i].BlockID != req.SourceVolumeId {
+			continue
+		}
+
+		entries = append(entries, &csi.ListSnapshotsResponse_Entry{Snapshot: convertBlockStorageSnapshot(&snapshots[i])})
+	}
+
+	res := &csi.ListSnapshotsResponse{Entries: entries}
+	if meta != nil && meta.Links != nil {
+		res.NextToken = meta.Links.Next
+	}
+
+	return res, nil
 }
 
 // ControllerExpandVolume provides the expand volume
@@ -637,4 +785,56 @@ func getStorageBytes(capRange *csi.CapacityRange, sh *vultrstorage.VultrStorageH
 	}
 
 	return 0, fmt.Errorf("default size unavailable for type %v storage %v disk", sh.StorageType, sh.DiskType)
+}
+
+func listAllBlockStorageSnapshots(ctx context.Context, client *govultr.Client) ([]govultr.BlockStorageSnapshot, error) {
+	var allSnapshots []govultr.BlockStorageSnapshot
+	listOptions := &govultr.ListOptions{}
+
+	for {
+		snapshots, meta, _, err := client.BlockStorage.ListSnapshots(ctx, listOptions)
+		if err != nil {
+			return nil, err
+		}
+
+		allSnapshots = append(allSnapshots, snapshots...)
+
+		if meta == nil || meta.Links == nil || meta.Links.Next == "" {
+			break
+		}
+
+		listOptions.Cursor = meta.Links.Next
+	}
+
+	return allSnapshots, nil
+}
+
+func convertBlockStorageSnapshot(snapshot *govultr.BlockStorageSnapshot) *csi.Snapshot {
+	if snapshot == nil {
+		return nil
+	}
+
+	csiSnapshot := &csi.Snapshot{
+		SnapshotId:     snapshot.ID,
+		SourceVolumeId: snapshot.BlockID,
+		SizeBytes:      int64(snapshot.Size),
+		ReadyToUse:     strings.EqualFold(snapshot.State, "complete"),
+	}
+
+	if created, err := time.Parse("2006-01-02 15:04:05", snapshot.DateCreated); err == nil {
+		csiSnapshot.CreationTime = timestamppb.New(created)
+	}
+
+	return csiSnapshot
+}
+
+func isNotFoundError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	errMsg := err.Error()
+	return strings.Contains(errMsg, "Not Found") ||
+		strings.Contains(errMsg, "not found") ||
+		strings.Contains(errMsg, "404")
 }

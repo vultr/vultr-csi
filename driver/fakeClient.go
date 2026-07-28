@@ -33,6 +33,18 @@ func newFakeBS() *govultr.BlockStorage {
 		AttachedToInstance: "245bb2fe-b55c-44a0-9a1e-ab80e4b5f088",
 		Label:              "test-bs",
 		MountID:            "test-mount-3",
+		BlockType:          "storage_opt",
+	}
+}
+
+func newFakeBlockStorageSnapshot() *govultr.BlockStorageSnapshot {
+	return &govultr.BlockStorageSnapshot{
+		ID:          "cb676a46-66fd-4dfb-b839-443f2e6c0b60",
+		Description: "snapshot-test-name",
+		BlockID:     "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
+		State:       "COMPLETE",
+		DateCreated: "2026-07-17 16:46:05",
+		Size:        10737418240,
 	}
 }
 
@@ -68,6 +80,7 @@ func (f *fakeBS) List(ctx context.Context, options *govultr.ListOptions) ([]govu
 				AttachedToInstance: "245bb2fe-b55c-44a0-9a1e-ab80e4b5f088",
 				Label:              "test-bs-perf",
 				MountID:            "test-mount-1",
+				BlockType:          "high_perf",
 			},
 			{
 				ID:                 "bda4f333-bfd7-477b-84c2-e4df0ec9e5bf",
@@ -79,6 +92,7 @@ func (f *fakeBS) List(ctx context.Context, options *govultr.ListOptions) ([]govu
 				AttachedToInstance: "b9d23eb3-1880-4746-acc7-f1ef56565320",
 				Label:              "test-bs-hdd",
 				MountID:            "test-mount-2",
+				BlockType:          "storage_opt",
 			},
 		}, &govultr.Meta{
 			Total: 0,
@@ -105,6 +119,41 @@ func (f *fakeBS) Detach(ctx context.Context, blockID string, detach *govultr.Blo
 		}
 	}
 
+	return nil
+}
+
+func (f *fakeBS) ListSnapshots(ctx context.Context, options *govultr.ListOptions) ([]govultr.BlockStorageSnapshot, *govultr.Meta, *http.Response, error) {
+	return []govultr.BlockStorageSnapshot{*newFakeBlockStorageSnapshot()}, &govultr.Meta{
+		Total: 1,
+		Links: &govultr.Links{
+			Next: "",
+			Prev: "",
+		},
+	}, nil, nil
+}
+
+func (f *fakeBS) GetSnapshot(ctx context.Context, snapshotID string) (*govultr.BlockStorageSnapshot, *http.Response, error) {
+	snapshot := newFakeBlockStorageSnapshot()
+	if snapshot.ID != snapshotID {
+		return nil, nil, fmt.Errorf("snapshot not found")
+	}
+
+	return snapshot, nil, nil
+}
+
+func (f *fakeBS) CreateSnapshot(ctx context.Context, snapshotReq *govultr.BlockStorageSnapshotReq) (*govultr.BlockStorageSnapshot, *http.Response, error) {
+	snapshot := newFakeBlockStorageSnapshot()
+	snapshot.BlockID = snapshotReq.BlockID
+	snapshot.Description = snapshotReq.Description
+
+	return snapshot, nil, nil
+}
+
+func (f *fakeBS) UpdateSnapshot(ctx context.Context, snapshotID string, snapshotReq *govultr.BlockStorageSnapshotReq) error {
+	return nil
+}
+
+func (f *fakeBS) DeleteSnapshot(ctx context.Context, snapshotID string) error {
 	return nil
 }
 
