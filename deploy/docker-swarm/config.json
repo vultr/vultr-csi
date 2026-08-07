@@ -1,0 +1,50 @@
+{
+  "description": "Vultr csi plugin for Docker",
+  "documentation": "https://github.com/moby/moby/blob/master/docs/cluster_volumes.md",
+  "entrypoint": [
+    "/entrypoint.sh"
+  ],
+  "env": [
+    {
+      "name": "VULTR_API_URL",
+      "settable": [
+        "value"
+      ],
+      "value": ""
+    },
+    {
+      "name": "VULTR_API_TOKEN",
+      "settable": [
+        "value"
+      ],
+      "value": ""
+    }
+  ],
+  "interface": {
+    "socket": "csi-vultr.sock",
+    "types": [
+      "docker.csicontroller/1.0",
+      "docker.csinode/1.0"
+    ]
+  },
+  "linux": {
+    "allowAllDevices": true,
+    "capabilities": [
+      "CAP_SYS_ADMIN"
+    ]
+  },
+  "mounts": [
+    {
+      "destination": "/dev",
+      "options": [
+        "rbind"
+      ],
+      "source": "/dev",
+      "type": "bind"
+    }
+  ],
+  "network": {
+    "type": "host"
+  },
+  "propagatedMount": "/data/published"
+}
