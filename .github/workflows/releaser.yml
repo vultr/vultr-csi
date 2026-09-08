@@ -70,7 +70,7 @@ jobs:
           echo "${VCR_PUB_PASS}" | docker login https://sjc.vultrcr.com/vultrpublic --username "${VCR_PUB_USER}" --password-stdin
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
       -
         name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v7
