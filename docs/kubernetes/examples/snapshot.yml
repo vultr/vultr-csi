@@ -1,0 +1,8 @@
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshot
+metadata:
+  name: csi-snapshot
+spec:
+  volumeSnapshotClassName: vultr-block-storage
+  source:
+    persistentVolumeClaimName: csi-pvc

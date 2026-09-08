@@ -8,7 +8,7 @@ job "vultr-csi-nodes" {
       driver = "docker"
 
       config {
-        image = "vultr/vultr-csi:v0.5.0"
+        image = "vultr/vultr-csi:v0.19.0"
 
         privileged = true
 

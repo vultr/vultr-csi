@@ -43,6 +43,7 @@ type VultrStorage struct {
 	Status            string
 	StorageType       string
 	SizeGB            int
+	SnapshotID        string
 	AttachedInstances []VultrStorageAttachment
 }
 
@@ -516,6 +517,7 @@ func convertFromBlock(bs *govultr.BlockStorage) (*VultrStorage, error) {
 	vs.Region = bs.Region
 	vs.BlockType = bs.BlockType
 	vs.StorageType = "block"
+	vs.SnapshotID = bs.SnapshotID
 
 	switch bs.BlockType {
 	case "high_perf":

@@ -81,7 +81,7 @@ func (n *nonBlockingGRPCServer) serve(endpoint string, ids csi.IdentityServer, c
 	switch serveURL.Scheme {
 	case "unix":
 		addr = serveURL.Path
-		if errRemove := os.Remove(addr); err != nil && !os.IsNotExist(err) {
+		if errRemove := os.Remove(addr); errRemove != nil && !os.IsNotExist(errRemove) {
 			log.Fatalf("Failed to remove %s, error: %s", addr, errRemove.Error())
 		}
 	case "tcp":

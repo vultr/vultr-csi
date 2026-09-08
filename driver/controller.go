@@ -95,6 +95,27 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 		"capabilities": req.VolumeCapabilities,
 	}).Info("CreateVolume: called")
 
+	size, err := getStorageBytes(req.CapacityRange, sh)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "CreateVolume: could not request new volume: %v", err.Error())
+	}
+
+	var contentSource *csi.VolumeContentSource
+	var sourceSnapshotID string
+	if source := req.GetVolumeContentSource(); source != nil {
+		if sh.StorageType != "block" {
+			return nil, status.Error(codes.InvalidArgument, "CreateVolume: snapshot volume content sources are only supported for block storage")
+		}
+
+		snapshotSource := source.GetSnapshot()
+		if snapshotSource == nil || snapshotSource.GetSnapshotId() == "" {
+			return nil, status.Error(codes.InvalidArgument, "CreateVolume: only snapshot volume content sources are supported")
+		}
+
+		contentSource = source
+		sourceSnapshotID = snapshotSource.GetSnapshotId()
+	}
+
 	var curVolume *vultrstorage.VultrStorage
 
 	storages, err := vultrstorage.ListAllStorages(ctx, c.Driver.client)
@@ -111,20 +132,26 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 	}
 
 	if curVolume != nil {
+		capacityBytes := int64(curVolume.SizeGB) * gibiByte
+		if curVolume.StorageType != storageType || curVolume.DiskType != diskType ||
+			curVolume.SnapshotID != sourceSnapshotID || capacityBytes < size ||
+			(req.CapacityRange.GetLimitBytes() > 0 && capacityBytes > req.CapacityRange.GetLimitBytes()) {
+			return nil, status.Error(codes.AlreadyExists, "CreateVolume: volume name already exists with incompatible parameters")
+		}
+
 		return &csi.CreateVolumeResponse{
 			Volume: &csi.Volume{
 				VolumeId:      curVolume.ID,
-				CapacityBytes: int64(curVolume.SizeGB) * gibiByte,
+				CapacityBytes: capacityBytes,
+				ContentSource: contentSource,
+				AccessibleTopology: []*csi.Topology{{
+					Segments: map[string]string{"region": curVolume.Region},
+				}},
 			},
 		}, nil
 	}
 
 	// volume doesn't exist, create
-	size, err := getStorageBytes(req.CapacityRange, sh)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "CreateVolume: could not request new volume: %v", err.Error())
-	}
-
 	storageReq := &vultrstorage.VultrStorageReq{
 		Region:   c.Driver.region,
 		SizeGB:   int(size / gibiByte),
@@ -132,18 +159,8 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 		DiskType: diskType,
 	}
 
-	var contentSource *csi.VolumeContentSource
-	if source := req.GetVolumeContentSource(); source != nil {
-		if sh.StorageType != "block" {
-			return nil, status.Error(codes.InvalidArgument, "CreateVolume: snapshot volume content sources are only supported for block storage")
-		}
-
-		snapshotSource := source.GetSnapshot()
-		if snapshotSource == nil || snapshotSource.GetSnapshotId() == "" {
-			return nil, status.Error(codes.InvalidArgument, "CreateVolume: only snapshot volume content sources are supported")
-		}
-
-		snapshot, _, err := c.Driver.client.BlockStorage.GetSnapshot(ctx, snapshotSource.GetSnapshotId())
+	if sourceSnapshotID != "" {
+		snapshot, _, err := c.Driver.client.BlockStorage.GetSnapshot(ctx, sourceSnapshotID)
 		if err != nil {
 			return nil, status.Errorf(codes.NotFound, "CreateVolume: could not retrieve source snapshot: %v", err.Error())
 		}
@@ -157,7 +174,6 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 		}
 
 		storageReq.SnapshotID = snapshot.ID
-		contentSource = source
 	}
 
 	volume, err := sh.Operations.Create(ctx, *storageReq)
@@ -639,6 +655,10 @@ func (c *VultrControllerServer) DeleteSnapshot(ctx context.Context, req *csi.Del
 
 // ListSnapshots provides the list snapshot
 func (c *VultrControllerServer) ListSnapshots(ctx context.Context, req *csi.ListSnapshotsRequest) (*csi.ListSnapshotsResponse, error) {
+	if req.MaxEntries < 0 {
+		return nil, status.Error(codes.InvalidArgument, "ListSnapshots: max entries cannot be negative")
+	}
+
 	if req.SnapshotId != "" {
 		snapshot, _, err := c.Driver.client.BlockStorage.GetSnapshot(ctx, req.SnapshotId)
 		if err != nil {

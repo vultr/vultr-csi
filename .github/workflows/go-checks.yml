@@ -22,8 +22,8 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
-          version: latest
-          args: "driver/..."
+          version: v2.6.1
+          args: "./..."
   Go-Fmt:
     runs-on: ubuntu-latest
 
@@ -36,7 +36,7 @@ jobs:
 
       - name: Run fmt
         run: |
-          gofmt_files=$(gofmt -l driver/.)
+          gofmt_files=$(gofmt -l .)
           if [[ -n ${gofmt_files} ]]; then
               echo 'gofmt needs running on the following files:'
               echo "${gofmt_files}"

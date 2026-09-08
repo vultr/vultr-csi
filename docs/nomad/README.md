@@ -43,7 +43,7 @@ Example snippet:
         }
 
         config {
-          image = "vultr/vultr-csi:v0.5.0"
+          image = "vultr/vultr-csi:v0.19.0"
 
           args = [
             "-endpoint=unix:///csi/csi.sock",

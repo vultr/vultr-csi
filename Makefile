@@ -22,4 +22,4 @@ docker-push:
 
 .PHONY: test
 test:
-	go test -race github.com/vultr/vultr-csi/driver -v
+	go test -race ./... -v

@@ -8,6 +8,7 @@ import (
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/sirupsen/logrus"
+	"github.com/vultr/govultr/v3"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -144,6 +145,52 @@ func TestControllerCreateBlockVolumeFromSnapshot(t *testing.T) {
 	if !reflect.DeepEqual(res, expected) {
 		t.Errorf("expected %+v got %+v", expected, res)
 	}
+
+	fakeBlockStorage := controller.Driver.client.BlockStorage.(*fakeBS)
+	if fakeBlockStorage.lastCreateReq == nil || fakeBlockStorage.lastCreateReq.SnapshotID != "cb676a46-66fd-4dfb-b839-443f2e6c0b60" {
+		t.Fatalf("expected snapshot ID in block storage create request, got %+v", fakeBlockStorage.lastCreateReq)
+	}
+}
+
+func TestControllerCreateBlockVolumeFromSnapshotIsIdempotent(t *testing.T) {
+	controller := NewFakeVultrControllerServer("retry block volume from snapshot")
+	fakeBlockStorage := controller.Driver.client.BlockStorage.(*fakeBS)
+	fakeBlockStorage.storages = []govultr.BlockStorage{{
+		ID:         "restored-volume-id",
+		Label:      "restored-volume-name",
+		Region:     "ewr",
+		SizeGB:     40,
+		BlockType:  "storage_opt",
+		SnapshotID: "cb676a46-66fd-4dfb-b839-443f2e6c0b60",
+	}}
+
+	source := &csi.VolumeContentSource{
+		Type: &csi.VolumeContentSource_Snapshot{
+			Snapshot: &csi.VolumeContentSource_SnapshotSource{
+				SnapshotId: "cb676a46-66fd-4dfb-b839-443f2e6c0b60",
+			},
+		},
+	}
+	res, err := controller.CreateVolume(context.Background(), &csi.CreateVolumeRequest{
+		Name: "restored-volume-name",
+		Parameters: map[string]string{
+			"storage_type": "block",
+			"disk_type":    "hdd",
+		},
+		VolumeCapabilities: []*csi.VolumeCapability{{
+			AccessMode: &csi.VolumeCapability_AccessMode{Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER},
+		}},
+		VolumeContentSource: source,
+	})
+	if err != nil {
+		t.Fatalf("expected retry to succeed: %v", err)
+	}
+	if fakeBlockStorage.lastCreateReq != nil {
+		t.Fatalf("expected retry not to create another volume, got %+v", fakeBlockStorage.lastCreateReq)
+	}
+	if res.Volume.VolumeId != "restored-volume-id" || !reflect.DeepEqual(res.Volume.ContentSource, source) {
+		t.Fatalf("expected existing restored volume and content source, got %+v", res.Volume)
+	}
 }
 
 func TestControllerCreateSnapshot(t *testing.T) {
@@ -220,6 +267,15 @@ func TestControllerListSnapshots(t *testing.T) {
 
 	if !reflect.DeepEqual(res, expected) {
 		t.Errorf("expected %+v got %+v", expected, res)
+	}
+}
+
+func TestControllerListSnapshotsRejectsNegativeMaxEntries(t *testing.T) {
+	controller := NewFakeVultrControllerServer("list snapshots with invalid max entries")
+
+	_, err := controller.ListSnapshots(context.Background(), &csi.ListSnapshotsRequest{MaxEntries: -1})
+	if err == nil {
+		t.Fatal("expected an error for negative max entries")
 	}
 }
 

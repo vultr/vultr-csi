@@ -49,10 +49,13 @@ func newFakeBlockStorageSnapshot() *govultr.BlockStorageSnapshot {
 }
 
 type fakeBS struct {
-	client *govultr.Client
+	client        *govultr.Client
+	lastCreateReq *govultr.BlockStorageCreate
+	storages      []govultr.BlockStorage
 }
 
 func (f *fakeBS) Create(ctx context.Context, blockReq *govultr.BlockStorageCreate) (*govultr.BlockStorage, *http.Response, error) {
+	f.lastCreateReq = blockReq
 	return newFakeBS(), nil, nil
 }
 
@@ -69,6 +72,10 @@ func (f *fakeBS) Delete(ctx context.Context, blockID string) error {
 }
 
 func (f *fakeBS) List(ctx context.Context, options *govultr.ListOptions) ([]govultr.BlockStorage, *govultr.Meta, *http.Response, error) {
+	if f.storages != nil {
+		return f.storages, &govultr.Meta{Links: &govultr.Links{}}, nil, nil
+	}
+
 	return []govultr.BlockStorage{
 			{
 				ID:                 "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",

@@ -1,4 +1,26 @@
 # Change Log
+## [v0.19.0](https://github.com/vultr/vultr-csi/compare/v0.18.0...v0.19.0) (2026-09-08)
+### Enhancements
+* Add block storage snapshot create, delete, list, and restore support [PR 388](https://github.com/vultr/vultr-csi/pull/388)
+* Add the Kubernetes CSI snapshotter sidecar, RBAC, snapshot classes, controller manifest, and usage examples
+
+### Bug Fixes
+* Preserve and validate snapshot content sources when volume creation is retried
+* Reject invalid snapshot pagination requests
+* Fix the CSI resizer role binding and Unix socket cleanup error handling
+
+### Automation
+* Run tests, formatting, and lint checks across all Go packages
+
+### Dependencies
+* Update github.com/vultr/govultr/v3 from 3.28.1 to 3.32.0
+* Bump golang.org/x/oauth2 from 0.35.0 to 0.36.0 [PR 382](https://github.com/vultr/vultr-csi/pull/382)
+* Bump golang.org/x/sync from 0.19.0 to 0.22.0 [PR 380](https://github.com/vultr/vultr-csi/pull/380)
+* Bump golang.org/x/sys from 0.41.0 to 0.47.0 [PR 383](https://github.com/vultr/vultr-csi/pull/383)
+* Bump google.golang.org/grpc from 1.79.1 to 1.82.1 [PR 384](https://github.com/vultr/vultr-csi/pull/384)
+* Bump k8s.io/mount-utils from 0.35.2 to 0.36.2 [PR 385](https://github.com/vultr/vultr-csi/pull/385)
+* Bump golang.org/x/net from 0.53.0 to 0.55.0 [PR 386](https://github.com/vultr/vultr-csi/pull/386)
+
 ## [v0.18.0](https://github.com/vultr/vultr-csi/compare/v0.17.1...v0.18.0) (2026-03-06)
 ### Enhancements
 * Add check for bare metal nodes to prevent block storage usage [PR 364](https://github.com/vultr/vultr-csi/pull/364)

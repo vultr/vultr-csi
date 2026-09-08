@@ -33,6 +33,7 @@ It is currently available in every region **except** for the following:
 ### Requirements
 
 - `--allow-privileged` must be enabled for the API server and kubelet
+- Kubernetes 1.25 or newer is required for the bundled external-snapshotter
 
 ### Kubernetes secret
 
@@ -64,6 +65,27 @@ secret/vultr-csi created
 
 ### Deploying the CSI
 
+Snapshots require the Kubernetes snapshot CRDs and the cluster-wide snapshot
+controller. Some managed Kubernetes distributions install these components for
+you. Check before installing them:
+
+```sh
+kubectl get crd volumesnapshots.snapshot.storage.k8s.io \
+  volumesnapshotcontents.snapshot.storage.k8s.io \
+  volumesnapshotclasses.snapshot.storage.k8s.io
+kubectl -n kube-system get deployment snapshot-controller
+```
+
+If they are absent, install the v8.4.0 snapshot CRDs and the controller bundled
+with this repository:
+
+```sh
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/v8.4.0/client/config/crd/snapshot.storage.k8s.io_volumesnapshotclasses.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/v8.4.0/client/config/crd/snapshot.storage.k8s.io_volumesnapshotcontents.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/v8.4.0/client/config/crd/snapshot.storage.k8s.io_volumesnapshots.yaml
+kubectl apply -f https://raw.githubusercontent.com/vultr/vultr-csi/master/docs/kubernetes/snapshot-controller.yml
+```
+
 To deploy the latest release of the CSI to your Kubernetes cluster, run the
 following:
 
@@ -82,9 +104,9 @@ which will be used to create your volumes
 
 ```sh
 $ kubectl get storageclass
-NAME                            PROVISIONER              RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
-vultr-block-storage (default)   block.csi.vultr.com   Delete          Immediate           false                  131m
-vultr-block-storage-retain      block.csi.vultr.com   Retain          Immediate           false                  131m
+NAME                         PROVISIONER           RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION
+vultr-block-storage          block.csi.vultr.com   Delete          Immediate           true
+vultr-block-storage-retain   block.csi.vultr.com   Retain          Immediate           true
 ```
 
 To further validate the CSI, create a
@@ -165,6 +187,32 @@ kubectl create -f pod-volume.yml
 # See that data on our volume still exists
 $ kubectl exec -it readme-app -- /bin/sh -c "ls /data"
 ```
+
+## Snapshots
+
+Snapshots and restores are supported for Vultr Block Storage volumes. VFS
+volumes cannot be snapshotted. The release manifest creates `Delete` and
+`Retain` snapshot classes named `vultr-block-storage` and
+`vultr-block-storage-retain`.
+
+Create a snapshot of the example `csi-pvc` claim and wait until it is ready:
+
+```sh
+kubectl apply -f https://raw.githubusercontent.com/vultr/vultr-csi/master/docs/kubernetes/examples/snapshot.yml
+kubectl wait --for=jsonpath='{.status.readyToUse}'=true \
+  volumesnapshot/csi-snapshot --timeout=10m
+```
+
+Restore that snapshot into a new volume:
+
+```sh
+kubectl apply -f https://raw.githubusercontent.com/vultr/vultr-csi/master/docs/kubernetes/examples/restore-pvc.yml
+kubectl get pvc csi-restored-pvc
+```
+
+The restored PVC must request at least as much capacity as the source snapshot.
+Deleting a snapshot that uses `vultr-block-storage` also deletes the Vultr
+snapshot. The `vultr-block-storage-retain` class preserves it.
 
 ## Examples
 
