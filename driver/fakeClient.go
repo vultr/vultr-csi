@@ -49,9 +49,13 @@ func newFakeBlockStorageSnapshot() *govultr.BlockStorageSnapshot {
 }
 
 type fakeBS struct {
-	client        *govultr.Client
-	lastCreateReq *govultr.BlockStorageCreate
-	storages      []govultr.BlockStorage
+	client                  *govultr.Client
+	lastCreateReq           *govultr.BlockStorageCreate
+	storages                []govultr.BlockStorage
+	getCalls                int
+	listCalls               int
+	deleteCalls             int
+	lastSnapshotListOptions *govultr.ListOptions
 }
 
 func (f *fakeBS) Create(ctx context.Context, blockReq *govultr.BlockStorageCreate) (*govultr.BlockStorage, *http.Response, error) {
@@ -60,6 +64,15 @@ func (f *fakeBS) Create(ctx context.Context, blockReq *govultr.BlockStorageCreat
 }
 
 func (f *fakeBS) Get(ctx context.Context, blockID string) (*govultr.BlockStorage, *http.Response, error) {
+	f.getCalls++
+	if f.storages != nil {
+		for i := range f.storages {
+			if f.storages[i].ID == blockID {
+				return &f.storages[i], nil, nil
+			}
+		}
+		return nil, nil, fmt.Errorf("Invalid block storage ID")
+	}
 	return newFakeBS(), nil, nil
 }
 
@@ -68,10 +81,12 @@ func (f *fakeBS) Update(ctx context.Context, blockID string, blockReq *govultr.B
 }
 
 func (f *fakeBS) Delete(ctx context.Context, blockID string) error {
+	f.deleteCalls++
 	return nil
 }
 
 func (f *fakeBS) List(ctx context.Context, options *govultr.ListOptions) ([]govultr.BlockStorage, *govultr.Meta, *http.Response, error) {
+	f.listCalls++
 	if f.storages != nil {
 		return f.storages, &govultr.Meta{Links: &govultr.Links{}}, nil, nil
 	}
@@ -115,21 +130,11 @@ func (f *fakeBS) Attach(ctx context.Context, blockID string, attach *govultr.Blo
 }
 
 func (f *fakeBS) Detach(ctx context.Context, blockID string, detach *govultr.BlockStorageDetach) error {
-	list, _, _, err := f.List(ctx, nil) //nolint:bodyclose
-	if err != nil {
-		return err
-	}
-
-	for i := range list {
-		if list[i].ID == blockID {
-			list[i].AttachedToInstance = ""
-		}
-	}
-
 	return nil
 }
 
 func (f *fakeBS) ListSnapshots(ctx context.Context, options *govultr.ListOptions) ([]govultr.BlockStorageSnapshot, *govultr.Meta, *http.Response, error) {
+	f.lastSnapshotListOptions = options
 	return []govultr.BlockStorageSnapshot{*newFakeBlockStorageSnapshot()}, &govultr.Meta{
 		Total: 1,
 		Links: &govultr.Links{
@@ -191,7 +196,8 @@ func newFakeVFS() *govultr.VirtualFileSystemStorage {
 }
 
 type fakeVFS struct {
-	client *govultr.Client
+	client    *govultr.Client
+	listCalls int
 }
 
 func (f *fakeVFS) Create(ctx context.Context, vfsReq *govultr.VirtualFileSystemStorageReq) (*govultr.VirtualFileSystemStorage, *http.Response, error) {
@@ -211,6 +217,7 @@ func (f *fakeVFS) Delete(ctx context.Context, vfsID string) error {
 }
 
 func (f *fakeVFS) List(ctx context.Context, options *govultr.ListOptions) ([]govultr.VirtualFileSystemStorage, *govultr.Meta, *http.Response, error) {
+	f.listCalls++
 	return []govultr.VirtualFileSystemStorage{
 			{
 				ID:          "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",

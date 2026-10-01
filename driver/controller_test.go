@@ -75,6 +75,8 @@ func TestControllerCreateBlockVolume(t *testing.T) {
 
 func TestControllerDeleteBlockVolume(t *testing.T) {
 	controller := NewFakeVultrControllerServer("delete block volume")
+	fakeBlockStorage := controller.Driver.client.BlockStorage.(*fakeBS)
+	fakeVFSStorage := controller.Driver.client.VirtualFileSystemStorage.(*fakeVFS)
 
 	volumeID := "c56c7b6e-15c2-445e-9a5d-1063ab5828ec" //nolint:goconst
 	res, err := controller.DeleteVolume(context.Background(), &csi.DeleteVolumeRequest{
@@ -89,6 +91,49 @@ func TestControllerDeleteBlockVolume(t *testing.T) {
 
 	if !reflect.DeepEqual(res, expected) {
 		t.Errorf("expected %+v got %+v", res, expected)
+	}
+	if fakeBlockStorage.listCalls != 0 || fakeVFSStorage.listCalls != 0 {
+		t.Fatalf("expected delete by ID not to list storage, got %d block and %d VFS list calls", fakeBlockStorage.listCalls, fakeVFSStorage.listCalls)
+	}
+	if fakeBlockStorage.deleteCalls != 1 {
+		t.Fatalf("expected one direct block storage deletion, got %d", fakeBlockStorage.deleteCalls)
+	}
+}
+
+func TestControllerCreateVolumeRetryUsesCachedID(t *testing.T) {
+	controller := NewFakeVultrControllerServer("retry create volume by cached ID")
+	fakeBlockStorage := controller.Driver.client.BlockStorage.(*fakeBS)
+	fakeBlockStorage.storages = []govultr.BlockStorage{{
+		ID:        "existing-volume-id",
+		Label:     "existing-volume-name",
+		Region:    "ewr",
+		SizeGB:    40,
+		BlockType: "storage_opt",
+	}}
+
+	req := &csi.CreateVolumeRequest{
+		Name: "existing-volume-name",
+		Parameters: map[string]string{
+			"storage_type": "block",
+			"disk_type":    "hdd",
+		},
+		VolumeCapabilities: []*csi.VolumeCapability{{
+			AccessMode: &csi.VolumeCapability_AccessMode{Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER},
+		}},
+	}
+
+	if _, err := controller.CreateVolume(context.Background(), req); err != nil {
+		t.Fatalf("expected initial create retry lookup to succeed: %v", err)
+	}
+	blockListCalls := fakeBlockStorage.listCalls
+	fakeVFSStorage := controller.Driver.client.VirtualFileSystemStorage.(*fakeVFS)
+	vfsListCalls := fakeVFSStorage.listCalls
+
+	if _, err := controller.CreateVolume(context.Background(), req); err != nil {
+		t.Fatalf("expected cached create retry lookup to succeed: %v", err)
+	}
+	if fakeBlockStorage.listCalls != blockListCalls || fakeVFSStorage.listCalls != vfsListCalls {
+		t.Fatalf("expected cached ID retry not to list storage")
 	}
 }
 
@@ -195,6 +240,7 @@ func TestControllerCreateBlockVolumeFromSnapshotIsIdempotent(t *testing.T) {
 
 func TestControllerCreateSnapshot(t *testing.T) {
 	controller := NewFakeVultrControllerServer("create snapshot")
+	fakeBlockStorage := controller.Driver.client.BlockStorage.(*fakeBS)
 
 	res, err := controller.CreateSnapshot(context.Background(), &csi.CreateSnapshotRequest{
 		Name:           "new-snapshot-test-name",
@@ -218,6 +264,9 @@ func TestControllerCreateSnapshot(t *testing.T) {
 
 	if !reflect.DeepEqual(res, expected) {
 		t.Errorf("expected %+v got %+v", expected, res)
+	}
+	if fakeBlockStorage.lastSnapshotListOptions == nil || fakeBlockStorage.lastSnapshotListOptions.Description != "new-snapshot-test-name" {
+		t.Fatalf("expected snapshot idempotency lookup to filter by name, got %+v", fakeBlockStorage.lastSnapshotListOptions)
 	}
 }
 
@@ -281,6 +330,7 @@ func TestControllerListSnapshotsRejectsNegativeMaxEntries(t *testing.T) {
 
 func TestControllerPublishBlockVolume(t *testing.T) {
 	controller := NewFakeVultrControllerServer("publish block volume")
+	fakeBlockStorage := controller.Driver.client.BlockStorage.(*fakeBS)
 
 	nodeID := "245bb2fe-b55c-44a0-9a1e-ab80e4b5f088" //nolint:goconst
 	volumeID := "c56c7b6e-15c2-445e-9a5d-1063ab5828ec"
@@ -311,6 +361,9 @@ func TestControllerPublishBlockVolume(t *testing.T) {
 
 	if !reflect.DeepEqual(res, expected) {
 		t.Errorf("expected %+v got %+v", res, expected)
+	}
+	if fakeBlockStorage.getCalls != 1 {
+		t.Fatalf("expected storage discovery to reuse its GET result, got %d GET calls", fakeBlockStorage.getCalls)
 	}
 }
 

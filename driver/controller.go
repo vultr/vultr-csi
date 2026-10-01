@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
@@ -40,12 +41,19 @@ var _ csi.ControllerServer = &VultrControllerServer{}
 // VultrControllerServer is the struct type for the VultrDriver
 type VultrControllerServer struct {
 	csi.UnimplementedControllerServer
-	Driver *VultrDriver
+	Driver           *VultrDriver
+	storageIndexMu   sync.RWMutex
+	storageTypesByID map[string]string
+	volumeIDsByName  map[string]string
 }
 
 // NewVultrControllerServer returns a VultrControllerServer
 func NewVultrControllerServer(driver *VultrDriver) *VultrControllerServer {
-	return &VultrControllerServer{Driver: driver}
+	return &VultrControllerServer{
+		Driver:           driver,
+		storageTypesByID: make(map[string]string),
+		volumeIDsByName:  make(map[string]string),
+	}
 }
 
 // CreateVolume provisions a new volume on behalf of the user
@@ -116,18 +124,22 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 		sourceSnapshotID = snapshotSource.GetSnapshotId()
 	}
 
-	var curVolume *vultrstorage.VultrStorage
-
-	storages, err := vultrstorage.ListAllStorages(ctx, c.Driver.client)
+	curVolume, err := c.getVolumeByName(ctx, req.Name)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "CreateVolume: could not retrieve list of storages. %v", err.Error())
+		return nil, status.Errorf(codes.Internal, "CreateVolume: could not retrieve existing storage. %v", err.Error())
 	}
+	if curVolume == nil {
+		storages, listErr := vultrstorage.ListAllStorages(ctx, c.Driver.client)
+		if listErr != nil {
+			return nil, status.Errorf(codes.Internal, "CreateVolume: could not retrieve list of storages. %v", listErr.Error())
+		}
 
-	// check if volume already exists
-	for i := range storages {
-		if storages[i].Label == req.Name {
-			curVolume = &storages[i]
-			break
+		// A name is all CSI provides on the first request, so retain the ID for retries.
+		for i := range storages {
+			c.indexStorage(&storages[i])
+			if curVolume == nil && storages[i].Label == req.Name {
+				curVolume = &storages[i]
+			}
 		}
 	}
 
@@ -180,6 +192,7 @@ func (c *VultrControllerServer) CreateVolume(ctx context.Context, req *csi.Creat
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "CreateVolume: could not create a new volume: %v", err.Error())
 	}
+	c.indexStorage(volume)
 
 	// Check to see if volume is in active state
 	volReady := false
@@ -237,29 +250,12 @@ func (c *VultrControllerServer) DeleteVolume(ctx context.Context, req *csi.Delet
 		"volume-id": req.VolumeId,
 	}).Info("DeleteVolume: called")
 
-	exists := false
-	var deleteStorage vultrstorage.VultrStorage
-
-	storages, err := vultrstorage.ListAllStorages(ctx, c.Driver.client)
+	sh, deleteStorage, err := c.getStorageByID(ctx, req.VolumeId)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "DeleteVolume: could not retrieve list of storages. %v", err.Error())
-	}
-
-	for i := range storages {
-		if storages[i].ID == req.VolumeId {
-			exists = true
-			deleteStorage = storages[i]
-			break
+		if isNotFoundError(err) || strings.Contains(err.Error(), "storage not found") {
+			return &csi.DeleteVolumeResponse{}, nil
 		}
-	}
-
-	if !exists {
-		return &csi.DeleteVolumeResponse{}, nil
-	}
-
-	sh, err := vultrstorage.NewVultrStorageHandler(c.Driver.client, deleteStorage.StorageType, "", true)
-	if err != nil {
-		return nil, fmt.Errorf("DeleteVolume: cannot initialize vultr storage handler. %v", err)
+		return nil, status.Errorf(codes.Internal, "DeleteVolume: could not retrieve storage. %v", err.Error())
 	}
 
 	// detach all instances
@@ -276,6 +272,7 @@ func (c *VultrControllerServer) DeleteVolume(ctx context.Context, req *csi.Delet
 	if err := sh.Operations.Delete(ctx, deleteStorage.ID); err != nil {
 		return nil, status.Errorf(codes.Internal, "DeleteVolume: cannot delete volume, %v", err.Error())
 	}
+	c.removeStorageFromIndex(deleteStorage)
 
 	c.Driver.log.WithFields(logrus.Fields{
 		"volume-id": req.VolumeId,
@@ -302,14 +299,9 @@ func (c *VultrControllerServer) ControllerPublishVolume(ctx context.Context, req
 		return nil, status.Error(codes.InvalidArgument, "ControllerPublishVolume: read only is not currently supported")
 	}
 
-	sh, err := vultrstorage.FindVultrStorageHandlerByID(ctx, c.Driver.client, req.VolumeId)
+	sh, storageExisting, err := c.getStorageByID(ctx, req.VolumeId)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "ControllerPublishVolume: could not find storage handler for storage. %v", err.Error())
-	}
-
-	storageExisting, err := sh.Operations.Get(ctx, req.VolumeId)
-	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "ControllerPublishVolume: could not retrieve existing storage volume: %v", err.Error())
 	}
 
 	if _, _, bmErr := c.Driver.client.BareMetalServer.Get(ctx, req.NodeId); bmErr == nil && storageExisting.StorageType == "block" {
@@ -413,15 +405,9 @@ func (c *VultrControllerServer) ControllerUnpublishVolume(ctx context.Context, r
 		"node-id":   req.NodeId,
 	}).Info("ControllerPublishUnpublish: called")
 
-	sh, err := vultrstorage.FindVultrStorageHandlerByID(ctx, c.Driver.client, req.VolumeId)
+	sh, storage, err := c.getStorageByID(ctx, req.VolumeId)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "ControllerUnpublishVolume: could not find storage handler for storage. %v", err.Error())
-	}
-
-	storage, err := sh.Operations.Get(ctx, req.VolumeId)
-	if err != nil {
-		// Not found, return empty response
-		return &csi.ControllerUnpublishVolumeResponse{}, nil
 	}
 
 	// node is already unattached, do nothing
@@ -512,6 +498,7 @@ func (c *VultrControllerServer) ListVolumes(ctx context.Context, req *csi.ListVo
 	}
 
 	for i := range storages {
+		c.indexStorage(&storages[i])
 		entries = append(entries, &csi.ListVolumesResponse_Entry{
 			Volume: &csi.Volume{
 				VolumeId:      storages[i].ID,
@@ -581,7 +568,7 @@ func (c *VultrControllerServer) CreateSnapshot(ctx context.Context, req *csi.Cre
 		return nil, status.Error(codes.InvalidArgument, "CreateSnapshot: source volume ID is missing")
 	}
 
-	sh, err := vultrstorage.FindVultrStorageHandlerByID(ctx, c.Driver.client, req.SourceVolumeId)
+	sh, _, err := c.getStorageByID(ctx, req.SourceVolumeId)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "CreateSnapshot: could not find source volume: %v", err.Error())
 	}
@@ -590,7 +577,7 @@ func (c *VultrControllerServer) CreateSnapshot(ctx context.Context, req *csi.Cre
 		return nil, status.Error(codes.InvalidArgument, "CreateSnapshot: snapshots are only supported for block storage volumes")
 	}
 
-	existingSnapshots, err := listAllBlockStorageSnapshots(ctx, c.Driver.client)
+	existingSnapshots, err := listAllBlockStorageSnapshots(ctx, c.Driver.client, req.Name)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "CreateSnapshot: could not retrieve snapshots: %v", err.Error())
 	}
@@ -712,14 +699,9 @@ func (c *VultrControllerServer) ControllerExpandVolume(ctx context.Context, req 
 		return nil, status.Error(codes.InvalidArgument, "ControllerExpandVolume: volume ID must be provided")
 	}
 
-	sh, err := vultrstorage.FindVultrStorageHandlerByID(ctx, c.Driver.client, req.VolumeId)
+	sh, curVolume, err := c.getStorageByID(ctx, req.VolumeId)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "ControllerExpandVolume: could not find storage handler for volume: %v", err.Error())
-	}
-
-	curVolume, err := sh.Operations.Get(ctx, req.VolumeId)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "ControllerExpandVolume: could not retrieve volume: %v", err.Error())
 	}
 
 	newSizeBytes, err := getStorageBytes(req.CapacityRange, sh)
@@ -807,9 +789,9 @@ func getStorageBytes(capRange *csi.CapacityRange, sh *vultrstorage.VultrStorageH
 	return 0, fmt.Errorf("default size unavailable for type %v storage %v disk", sh.StorageType, sh.DiskType)
 }
 
-func listAllBlockStorageSnapshots(ctx context.Context, client *govultr.Client) ([]govultr.BlockStorageSnapshot, error) {
+func listAllBlockStorageSnapshots(ctx context.Context, client *govultr.Client, description string) ([]govultr.BlockStorageSnapshot, error) {
 	var allSnapshots []govultr.BlockStorageSnapshot
-	listOptions := &govultr.ListOptions{}
+	listOptions := &govultr.ListOptions{Description: description}
 
 	for {
 		snapshots, meta, _, err := client.BlockStorage.ListSnapshots(ctx, listOptions)
@@ -856,5 +838,69 @@ func isNotFoundError(err error) bool {
 	errMsg := err.Error()
 	return strings.Contains(errMsg, "Not Found") ||
 		strings.Contains(errMsg, "not found") ||
+		strings.Contains(errMsg, "Invalid block storage ID") ||
+		strings.Contains(errMsg, "Subscription ID Not Found") ||
 		strings.Contains(errMsg, "404")
+}
+
+func (c *VultrControllerServer) getStorageByID(ctx context.Context, storageID string) (*vultrstorage.VultrStorageHandler, *vultrstorage.VultrStorage, error) {
+	c.storageIndexMu.RLock()
+	storageType := c.storageTypesByID[storageID]
+	c.storageIndexMu.RUnlock()
+
+	if storageType != "" {
+		sh, err := vultrstorage.NewVultrStorageHandler(c.Driver.client, storageType, "", true)
+		if err != nil {
+			return nil, nil, err
+		}
+		storage, err := sh.Operations.Get(ctx, storageID)
+		return sh, storage, err
+	}
+
+	sh, storage, err := vultrstorage.FindVultrStorageByID(ctx, c.Driver.client, storageID)
+	if err == nil {
+		c.indexStorage(storage)
+	}
+	return sh, storage, err
+}
+
+func (c *VultrControllerServer) getVolumeByName(ctx context.Context, name string) (*vultrstorage.VultrStorage, error) {
+	c.storageIndexMu.RLock()
+	storageID := c.volumeIDsByName[name]
+	c.storageIndexMu.RUnlock()
+	if storageID == "" {
+		return nil, nil
+	}
+
+	_, storage, err := c.getStorageByID(ctx, storageID)
+	if err == nil && storage.Label == name {
+		return storage, nil
+	}
+	if err != nil && !isNotFoundError(err) {
+		return nil, err
+	}
+
+	c.storageIndexMu.Lock()
+	delete(c.volumeIDsByName, name)
+	c.storageIndexMu.Unlock()
+	return nil, nil
+}
+
+func (c *VultrControllerServer) indexStorage(storage *vultrstorage.VultrStorage) {
+	if storage == nil {
+		return
+	}
+	c.storageIndexMu.Lock()
+	c.storageTypesByID[storage.ID] = storage.StorageType
+	c.volumeIDsByName[storage.Label] = storage.ID
+	c.storageIndexMu.Unlock()
+}
+
+func (c *VultrControllerServer) removeStorageFromIndex(storage *vultrstorage.VultrStorage) {
+	c.storageIndexMu.Lock()
+	delete(c.storageTypesByID, storage.ID)
+	if c.volumeIDsByName[storage.Label] == storage.ID {
+		delete(c.volumeIDsByName, storage.Label)
+	}
+	c.storageIndexMu.Unlock()
 }
