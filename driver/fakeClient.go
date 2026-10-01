@@ -92,7 +92,7 @@ func (f *fakeBS) List(ctx context.Context, options *govultr.ListOptions) ([]govu
 		return f.storages, &govultr.Meta{Links: &govultr.Links{}}, nil, nil
 	}
 
-	return []govultr.BlockStorage{
+	storages := []govultr.BlockStorage{
 		{
 			ID:                 "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
 			DateCreated:        "",
@@ -117,13 +117,15 @@ func (f *fakeBS) List(ctx context.Context, options *govultr.ListOptions) ([]govu
 			MountID:            "test-mount-2",
 			BlockType:          "storage_opt",
 		},
-	}, &govultr.Meta{
+	}
+	meta := &govultr.Meta{
 		Total: 0,
 		Links: &govultr.Links{
 			Next: "",
 			Prev: "",
 		},
-	}, nil, nil
+	}
+	return storages, meta, nil, nil
 }
 
 func (f *fakeBS) Attach(ctx context.Context, blockID string, attach *govultr.BlockStorageAttach) error {
@@ -219,7 +221,7 @@ func (f *fakeVFS) Delete(ctx context.Context, vfsID string) error {
 
 func (f *fakeVFS) List(ctx context.Context, options *govultr.ListOptions) ([]govultr.VirtualFileSystemStorage, *govultr.Meta, *http.Response, error) {
 	f.listCalls++
-	return []govultr.VirtualFileSystemStorage{
+	storages := []govultr.VirtualFileSystemStorage{
 		{
 			ID:          "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
 			Region:      "ewr",
@@ -262,13 +264,15 @@ func (f *fakeVFS) List(ctx context.Context, options *govultr.ListOptions) ([]gov
 				Monthly: 1.0,
 			},
 		},
-	}, &govultr.Meta{
+	}
+	meta := &govultr.Meta{
 		Total: 2,
 		Links: &govultr.Links{
 			Next: "",
 			Prev: "",
 		},
-	}, nil, nil
+	}
+	return storages, meta, nil, nil
 }
 
 func (f *fakeVFS) AttachmentList(ctx context.Context, vfsID string) ([]govultr.VirtualFileSystemStorageAttachment, *http.Response, error) {
