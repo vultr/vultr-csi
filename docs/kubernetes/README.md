@@ -93,8 +93,10 @@ following:
 
 The controller runs with two replicas. Its provisioner, attacher, resizer, and
 snapshotter sidecars use Kubernetes Lease-based leader election, allowing a
-standby replica to take over when the active controller pod is unavailable.
-Additional controller replicas can be configured by scaling the StatefulSet:
+standby replica to take over when the active controller pod is unavailable. The
+replicas use required pod anti-affinity and therefore need separate Kubernetes
+nodes; replicas without an available node remain pending. Additional controller
+replicas can be configured by scaling the StatefulSet:
 
 ```sh
 kubectl -n kube-system scale statefulset csi-vultr-controller --replicas=3

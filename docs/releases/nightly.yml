@@ -121,13 +121,11 @@ spec:
       serviceAccountName: csi-vultr-controller-sa
       affinity:
         podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app: csi-vultr-controller
-                topologyKey: kubernetes.io/hostname
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: csi-vultr-controller
+              topologyKey: kubernetes.io/hostname
       containers:
         - name: csi-provisioner
           image: registry.k8s.io/sig-storage/csi-provisioner:v3.4.0
@@ -189,7 +187,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
         - name: csi-vultr-plugin
-          image: vultr/vultr-csi:v0.19.0
+          image: vultr/vultr-csi:v0.19.1
           args:
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--token=$(VULTR_API_KEY)"
@@ -325,6 +323,9 @@ rules:
     resources: [ "volumesnapshotclasses" ]
     verbs: [ "get", "list", "watch" ]
   - apiGroups: [ "snapshot.storage.k8s.io" ]
+    resources: [ "volumesnapshots" ]
+    verbs: [ "get", "list", "watch" ]
+  - apiGroups: [ "snapshot.storage.k8s.io" ]
     resources: [ "volumesnapshotcontents" ]
     verbs: [ "get", "list", "watch", "update", "patch" ]
   - apiGroups: [ "snapshot.storage.k8s.io" ]
@@ -416,7 +417,7 @@ spec:
             - name: registration-dir
               mountPath: /registration/
         - name: csi-vultr-plugin
-          image: vultr/vultr-csi:v0.19.0
+          image: vultr/vultr-csi:v0.19.1
           args:
             - "--endpoint=$(CSI_ENDPOINT)"
           env:

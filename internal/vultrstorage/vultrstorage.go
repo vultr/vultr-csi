@@ -154,36 +154,44 @@ func NewVultrStorageHandler(client *govultr.Client, storageType, diskType string
 	)
 }
 
-// FindVultrStorageHandlerByID performs a lookup of available storage types and
-// returns the appropriate handler to use with the storage
-func FindVultrStorageHandlerByID(ctx context.Context, client *govultr.Client, storageID string) (*VultrStorageHandler, error) {
+// FindVultrStorageByID performs a lookup of available storage types and returns
+// both the appropriate handler and the storage returned by that lookup.
+func FindVultrStorageByID(ctx context.Context, client *govultr.Client, storageID string) (*VultrStorageHandler, *VultrStorage, error) {
 	if storageID == "" {
-		return nil, fmt.Errorf("missing storage ID")
+		return nil, nil, fmt.Errorf("missing storage ID")
 	}
 
 	for _, storageType := range StorageTypes {
 		sh, err := NewVultrStorageHandler(client, storageType, "", true)
 		if err != nil {
-			return nil, fmt.Errorf("FindVultrStorageHandlerByID cannot initialize vultr storage handler. %v", err)
+			return nil, nil, fmt.Errorf("FindVultrStorageByID cannot initialize vultr storage handler. %v", err)
 		}
 
 		storage, err := sh.Operations.Get(ctx, storageID)
 		if err != nil {
 			if strings.Contains(err.Error(), "Invalid block storage ID") ||
+				strings.Contains(err.Error(), "invalid block storage ID") ||
 				strings.Contains(err.Error(), "Subscription ID Not Found") {
 				continue
 			}
 
 			// some other error
-			return nil, fmt.Errorf("FindVultrStorageHandlerByID could not retrieve storage: %v", err)
+			return nil, nil, fmt.Errorf("FindVultrStorageByID could not retrieve storage: %v", err)
 		}
 
 		if storage != nil {
-			return sh, nil
+			return sh, storage, nil
 		}
 	}
 
-	return nil, fmt.Errorf("storage not found : %v", storageID)
+	return nil, nil, fmt.Errorf("storage not found : %v", storageID)
+}
+
+// FindVultrStorageHandlerByID performs a lookup of available storage types and
+// returns the appropriate handler to use with the storage.
+func FindVultrStorageHandlerByID(ctx context.Context, client *govultr.Client, storageID string) (*VultrStorageHandler, error) {
+	sh, _, err := FindVultrStorageByID(ctx, client, storageID)
+	return sh, err
 }
 
 // ListAllStorages retrieves the list results of available storage types and

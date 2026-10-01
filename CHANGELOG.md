@@ -1,4 +1,19 @@
 # Change Log
+## [v0.19.1](https://github.com/vultr/vultr-csi/compare/v0.19.0...v0.19.1) (2026-10-01)
+### Enhancements
+* Run two controller replicas with sidecar leader election, pod anti-affinity, and a disruption budget
+
+### Performance
+* Favor direct storage lookups by ID and retain validated name-to-ID mappings to reduce Vultr API list calls
+* Reuse storage discovery responses to avoid duplicate storage and attachment lookups
+* Filter snapshot idempotency lookups by snapshot description
+
+### Bug Fixes
+* Grant the CSI controller permission to read VolumeSnapshots when restoring a PVC
+
+### Automation
+* Update golangci-lint from v2.6.1 to v2.14.0
+
 ## [v0.19.0](https://github.com/vultr/vultr-csi/compare/v0.18.0...v0.19.0) (2026-09-08)
 ### Enhancements
 * Add block storage snapshot create, delete, list, and restore support [PR 388](https://github.com/vultr/vultr-csi/pull/388)
