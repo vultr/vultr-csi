@@ -93,37 +93,37 @@ func (f *fakeBS) List(ctx context.Context, options *govultr.ListOptions) ([]govu
 	}
 
 	return []govultr.BlockStorage{
-			{
-				ID:                 "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
-				DateCreated:        "",
-				Cost:               1,
-				Status:             "active",
-				SizeGB:             10,
-				Region:             "ewr",
-				AttachedToInstance: "245bb2fe-b55c-44a0-9a1e-ab80e4b5f088",
-				Label:              "test-bs-perf",
-				MountID:            "test-mount-1",
-				BlockType:          "high_perf",
-			},
-			{
-				ID:                 "bda4f333-bfd7-477b-84c2-e4df0ec9e5bf",
-				DateCreated:        "",
-				Cost:               2,
-				Status:             "active",
-				SizeGB:             80,
-				Region:             "ewr",
-				AttachedToInstance: "b9d23eb3-1880-4746-acc7-f1ef56565320",
-				Label:              "test-bs-hdd",
-				MountID:            "test-mount-2",
-				BlockType:          "storage_opt",
-			},
-		}, &govultr.Meta{
-			Total: 0,
-			Links: &govultr.Links{
-				Next: "",
-				Prev: "",
-			},
-		}, nil, nil
+		{
+			ID:                 "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
+			DateCreated:        "",
+			Cost:               1,
+			Status:             "active",
+			SizeGB:             10,
+			Region:             "ewr",
+			AttachedToInstance: "245bb2fe-b55c-44a0-9a1e-ab80e4b5f088",
+			Label:              "test-bs-perf",
+			MountID:            "test-mount-1",
+			BlockType:          "high_perf",
+		},
+		{
+			ID:                 "bda4f333-bfd7-477b-84c2-e4df0ec9e5bf",
+			DateCreated:        "",
+			Cost:               2,
+			Status:             "active",
+			SizeGB:             80,
+			Region:             "ewr",
+			AttachedToInstance: "b9d23eb3-1880-4746-acc7-f1ef56565320",
+			Label:              "test-bs-hdd",
+			MountID:            "test-mount-2",
+			BlockType:          "storage_opt",
+		},
+	}, &govultr.Meta{
+		Total: 0,
+		Links: &govultr.Links{
+			Next: "",
+			Prev: "",
+		},
+	}, nil, nil
 }
 
 func (f *fakeBS) Attach(ctx context.Context, blockID string, attach *govultr.BlockStorageAttach) error {
@@ -220,55 +220,55 @@ func (f *fakeVFS) Delete(ctx context.Context, vfsID string) error {
 func (f *fakeVFS) List(ctx context.Context, options *govultr.ListOptions) ([]govultr.VirtualFileSystemStorage, *govultr.Meta, *http.Response, error) {
 	f.listCalls++
 	return []govultr.VirtualFileSystemStorage{
-			{
-				ID:          "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
-				Region:      "ewr",
-				DateCreated: "2025-01-06 16:31:03",
-				Status:      "active",
-				Label:       "test-vfs",
-				Tags:        nil,
-				DiskType:    "nvme",
-				StorageSize: govultr.VirtualFileSystemStorageSize{
-					SizeBytes: 26843545600,
-					SizeGB:    25,
-				},
-				StorageUsed: govultr.VirtualFileSystemStorageSize{
-					SizeBytes: 0,
-					SizeGB:    0,
-				},
-				Billing: govultr.VirtualFileSystemStorageBilling{
-					Charges: 0.1,
-					Monthly: 5.0,
-				},
+		{
+			ID:          "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
+			Region:      "ewr",
+			DateCreated: "2025-01-06 16:31:03",
+			Status:      "active",
+			Label:       "test-vfs",
+			Tags:        nil,
+			DiskType:    "nvme",
+			StorageSize: govultr.VirtualFileSystemStorageSize{
+				SizeBytes: 26843545600,
+				SizeGB:    25,
 			},
-			{
-				ID:          "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
-				Region:      "ord",
-				DateCreated: "2024-12-11 14:30:49",
-				Status:      "active",
-				Label:       "test-vfs-1",
-				Tags:        nil,
-				DiskType:    "nvme",
-				StorageSize: govultr.VirtualFileSystemStorageSize{
-					SizeBytes: 32212254720,
-					SizeGB:    30,
-				},
-				StorageUsed: govultr.VirtualFileSystemStorageSize{
-					SizeBytes: 0,
-					SizeGB:    0,
-				},
-				Billing: govultr.VirtualFileSystemStorageBilling{
-					Charges: 0.36,
-					Monthly: 1.0,
-				},
+			StorageUsed: govultr.VirtualFileSystemStorageSize{
+				SizeBytes: 0,
+				SizeGB:    0,
 			},
-		}, &govultr.Meta{
-			Total: 2,
-			Links: &govultr.Links{
-				Next: "",
-				Prev: "",
+			Billing: govultr.VirtualFileSystemStorageBilling{
+				Charges: 0.1,
+				Monthly: 5.0,
 			},
-		}, nil, nil
+		},
+		{
+			ID:          "c56c7b6e-15c2-445e-9a5d-1063ab5828ec",
+			Region:      "ord",
+			DateCreated: "2024-12-11 14:30:49",
+			Status:      "active",
+			Label:       "test-vfs-1",
+			Tags:        nil,
+			DiskType:    "nvme",
+			StorageSize: govultr.VirtualFileSystemStorageSize{
+				SizeBytes: 32212254720,
+				SizeGB:    30,
+			},
+			StorageUsed: govultr.VirtualFileSystemStorageSize{
+				SizeBytes: 0,
+				SizeGB:    0,
+			},
+			Billing: govultr.VirtualFileSystemStorageBilling{
+				Charges: 0.36,
+				Monthly: 1.0,
+			},
+		},
+	}, &govultr.Meta{
+		Total: 2,
+		Links: &govultr.Links{
+			Next: "",
+			Prev: "",
+		},
+	}, nil, nil
 }
 
 func (f *fakeVFS) AttachmentList(ctx context.Context, vfsID string) ([]govultr.VirtualFileSystemStorageAttachment, *http.Response, error) {
