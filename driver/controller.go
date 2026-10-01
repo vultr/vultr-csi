@@ -839,11 +839,15 @@ func isNotFoundError(err error) bool {
 	return strings.Contains(errMsg, "Not Found") ||
 		strings.Contains(errMsg, "not found") ||
 		strings.Contains(errMsg, "Invalid block storage ID") ||
+		strings.Contains(errMsg, "invalid block storage ID") ||
 		strings.Contains(errMsg, "Subscription ID Not Found") ||
 		strings.Contains(errMsg, "404")
 }
 
-func (c *VultrControllerServer) getStorageByID(ctx context.Context, storageID string) (*vultrstorage.VultrStorageHandler, *vultrstorage.VultrStorage, error) {
+func (c *VultrControllerServer) getStorageByID(
+	ctx context.Context,
+	storageID string,
+) (*vultrstorage.VultrStorageHandler, *vultrstorage.VultrStorage, error) {
 	c.storageIndexMu.RLock()
 	storageType := c.storageTypesByID[storageID]
 	c.storageIndexMu.RUnlock()

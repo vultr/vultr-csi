@@ -2,6 +2,7 @@ package driver
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -71,7 +72,7 @@ func (f *fakeBS) Get(ctx context.Context, blockID string) (*govultr.BlockStorage
 				return &f.storages[i], nil, nil
 			}
 		}
-		return nil, nil, fmt.Errorf("Invalid block storage ID")
+		return nil, nil, errors.New("invalid block storage ID")
 	}
 	return newFakeBS(), nil, nil
 }
