@@ -108,7 +108,7 @@ metadata:
   namespace: kube-system
 spec:
   serviceName: "csi-vultr"
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: csi-vultr-controller
@@ -119,6 +119,15 @@ spec:
         role: csi-vultr
     spec:
       serviceAccountName: csi-vultr-controller-sa
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: csi-vultr-controller
+                topologyKey: kubernetes.io/hostname
       containers:
         - name: csi-provisioner
           image: registry.k8s.io/sig-storage/csi-provisioner:v3.4.0
@@ -126,6 +135,7 @@ spec:
             - "--volume-name-prefix=pvc"
             - "--volume-name-uuid-length=16"
             - "--csi-address=$(ADDRESS)"
+            - "--leader-election=true"
             - "--timeout=90s"
             - "--v=5"
             - "--default-fstype=ext4"
@@ -141,6 +151,7 @@ spec:
           args:
             - "--v=5"
             - "--csi-address=$(ADDRESS)"
+            - "--leader-election=true"
           env:
             - name: ADDRESS
               value: /var/lib/csi/sockets/pluginproxy/csi.sock
@@ -152,6 +163,7 @@ spec:
           image: registry.k8s.io/sig-storage/csi-resizer:v1.7.0
           args:
             - "--csi-address=$(ADDRESS)"
+            - "--leader-election=true"
             - "--timeout=30s"
             - "--v=5"
             - "--handle-volume-inuse-error=false"
@@ -196,6 +208,18 @@ spec:
       volumes:
         - name: socket-dir
           emptyDir: { }
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: csi-vultr-controller
+  namespace: kube-system
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: csi-vultr-controller
 
 ---
 apiVersion: v1
@@ -321,6 +345,7 @@ roleRef:
   name: csi-vultr-snapshotter-role
   apiGroup: rbac.authorization.k8s.io
 
+## Controller Sidecar Leader Election Role + Binding
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1

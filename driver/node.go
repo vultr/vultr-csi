@@ -374,9 +374,9 @@ func (n *VultrNodeServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeG
 		return nil, err
 	}
 
-	availableBytes := int64(statfs.Bavail) * int64(statfs.Bsize)                    //nolint:unconvert // 32bit builds fail otherwise
-	usedBytes := (int64(statfs.Blocks) - int64(statfs.Bfree)) * int64(statfs.Bsize) //nolint:unconvert // 32bit builds fail otherwise
-	totalBytes := int64(statfs.Blocks) * int64(statfs.Bsize)                        //nolint:unconvert // 32bit builds fail otherwise
+	availableBytes := int64(statfs.Bavail) * int64(statfs.Bsize)                    //nolint:unconvert,nolintlint // Required on 32-bit builds.
+	usedBytes := (int64(statfs.Blocks) - int64(statfs.Bfree)) * int64(statfs.Bsize) //nolint:unconvert,nolintlint // Required on 32-bit builds.
+	totalBytes := int64(statfs.Blocks) * int64(statfs.Bsize)                        //nolint:unconvert,nolintlint // Required on 32-bit builds.
 	totalInodes := int64(statfs.Files)
 	availableInodes := int64(statfs.Ffree)
 	usedInodes := totalInodes - availableInodes

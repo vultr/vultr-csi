@@ -91,6 +91,15 @@ following:
 
 `kubectl apply -f https://raw.githubusercontent.com/vultr/vultr-csi/master/docs/releases/latest.yml`
 
+The controller runs with two replicas. Its provisioner, attacher, resizer, and
+snapshotter sidecars use Kubernetes Lease-based leader election, allowing a
+standby replica to take over when the active controller pod is unavailable.
+Additional controller replicas can be configured by scaling the StatefulSet:
+
+```sh
+kubectl -n kube-system scale statefulset csi-vultr-controller --replicas=3
+```
+
 If you wish to deploy a specific version, you must replace `latest` with a
 proper release where `X.Y.Z` is the desired version:
 
