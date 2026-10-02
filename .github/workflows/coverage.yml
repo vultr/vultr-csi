@@ -39,7 +39,7 @@ jobs:
     needs: coverage
     steps:
       - name: Add Comment
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         if: always()
         with:
           script: |
